@@ -1,4 +1,4 @@
-{ config, pkgs, lib, ... }:
+{ config, pkgs, lib, inputs,  ... }:
 {
   # Home Manager needs a bit of information about you and the
   # paths it should manage.
@@ -15,6 +15,11 @@
 
   # Let Home Manager install and manage itself.
   programs.home-manager.enable = true;
+
+  # programs._1password-shell-plugins = {
+  #   enable = true;
+  #   plugins = with pkgs; [ gh awscli2 ];
+  # };
 
   programs.bat = {
     enable = true;
@@ -109,10 +114,6 @@
     GITHUB_USERNAME = "marmos91";
     BACKUP_VOLUME = "/Volumes/BackupMarco";
     PNPM_HOME = "$HOME/Library/pnpm";
-
-    # GIT_USERNAME = ''${builtins.exec [ "op read op://Private/zhbcl6lev6deprtnom5lj2tily/username" ]}'';
-    # GIT_EMAIL = ''${builtins.exec [ "op read op://Private/zlghqxn5oj6muxylw6lcctq4te/email" ]}'';
-    # GIT_SIGNING_KEY = ''${builtins.exec [ "op read op://Private/icvlyica2bqisvldzi3exj5kau/password" ]}'';
   };
 
   # Configure fish shell
@@ -178,13 +179,14 @@
     };
     interactiveShellInit = ''
       set -U fish_greeting ""
+      # source ~/.config/op/plugins.sh
       neofetch
     '';
   };
 
   home.packages = with pkgs; [
     _1password-cli
-    awscli
+    awscli2
     bazelisk
     btop
     buildifier
