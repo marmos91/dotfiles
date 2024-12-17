@@ -51,6 +51,138 @@
     enable = true;
   };
 
+  programs.tmux = {
+    enable = true;
+    shell = "${pkgs.fish}/bin/fish";  
+    clock24 = true; 
+    terminal = "tmux-256color";
+    prefix = "C-Space";
+    baseIndex = 1;
+    keyMode = "vi";
+    mouse = true;
+    historyLimit = 10000;
+    plugins = with pkgs.tmuxPlugins; [
+      vim-tmux-navigator
+      {
+        plugin = catppuccin;
+        extraConfig = ''
+          set -g @catppuccin_window_left_separator ""
+          set -g @catppuccin_window_right_separator " "
+          set -g @catppuccin_window_middle_separator " █"
+          set -g @catppuccin_window_number_position "right"
+
+          set -g @catppuccin_window_default_fill "number"
+          set -g @catppuccin_window_default_text "#W"
+
+          set -g @catppuccin_window_current_fill "number"
+          set -g @catppuccin_window_current_text "#W"
+
+          set -g @catppuccin_status_modules_right "... directory cpu weather battery ..."
+          set -g @catppuccin_status_left_separator  " "
+          set -g @catppuccin_status_right_separator ""
+          set -g @catppuccin_status_fill "icon"
+          set -g @catppuccin_status_connect_separator "no"
+
+          set -g @catppuccin_directory_text "#{pane_current_path}" 
+        '';
+      }
+      {
+        plugin = weather;
+        extraConfig = ''
+          set-option -g @tmux-weather-interval 1
+        '';
+      }
+      battery
+      cpu
+      sensible
+      yank
+      resurrect
+      {
+        plugin = continuum;
+        extraConfig = "set -g @continuum-restore 'on'";
+      }
+      open
+    ];
+    extraConfig = ''
+      set -g default-command ${pkgs.fish}/bin/fish
+
+      # Enable focus events (better vim/neovim integration)
+      set -g focus-events on
+
+      # Reduce escape-time (better vim/neovim experience)
+      set-option -sg escape-time 10
+
+      # Better terminal settings
+      set-option -sa terminal-features ',xterm-256color:RGB'
+
+      # Move tmux UI to the bottom
+      set -g status-position bottom 
+
+      # Vim style pane selection
+      bind h select-pane -L
+      bind j select-pane -D 
+      bind k select-pane -U
+      bind l select-pane -R
+
+      # Vim style resize panes
+      bind -r j resize-pane -D 5
+      bind -r k resize-pane -U 5
+      bind -r l resize-pane -R 5
+      bind -r h resize-pane -L 5
+   
+      # Reload tmux prefix
+      unbind r
+      bind r source-file ~/.tmux.conf 
+
+      # Clipboard
+      set -g set-clipboard external
+
+      # Vim style pane selection
+      bind h select-pane -L
+      bind j select-pane -D 
+      bind k select-pane -U
+      bind l select-pane -R
+
+      # Vim style resize panes
+      bind -r j resize-pane -D 5
+      bind -r k resize-pane -U 5
+      bind -r l resize-pane -R 5
+      bind -r h resize-pane -L 5
+
+      # Synchonize panes
+      bind-key g set-window-option synchronize-panes\; display-message "synchronize-panes is now #{?pane_synchronized,on,off}"
+
+      # Use Alt-arrow keys without prefix key to switch panes
+      bind -n M-Left select-pane -L
+      bind -n M-Right select-pane -R
+      bind -n M-Up select-pane -U
+      bind -n M-Down select-pane -D
+
+      # Shift arrow to switch windows
+      bind -n S-Left  previous-window
+      bind -n S-Right next-window
+
+      # Shift Alt vim keys to switch windows
+      bind -n M-H previous-window
+      bind -n M-L next-window
+
+      # Keep same CWD when splitting
+      unbind '"'
+      unbind %
+      bind - split-window -v -c "#{pane_current_path}"
+      bind | split-window -h -c "#{pane_current_path}"
+
+      # keybindings
+      bind-key -T copy-mode-vi v send-keys -X begin-selection
+      bind-key -T copy-mode-vi C-v send-keys -X rectangle-toggle
+      bind-key -T copy-mode-vi y send-keys -X copy-selection-and-cancel
+
+      # Allow the title bar to adapt to whatever host you connect to
+      set -g set-titles on
+      set -g set-titles-string "#T"
+    '';
+  };
+
   programs.ssh = {
     enable = true;
     extraConfig = ''

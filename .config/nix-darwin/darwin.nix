@@ -134,6 +134,7 @@
       "spotify"
       "steam"
       "telegram"
+      "vlc"
       "wezterm"
       "whatsapp"
       "zoom"
