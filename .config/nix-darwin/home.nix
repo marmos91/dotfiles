@@ -69,6 +69,26 @@
     };
   };
 
+  programs.ghostty = {
+    enable = true;
+    package = null; # Use the Cask version for now
+    shellIntegration.enable = false;
+
+    settings = {
+      theme = "catppuccin-mocha";
+      font-family = "MesloLGS Nerd Font Mono";
+      font-size = 13;
+      macos-option-as-alt = true;
+      window-padding-x = 15;
+      window-padding-y = 15;
+      background-opacity = 0.96;
+      background-blur-radius = 40;
+      confirm-close-surface = false;
+      mouse-hide-while-typing = true;
+      macos-titlebar-style = "tabs";
+    };
+  };
+
   programs.btop = {
     enable = true;
     settings = {
