@@ -1,7 +1,5 @@
 { config, pkgs, lib, inputs,  ... }:
 {
-  # Home Manager needs a bit of information about you and the
-  # paths it should manage.
   home.username = "marmos91";
   home.homeDirectory = "/Users/marmos91";
 
@@ -15,11 +13,6 @@
 
   # Let Home Manager install and manage itself.
   programs.home-manager.enable = true;
-
-  # programs._1password-shell-plugins = {
-  #   enable = true;
-  #   plugins = with pkgs; [ gh awscli2 ];
-  # };
 
   programs.bat = {
     enable = true;
