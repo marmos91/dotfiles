@@ -20,6 +20,14 @@ local config = {
             action = wezterm.action.ToggleFullScreen,
         },
     },
+    mouse_bindings = {
+        -- Ctrl-click will open the link under the mouse cursor
+        {
+            event = { Up = { streak = 1, button = 'Left' } },
+            mods = 'CTRL',
+            action = wezterm.action.OpenLinkAtMouseCursor,
+        },
+    },
     initial_rows = 40,
     initial_cols = 133,
     window_padding = {
