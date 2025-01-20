@@ -359,7 +359,6 @@
       gg = "lazygit";
       top = "btop";
       python = "python3";
-      pinentry = "pinentry-mac";
       cat = "bat";
       vim = "nvim";
       obsidian = "open -a Obsidian";
@@ -395,6 +394,7 @@
     neofetch
     neovim
     nixfmt-classic
+    nodejs
     reattach-to-user-namespace
     ripgrep
     rustup
