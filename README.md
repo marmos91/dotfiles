@@ -23,7 +23,7 @@ git clone https://github.com/marmos91/dotfiles.git ~/.dotfiles
 Run the following command
 
 ```bash
-chmod +x ~/.dotfiles/install.sh
+chmod +x ~/.dotfiles/setup.sh
 ~/.dotfiles/setup.sh
 ```
 
