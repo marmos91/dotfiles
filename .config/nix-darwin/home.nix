@@ -26,6 +26,36 @@
     ];
   };
 
+  programs.nushell = {
+    enable = false;
+    shellAliases = {
+      g = "hub";
+      gg = "lazygit";
+      top = "btop";
+      python = "python3";
+      # pinentry = "pinentry-mac";
+      cat = "bat";
+      vim = "nvim";
+      obsidian = "^open -a Obsidian";
+      reload-nix = "darwin-rebuild switch --flake ~/.config/nix-darwin#amaterasu";
+    };
+
+    extraConfig = ''
+      let carapace_completer = {|spans|
+       carapace $spans.0 nushell $spans | from json
+       }
+    '';
+
+    extraEnv = ''
+      path add /opt/homebrew/bin
+      path add /run/current-system/sw/bin
+    '';
+  };
+
+  programs.carapace = {
+    enable = true;
+    enableNushellIntegration = true;
+  };
   programs.btop = {
     enable = true;
     settings = {
