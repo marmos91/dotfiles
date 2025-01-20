@@ -23,7 +23,6 @@
     systemPackages = with pkgs; [
       coreutils
       curl
-      git
       vim
     ];
 
@@ -58,7 +57,7 @@
       "/Applications/WhatsApp.app"
       "/Applications/Telegram.app"
       "/Applications/Slack.app"
-      "/Applications/Wezterm.app"
+      "/Applications/Ghostty.app"
       "/Applications/Spotify.app"
       "/System/Applications/System Settings.app"
     ];
@@ -116,8 +115,11 @@
 
     taps = [
       "nikitabobko/tap"
+      "FelixKratz/formulae"
     ];
-    brews = [];
+    brews = [
+      "borders"
+    ];
     casks = [
       "1password"
       "adobe-creative-cloud"
@@ -127,13 +129,18 @@
       "bettertouchtool"
       "cleanmymac"
       "cursor"
+      "docker"
+      "dropbox"
+      "ghostty"
       "gpg-suite"
       "istat-menus"
+      "nordvpn"
       "raycast"
       "slack"
       "spotify"
       "steam"
       "telegram"
+      "tripmode"
       "vlc"
       "wezterm"
       "whatsapp"
