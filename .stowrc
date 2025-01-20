@@ -3,3 +3,4 @@
 --ignore=DS_Store
 --ignore=setup.sh
 --ignore=1password.sh
+--ignore=.gitignore
