@@ -3,3 +3,4 @@
 --ignore=DS_Store
 --ignore=setup.sh
 --ignore=.gitignore
+--ignore=assets
