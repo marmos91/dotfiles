@@ -48,6 +48,6 @@ else
     log "Homebrew is already installed with version $(brew --version | head -n 1)"
 fi
 
-nix --extra-experimental-features "nix-command flakes" run nix-darwin -- switch --flake ./nix-darwin#amaterasu
+nix --extra-experimental-features "nix-command flakes" run nix-darwin -- switch --flake ./.config/nix-darwin#amaterasu
 
 stow .
