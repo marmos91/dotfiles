@@ -40,7 +40,7 @@ You are free to modify my configuration to suit your needs.
 Here is a list of places to start:
 
 The config folder contains all the configurations of the applications we are going to install.
-The most interesting path is definitely [`config/nvim/lua/custom`](./config/nvim/lua/custom) where you can find my configuration for _neovim_.
+The most interesting path is definitely [`config/nvim/lua/custom`](./.config/nvim/lua/custom) where you can find my configuration for _neovim_.
 
 ## Enjoy
 
