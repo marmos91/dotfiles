@@ -162,7 +162,6 @@ return {
                 marksman = {},
                 pylsp = {},
                 bzl = {},
-                rnix = {},
                 rust_analyzer = {},
                 gopls = {},
                 terraformls = {},
