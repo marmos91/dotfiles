@@ -1,5 +1,4 @@
-{ config, pkgs, lib, inputs,  ... }:
-{
+{ config, pkgs, lib, inputs, ... }: {
   home.username = "marmos91";
   home.homeDirectory = "/Users/marmos91";
 
@@ -37,7 +36,8 @@
       cat = "bat";
       vim = "nvim";
       obsidian = "^open -a Obsidian";
-      reload-nix = "darwin-rebuild switch --flake ~/.config/nix-darwin#amaterasu";
+      reload-nix =
+        "darwin-rebuild switch --flake ~/.config/nix-darwin#amaterasu";
     };
 
     extraConfig = ''
@@ -79,8 +79,8 @@
       font-family = "MesloLGS Nerd Font Mono";
       font-size = 13;
       macos-option-as-alt = true;
-      window-padding-x = 15;
-      window-padding-y = 15;
+      # window-padding-x = 5;
+      # window-padding-y = 5;
       background-opacity = 0.96;
       background-blur-radius = 40;
       confirm-close-surface = false;
@@ -91,9 +91,7 @@
 
   programs.btop = {
     enable = true;
-    settings = {
-      theme = "catppuccin";
-    };
+    settings = { theme = "catppuccin"; };
   };
 
   programs.eza = {
@@ -103,14 +101,12 @@
     git = true;
   };
 
-  programs.zsh = {
-    enable = true;
-  };
+  programs.zsh = { enable = true; };
 
   programs.tmux = {
     enable = true;
-    shell = "${pkgs.fish}/bin/fish";  
-    clock24 = true; 
+    shell = "${pkgs.fish}/bin/fish";
+    clock24 = true;
     terminal = "tmux-256color";
     prefix = "C-Space";
     baseIndex = 1;
@@ -185,7 +181,7 @@
       bind -r k resize-pane -U 5
       bind -r l resize-pane -R 5
       bind -r h resize-pane -L 5
-   
+
       # Reload tmux prefix
       unbind r
       bind r source-file ~/.tmux.conf 
@@ -255,25 +251,16 @@
 
     signing = {
       signByDefault = true;
-      key = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQC1Z1G84m2eZAGLJnXNiItcqUvaL36gG2/bam73es6wDhDpdQwhb1+1kBCf3Yqq98is7zACuzKgFhrLkKPWs+1TSTCOXrL0he6MNHUdpiYhZewKNMg4A8+RkpBgJpekQr0ulhhnH7aWKZ1x+qIBc/uPOumEG0SnJM7mzoZ1KO+M2Djk64ofXOeODgCyXut/8wdpRVXjv9fttdvyQOoTFPgLqzsBCnlRR1lo3mo+AffLjwnRdH2UThW4cDiQnPCfLUAopFobC8P8plNnBdrjl3GOaCcGbbgphiJVJ9Gfb6gPMvMkQjnGlCfhvxfvCya6D0oZGA/oMZMU4+qePaSJKeyYatIdHSWtD8cn3USLIIRe0NBzsgpsluxuqLN/wYWkLGZ8jWVsPBUYWl+0V2jNmJNrk0AZwgHuhpegBU+rpCR4+LYvdB43qSHvT1e2Bjz83M5Sqbf94SpfaV0UjiUSR4HhVdmeftIrIRJLc59MIRGfQvaiII5ozCJu4nNTJa/YklM=";
+      key =
+        "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQC1Z1G84m2eZAGLJnXNiItcqUvaL36gG2/bam73es6wDhDpdQwhb1+1kBCf3Yqq98is7zACuzKgFhrLkKPWs+1TSTCOXrL0he6MNHUdpiYhZewKNMg4A8+RkpBgJpekQr0ulhhnH7aWKZ1x+qIBc/uPOumEG0SnJM7mzoZ1KO+M2Djk64ofXOeODgCyXut/8wdpRVXjv9fttdvyQOoTFPgLqzsBCnlRR1lo3mo+AffLjwnRdH2UThW4cDiQnPCfLUAopFobC8P8plNnBdrjl3GOaCcGbbgphiJVJ9Gfb6gPMvMkQjnGlCfhvxfvCya6D0oZGA/oMZMU4+qePaSJKeyYatIdHSWtD8cn3USLIIRe0NBzsgpsluxuqLN/wYWkLGZ8jWVsPBUYWl+0V2jNmJNrk0AZwgHuhpegBU+rpCR4+LYvdB43qSHvT1e2Bjz83M5Sqbf94SpfaV0UjiUSR4HhVdmeftIrIRJLc59MIRGfQvaiII5ozCJu4nNTJa/YklM=";
     };
 
     extraConfig = {
-      "github" = {
-        user = "marmos91";
-      };
-      "hub" = {
-        protocol = "ssh";
-      };
-      "pull" = {
-        rebase = true;
-      };
-      "fetch" = {
-        prune = true;
-      };
-      "push" = {
-        autoSetupRemote = true;
-      };
+      "github" = { user = "marmos91"; };
+      "hub" = { protocol = "ssh"; };
+      "pull" = { rebase = true; };
+      "fetch" = { prune = true; };
+      "push" = { autoSetupRemote = true; };
       "gpg" = {
         format = "ssh";
         "ssh" = {
@@ -289,7 +276,8 @@
         };
       };
       "alias" = {
-        "ls-subtrees" = "!\"git log | grep git-subtree-dir | awk '{ print $2 }'";
+        "ls-subtrees" =
+          "!\"git log | grep git-subtree-dir | awk '{ print $2 }'";
       };
     };
   };
@@ -336,6 +324,15 @@
         };
       }
       {
+        name = "tmux-fish";
+        src = pkgs.fetchFromGitHub {
+          owner = "budimanjojo";
+          repo = "tmux.fish";
+          rev = "e27bb956e1a39c041a151f3a2a6bb3861e265e7a";
+          sha256 = "sha256-oREvB4jfmk1EH9yry7u0GkmJty0vCUxFtLgZxFMSWf4=";
+        };
+      }
+      {
         name = "done";
         src = pkgs.fetchFromGitHub {
           owner = "franciscolourenco";
@@ -355,6 +352,7 @@
       }
     ];
     shellAliases = {
+      bazel = "bazelisk";
       g = "hub";
       gg = "lazygit";
       top = "btop";
@@ -362,7 +360,8 @@
       cat = "bat";
       vim = "nvim";
       obsidian = "open -a Obsidian";
-      reload-nix = "darwin-rebuild switch --flake ~/.config/nix-darwin#amaterasu";
+      reload-nix =
+        "darwin-rebuild switch --flake ~/.config/nix-darwin#amaterasu";
     };
     interactiveShellInit = ''
       set -U fish_greeting ""
@@ -404,5 +403,6 @@
     tree
     wget
     yt-dlp
+    zstd
   ];
 }
