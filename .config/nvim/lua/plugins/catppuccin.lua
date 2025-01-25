@@ -7,7 +7,6 @@ return {
             require("catppuccin").setup({
                 cmp = true,
                 gitsigns = true,
-                harpoon = true,
                 indent_blankline = {
                     enabled = false,
                     scope_color = "sapphire",
