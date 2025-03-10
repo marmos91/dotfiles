@@ -72,7 +72,6 @@
   programs.ghostty = {
     enable = true;
     package = null; # Use the Cask version for now
-    shellIntegration.enable = false;
 
     settings = {
       theme = "catppuccin-mocha";

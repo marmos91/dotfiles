@@ -15,16 +15,9 @@
   # The platform the configuration will be used on.
   nixpkgs.hostPlatform = "aarch64-darwin";
 
-  # Auto upgrade nix package and the daemon service.
-  services.nix-daemon.enable = true;
-
   environment = {
     # List packages installed in system profile. To search by name, run $ nix-env -qaP | grep wget
-    systemPackages = with pkgs; [
-      coreutils
-      curl
-      vim
-    ];
+    systemPackages = with pkgs; [ coreutils curl vim ];
 
     systemPath = [ "/opt/homebrew/bin" ];
     pathsToLink = [ "/Applications" ];
@@ -35,12 +28,9 @@
     remapCapsLockToEscape = true;
   };
 
-  fonts.packages = [ 
-    pkgs.nerd-fonts.fira-code
-    pkgs.nerd-fonts.meslo-lg
-  ];
+  fonts.packages = [ pkgs.nerd-fonts.fira-code pkgs.nerd-fonts.meslo-lg ];
 
-  security.pam.enableSudoTouchIdAuth = true;
+  security.pam.services.sudo_local.touchIdAuth = true;
 
   system.defaults = {
     finder.AppleShowAllExtensions = true;
@@ -113,13 +103,8 @@
     onActivation.cleanup = "uninstall";
     caskArgs.no_quarantine = true;
 
-    taps = [
-      "nikitabobko/tap"
-      "FelixKratz/formulae"
-    ];
-    brews = [
-      "borders"
-    ];
+    taps = [ "nikitabobko/tap" "FelixKratz/formulae" ];
+    brews = [ "borders" ];
     casks = [
       "1password"
       "adobe-creative-cloud"
@@ -129,10 +114,12 @@
       "bettertouchtool"
       "cleanmymac"
       "cursor"
+      "dbeaver-community"
       "docker"
       "dropbox"
       "ghostty"
       "gpg-suite"
+      "handbrake"
       "istat-menus"
       "nordvpn"
       "raycast"
@@ -140,11 +127,12 @@
       "spotify"
       "steam"
       "telegram"
+      "transmission"
       "tripmode"
       "vlc"
       "wezterm"
       "whatsapp"
       "zoom"
     ];
-};
+  };
 }
