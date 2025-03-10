@@ -2,7 +2,11 @@
   home.username = "marmos91";
   home.homeDirectory = "/Users/marmos91";
 
-  home.sessionPath = [ "/run/current-system/sw/bin" "$HOME/.nix-profile/bin" ];
+  home.sessionPath = [
+    "/run/current-system/sw/bin"
+    "$HOME/.nix-profile/bin"
+    "$HOME/.local/bin"
+  ];
 
   # This value determines the Home Manager release that your
   # configuration is compatible with. This helps avoid breakage
@@ -49,6 +53,7 @@
     extraEnv = ''
       path add /opt/homebrew/bin
       path add /run/current-system/sw/bin
+      path add $HOME/.local/bin
     '';
   };
 
@@ -362,6 +367,11 @@
       reload-nix =
         "darwin-rebuild switch --flake ~/.config/nix-darwin#amaterasu";
     };
+    shellInit = ''
+      fish_add_path /opt/homebrew/bin
+      fish_add_path /run/current-system/sw/bin
+      fish_add_path $HOME/.local/bin
+    '';
     interactiveShellInit = ''
       set -U fish_greeting ""
       # source ~/.config/op/plugins.sh
@@ -384,6 +394,7 @@
     hub
     git-lfs
     go-task
+    envsubst
     go_1_23
     k9s
     kubectl
@@ -393,6 +404,7 @@
     neovim
     nixfmt-classic
     nodejs
+    python310
     reattach-to-user-namespace
     ripgrep
     rustup
