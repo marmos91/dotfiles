@@ -122,24 +122,19 @@
       {
         plugin = catppuccin;
         extraConfig = ''
-          set -g @catppuccin_window_left_separator ""
-          set -g @catppuccin_window_right_separator " "
-          set -g @catppuccin_window_middle_separator " █"
-          set -g @catppuccin_window_number_position "right"
-
-          set -g @catppuccin_window_default_fill "number"
-          set -g @catppuccin_window_default_text "#W"
-
-          set -g @catppuccin_window_current_fill "number"
+          set -g @catppuccin_flavor "mocha"
+          set -g @catppuccin_window_status_style "rounded"
+          set -g @catppuccin_window_text "#W"
           set -g @catppuccin_window_current_text "#W"
-
-          set -g @catppuccin_status_modules_right "... directory cpu weather battery ..."
-          set -g @catppuccin_status_left_separator  " "
-          set -g @catppuccin_status_right_separator ""
-          set -g @catppuccin_status_fill "icon"
-          set -g @catppuccin_status_connect_separator "no"
-
-          set -g @catppuccin_directory_text "#{pane_current_path}" 
+          set -g status-right-length 100
+          set -g status-left-length 100
+          set -g status-left ""
+          set -g status-right "#{E:@catppuccin_status_application}"
+          set -agF status-right "#{E:@catppuccin_status_cpu}"
+          set -ag status-right "#{E:@catppuccin_status_session}"
+          set -ag status-right "#{E:@catppuccin_status_uptime}"
+          set -ag status-right "#{E:@catppuccin_status_weather}"
+          set -agF status-right "#{E:@catppuccin_status_battery}"
         '';
       }
       {
@@ -160,8 +155,6 @@
       open
     ];
     extraConfig = ''
-      set -g default-command ${pkgs.fish}/bin/fish
-
       # Enable focus events (better vim/neovim integration)
       set -g focus-events on
 
@@ -188,7 +181,7 @@
 
       # Reload tmux prefix
       unbind r
-      bind r source-file ~/.tmux.conf 
+      bind r source-file ~/.config/tmux/tmux.conf 
 
       # Clipboard
       set -g set-clipboard external
@@ -225,6 +218,8 @@
       # Keep same CWD when splitting
       unbind '"'
       unbind %
+
+      bind c new-window -c "#{pane_current_path}"
       bind - split-window -v -c "#{pane_current_path}"
       bind | split-window -h -c "#{pane_current_path}"
 
@@ -362,12 +357,15 @@
       top = "btop";
       python = "python3";
       cat = "bat";
+      ta = "tmux attach";
+      ts = "tmux new -s";
       vim = "nvim";
       obsidian = "open -a Obsidian";
       reload-nix =
         "darwin-rebuild switch --flake ~/.config/nix-darwin#amaterasu";
     };
     shellInit = ''
+      fish_add_path /etc/profiles/per-user/marmos91/bin/
       fish_add_path /opt/homebrew/bin
       fish_add_path /run/current-system/sw/bin
       fish_add_path $HOME/.local/bin
