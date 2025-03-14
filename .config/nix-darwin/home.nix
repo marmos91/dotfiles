@@ -379,6 +379,7 @@
 
   home.packages = with pkgs; [
     _1password-cli
+    ansible
     awscli2
     bazelisk
     btop
