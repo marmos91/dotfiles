@@ -260,6 +260,7 @@
       "pull" = { rebase = true; };
       "fetch" = { prune = true; };
       "push" = { autoSetupRemote = true; };
+      "init" = { defaultBranch = "main"; };
       "gpg" = {
         format = "ssh";
         "ssh" = {
@@ -411,6 +412,7 @@
     tilt
     tldr
     tree
+    wireguard-tools
     wget
     yt-dlp
     zstd

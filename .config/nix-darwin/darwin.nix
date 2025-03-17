@@ -135,5 +135,9 @@
       "whatsapp"
       "zoom"
     ];
+    masApps = {
+      LanScan = 472226235;
+      WireGuard = 1451685025;
+    };
   };
 }
