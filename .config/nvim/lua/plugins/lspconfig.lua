@@ -168,6 +168,7 @@ return {
                 yamlls = {},
                 jsonls = {},
                 bashls = {},
+                cssls = {},
             }
 
             -- Ensure the servers and tools above are installed

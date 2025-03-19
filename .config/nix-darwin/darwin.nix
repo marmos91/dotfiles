@@ -104,7 +104,7 @@
     caskArgs.no_quarantine = true;
 
     taps = [ "nikitabobko/tap" "FelixKratz/formulae" ];
-    brews = [ "borders" "helm" ];
+    brews = [ "borders" "helm" "ibazel" ];
     casks = [
       "1password"
       "adobe-creative-cloud"
@@ -120,6 +120,7 @@
       "ghostty"
       "gpg-suite"
       "handbrake"
+      "ibkr"
       "istat-menus"
       "nordvpn"
       "raycast"
