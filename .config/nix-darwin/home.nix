@@ -388,12 +388,14 @@
     bazelisk
     btop
     buildifier
+    certbot
     cmake
     commitlint
     diff-so-fancy
     ffmpeg
     fzf
     gh
+    jq
     hub
     git-lfs
     go-task
