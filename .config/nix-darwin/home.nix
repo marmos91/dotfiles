@@ -71,6 +71,10 @@
         success_symbol = "[➜](bold green)";
         error_symbol = "[➜](bold red)";
       };
+      kubernetes = {
+        format = "[⛵ $context ($namespace)](dimmed green)";
+        disabled = false;
+      };
     };
   };
 
@@ -133,7 +137,6 @@
           set -agF status-right "#{E:@catppuccin_status_cpu}"
           set -ag status-right "#{E:@catppuccin_status_session}"
           set -ag status-right "#{E:@catppuccin_status_uptime}"
-          set -ag status-right "#{E:@catppuccin_status_weather}"
           set -agF status-right "#{E:@catppuccin_status_battery}"
         '';
       }
