@@ -158,6 +158,10 @@
       open
     ];
     extraConfig = ''
+      # Explicitly set fish as the default shell/command for new panes/windows
+      set -g default-shell "${pkgs.fish}/bin/fish"
+      set -g default-command "${pkgs.fish}/bin/fish"
+
       # Enable focus events (better vim/neovim integration)
       set -g focus-events on
 
