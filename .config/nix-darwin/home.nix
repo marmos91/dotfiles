@@ -249,7 +249,6 @@
     enable = true;
 
     userName = "marmos91";
-    userEmail = "m.marmos@gmail.com";
 
     signing = {
       signByDefault = true;
@@ -282,6 +281,7 @@
         "ls-subtrees" =
           "!\"git log | grep git-subtree-dir | awk '{ print $2 }'";
       };
+      "include" = { path = "~/.config/git/config.local"; };
     };
   };
 
@@ -392,15 +392,15 @@
     cmake
     commitlint
     diff-so-fancy
+    envsubst
     ffmpeg
     fzf
     gh
-    jq
-    hub
     git-lfs
     go-task
-    envsubst
     go_1_23
+    hub
+    jq
     k9s
     kubectl
     kubectx
@@ -417,8 +417,8 @@
     tilt
     tldr
     tree
-    wireguard-tools
     wget
+    wireguard-tools
     yt-dlp
     zstd
   ];
