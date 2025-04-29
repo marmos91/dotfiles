@@ -13,6 +13,7 @@ return {
             -- `neodev` configures Lua LSP for your Neovim config, runtime and plugins
             -- used for completion, annotations and signatures of Neovim apis
             { "folke/neodev.nvim", opts = {} },
+            { "towolf/vim-helm", ft = "helm" },
         },
         config = function()
             local lsp_group = vim.api.nvim_create_augroup("lsp-group", { clear = true })
@@ -133,6 +134,22 @@ return {
             --  - settings (table): Override the default settings passed when initializing the server.
             --        For example, to see the options for `lua_ls`, you could go to: https://luals.github.io/wiki/settings/
             local servers = {
+                bashls = {},
+                bzl = {},
+                cssls = {},
+                eslint_d = {
+                    settings = {
+                        -- helps eslint find the eslintrc when it's placed in a subfolder instead of the cwd root
+                        workingDirectories = { mode = "auto" },
+                    },
+                },
+                gopls = {},
+                helm_ls = {
+                    yamlls = {
+                        path = "yaml-language-server",
+                    },
+                },
+                jsonls = {},
                 lua_ls = {
                     -- cmd = {...},
                     -- filetypes = { ...},
@@ -147,28 +164,19 @@ return {
                         },
                     },
                 },
+                marksman = {},
+                pylsp = {},
+                rust_analyzer = {},
+                terraformls = {},
                 vtsls = {
                     capabilities = vim.tbl_extend("keep", capabilities, {
                         documentFormattingProvider = false,
                         documentRangeFormattingProvider = false,
                     }),
                 },
-                eslint_d = {
-                    settings = {
-                        -- helps eslint find the eslintrc when it's placed in a subfolder instead of the cwd root
-                        workingDirectories = { mode = "auto" },
-                    },
+                yamlls = {
+                    filetypes_exclude = { "helm" },
                 },
-                marksman = {},
-                pylsp = {},
-                bzl = {},
-                rust_analyzer = {},
-                gopls = {},
-                terraformls = {},
-                yamlls = {},
-                jsonls = {},
-                bashls = {},
-                cssls = {},
             }
 
             -- Ensure the servers and tools above are installed

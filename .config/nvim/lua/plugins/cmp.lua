@@ -38,29 +38,29 @@ return {
             "hrsh7th/cmp-buffer",
             "hrsh7th/cmp-cmdline",
             "onsails/lspkind.nvim",
-            {
-                "zbirenbaum/copilot-cmp",
-                event = { "BufEnter" },
-                dependencies = {
-                    {
-                        "zbirenbaum/copilot.lua",
-                        cmd = "Copilot",
-                        build = ":Copilot auth",
-                        opts = {
-                            suggestion = { enabled = false },
-                            panel = { enabled = false },
-                            filetypes = {
-                                markdown = true,
-                                help = true,
-                            },
-                        },
-                    },
-                },
-                opts = {},
-                config = function(_, opts)
-                    require("copilot_cmp").setup(opts)
-                end,
-            },
+            -- {
+            --     "zbirenbaum/copilot-cmp",
+            --     event = { "BufEnter" },
+            --     dependencies = {
+            --         {
+            --             "zbirenbaum/copilot.lua",
+            --             cmd = "Copilot",
+            --             build = ":Copilot auth",
+            --             opts = {
+            --                 suggestion = { enabled = false },
+            --                 panel = { enabled = false },
+            --                 filetypes = {
+            --                     markdown = true,
+            --                     help = true,
+            --                 },
+            --             },
+            --         },
+            --     },
+            --     opts = {},
+            --     config = function(_, opts)
+            --         require("copilot_cmp").setup(opts)
+            --     end,
+            -- },
         },
         config = function()
             -- See `:help cmp`
@@ -146,7 +146,7 @@ return {
                     { name = "nvim_lsp" },
                     { name = "luasnip" },
                     { name = "path" },
-                    { name = "copilot" },
+                    -- { name = "copilot" },
                 },
             })
 
