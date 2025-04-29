@@ -235,6 +235,9 @@
       bind-key -T copy-mode-vi C-v send-keys -X rectangle-toggle
       bind-key -T copy-mode-vi y send-keys -X copy-selection-and-cancel
 
+      # Sync panes shortcut
+      bind -n C-x setw synchronize-panes
+
       # Allow the title bar to adapt to whatever host you connect to
       set -g set-titles on
       set -g set-titles-string "#T"
@@ -380,14 +383,11 @@
     '';
     interactiveShellInit = ''
       set -U fish_greeting ""
-      # source ~/.config/op/plugins.sh
-      neofetch
     '';
   };
 
   home.packages = with pkgs; [
     _1password-cli
-    ansible
     awscli2
     bazelisk
     btop
@@ -405,7 +405,6 @@
     go_1_23
     hub
     jq
-    k9s
     kubectl
     kubectx
     lazygit
@@ -413,7 +412,7 @@
     neovim
     nixfmt-classic
     nodejs
-    python310
+    python311
     reattach-to-user-namespace
     ripgrep
     rustup

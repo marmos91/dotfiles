@@ -103,8 +103,8 @@
     onActivation.cleanup = "uninstall";
     caskArgs.no_quarantine = true;
 
-    taps = [ "nikitabobko/tap" "FelixKratz/formulae" ];
-    brews = [ "borders" "helm" "ibazel" ];
+    taps = [ "nikitabobko/tap" "FelixKratz/formulae" "netbirdio/tap" ];
+    brews = [ "borders" "helm" "ibazel" "netbird" "ansible" "k9s" ];
     casks = [
       "1password"
       "adobe-creative-cloud"
@@ -123,8 +123,11 @@
       "handbrake"
       "ibkr"
       "istat-menus"
+      "netbird-ui"
       "nordvpn"
+      "obs"
       "obsidian"
+      "raspberry-pi-imager"
       "raycast"
       "slack"
       "spotify"
