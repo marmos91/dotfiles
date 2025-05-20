@@ -174,18 +174,6 @@
       # Move tmux UI to the bottom
       set -g status-position bottom 
 
-      # Vim style pane selection
-      bind h select-pane -L
-      bind j select-pane -D 
-      bind k select-pane -U
-      bind l select-pane -R
-
-      # Vim style resize panes
-      bind -r j resize-pane -D 5
-      bind -r k resize-pane -U 5
-      bind -r l resize-pane -R 5
-      bind -r h resize-pane -L 5
-
       # Reload tmux prefix
       unbind r
       bind r source-file ~/.config/tmux/tmux.conf 
@@ -234,9 +222,6 @@
       bind-key -T copy-mode-vi v send-keys -X begin-selection
       bind-key -T copy-mode-vi C-v send-keys -X rectangle-toggle
       bind-key -T copy-mode-vi y send-keys -X copy-selection-and-cancel
-
-      # Sync panes shortcut
-      bind -n C-x setw synchronize-panes
 
       # Allow the title bar to adapt to whatever host you connect to
       set -g set-titles on
@@ -383,11 +368,14 @@
     '';
     interactiveShellInit = ''
       set -U fish_greeting ""
+      # source ~/.config/op/plugins.sh
+      neofetch
     '';
   };
 
   home.packages = with pkgs; [
     _1password-cli
+    ansible
     awscli2
     bazelisk
     btop
@@ -401,10 +389,12 @@
     fzf
     gh
     git-lfs
+    git-filter-repo
     go-task
     go_1_23
     hub
     jq
+    k9s
     kubectl
     kubectx
     lazygit
@@ -412,7 +402,7 @@
     neovim
     nixfmt-classic
     nodejs
-    python311
+    python310
     reattach-to-user-namespace
     ripgrep
     rustup
