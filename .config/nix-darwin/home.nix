@@ -19,7 +19,6 @@
 
   programs.bat = {
     enable = true;
-    config.theme = "OneHalfDark";
     extraPackages = with pkgs.bat-extras; [
       batdiff
       batman
@@ -97,10 +96,7 @@
     };
   };
 
-  programs.btop = {
-    enable = true;
-    settings = { theme = "catppuccin"; };
-  };
+  programs.btop = { enable = true; };
 
   programs.eza = {
     enable = true;
