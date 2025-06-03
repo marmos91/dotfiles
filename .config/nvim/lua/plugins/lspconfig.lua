@@ -102,10 +102,31 @@ return {
                     -- code, if the language server you are using supports them
                     --
                     -- This may be unwanted, since they displace some of your code
-                    if client and client.server_capabilities.inlayHintProvider and vim.lsp.inlay_hint then
+                    if client and client.server_capabilities.inlayHintProvider then
                         map("<leader>th", function()
-                            ---@diagnostic disable-next-line: missing-parameter
-                            vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled())
+                            local bufnr = vim.api.nvim_get_current_buf()
+
+                            -- Try different API versions
+                            if vim.lsp.inlay_hint and type(vim.lsp.inlay_hint) == "table" then
+                                if vim.lsp.inlay_hint.enable and vim.lsp.inlay_hint.is_enabled then
+                                    -- Neovim 0.10+ API
+                                    local enabled = vim.lsp.inlay_hint.is_enabled({ bufnr = bufnr })
+                                    vim.lsp.inlay_hint.enable(not enabled, { bufnr = bufnr })
+                                    print("Inlay hints " .. (not enabled and "enabled" or "disabled"))
+                                elseif vim.lsp.inlay_hint.toggle then
+                                    -- Alternative toggle API
+                                    vim.lsp.inlay_hint.toggle({ bufnr = bufnr })
+                                end
+                            elseif type(vim.lsp.inlay_hint) == "function" then
+                                -- Function-based API
+                                vim.lsp.inlay_hint(bufnr, nil)
+                            elseif vim.lsp.buf.inlay_hint then
+                                -- Older buffer-based API
+                                vim.lsp.buf.inlay_hint(bufnr, nil)
+                            else
+                                vim.notify("Inlay hints API not found", vim.log.levels.WARN)
+                                print("vim.lsp.inlay_hint type: " .. type(vim.lsp.inlay_hint))
+                            end
                         end, "[T]oggle Inlay [H]ints")
                     end
 
@@ -166,7 +187,7 @@ return {
                 },
                 marksman = {},
                 pylsp = {},
-                rust_analyzer = {},
+                -- rust_analyzer = {},
                 terraformls = {},
                 vtsls = {
                     capabilities = vim.tbl_extend("keep", capabilities, {
