@@ -70,10 +70,10 @@
         success_symbol = "[➜](bold green)";
         error_symbol = "[➜](bold red)";
       };
-      kubernetes = {
-        format = "[⛵ $context ($namespace)](dimmed green)";
-        disabled = false;
-      };
+      # kubernetes = {
+      #   format = "[⛵ $context ($namespace)](dimmed green)";
+      #   disabled = false;
+      # };
     };
   };
 
