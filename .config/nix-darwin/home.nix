@@ -389,7 +389,6 @@
     fzf
     gh
     git-lfs
-    git-filter-repo
     go-task
     go_1_23
     hub
