@@ -1,12 +1,23 @@
 { self, pkgs, ... }: {
   users.users.marmos91.home = "/Users/marmos91";
-  users.users.marmos91.shell = pkgs.fish;
+  users.users.marmos91.shell = pkgs.zsh;
 
-  # Necessary for using flakes on this system.
-  nix.settings.experimental-features = "nix-command flakes";
+  # Nix configuration
+  nix.settings = {
+    experimental-features = "nix-command flakes";
+    # Performance: Enable parallel building
+    max-jobs = 8;
+    # Performance: Enable binary cache
+    substituters =
+      [ "https://cache.nixos.org/" "https://nix-community.cachix.org" ];
+    trusted-public-keys = [
+      "cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY="
+      "nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs="
+    ];
+  };
 
   # Enable alternative shell support in nix-darwin.
-  programs.fish.enable = true;
+  programs.zsh.enable = true;
 
   # Used for backwards compatibility, please read the changelog before changing.
   # $ darwin-rebuild changelog
@@ -19,7 +30,7 @@
 
   environment = {
     # List packages installed in system profile. To search by name, run $ nix-env -qaP | grep wget
-    systemPackages = with pkgs; [ coreutils curl vim ];
+    systemPackages = with pkgs; [ coreutils curl vim git gnused gawk ];
 
     systemPath = [ "/opt/homebrew/bin" ];
     pathsToLink = [ "/Applications" ];
@@ -57,6 +68,7 @@
     dock.mru-spaces = false;
     dock.showhidden = true;
     dock.show-recents = false;
+
     # Icon size
     dock.tilesize = 42;
 
@@ -102,11 +114,15 @@
 
   homebrew = {
     enable = true;
-    onActivation.cleanup = "uninstall";
+    onActivation = {
+      cleanup = "uninstall";
+      autoUpdate = true;
+      upgrade = true;
+    };
     caskArgs.no_quarantine = true;
 
     taps = [ "nikitabobko/tap" "FelixKratz/formulae" "netbirdio/tap" ];
-    brews = [ "borders" "helm" "ibazel" "netbird" "ansible" ];
+    brews = [ "borders" "helm" "ibazel" "netbird" ];
     casks = [
       "1password"
       "adobe-creative-cloud"
@@ -129,7 +145,6 @@
       "nordvpn"
       "obs"
       "obsidian"
-      "raspberry-pi-imager"
       "raycast"
       "slack"
       "spotify"
