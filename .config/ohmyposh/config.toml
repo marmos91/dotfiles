@@ -54,6 +54,14 @@ final_space = true
     [blocks.segments.properties]
       fetch_stash_count = true
       fetch_status = true
+  
+  [[blocks.segments]]
+    type = "rust"
+    style = "powerline"
+    powerline_symbol = ""
+    foreground = "#193549"
+    background = "#99908a"
+    template = "  {{ .Full }} "
 
 [[blocks]]
   type = 'prompt'
@@ -75,6 +83,7 @@ final_space = true
     powerline_symbol = ""
     foreground = "#ffffff"
     background = "#1BD760"
+    min_width=110
 
     [blocks.segments.properties]
       playing_icon = " "
@@ -95,6 +104,21 @@ final_space = true
       fetch_virtual_env = true
 
   [[blocks.segments]]
+    type = "kubectl"
+    style = "powerline"
+    powerline_symbol = ""
+    foreground = "#000000"
+    background = "#ebcc34"
+    template = " {{.Context}}{{if .Namespace}} :: {{.Namespace}}{{end}} "
+
+  [[blocks.segments]]
+    type = "bazel"
+    style = "powerline"
+    powerline_symbol = ""
+    foreground = "#ffffff"
+    background = "#43a047"
+
+  [[blocks.segments]]
     template = '<#fff>  </>{{ .CurrentDate | date .Format }} '
     foreground = '#fff'
     powerline_symbol = ''
@@ -102,6 +126,15 @@ final_space = true
     type = 'time'
     style = 'powerline'
     invert_powerline = true
+
+  [[blocks.segments]]
+    type = "upgrade"
+    style = "plain"
+    foreground = "#111111"
+    background = "#FFD664"
+
+    [blocks.segments.properties]
+    cache_duration = "168h"
 
 [[blocks]]
   type = 'prompt'
