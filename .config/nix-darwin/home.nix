@@ -63,16 +63,16 @@
     oh-my-zsh = {
       enable = true;
       plugins = [
+        "bazel"
         "git"
         "docker"
         "kubectl"
-        "tmux"
         "vi-mode"
-        "history-substring-search"
-        "colored-man-pages"
-        "command-not-found"
-        "nvm"
-        "z"
+        "fzf"
+        "gh"
+        "rust"
+        "tmux"
+        "zoxide"
       ];
     };
 
@@ -83,8 +83,6 @@
       top = "btop";
       python = "python3";
       cat = "bat";
-      ta = "tmux attach";
-      ts = "tmux new -s";
       vim = "nvim";
       reload-nix =
         "darwin-rebuild switch --flake ~/.config/nix-darwin#amaterasu";
@@ -93,24 +91,44 @@
     sessionVariables = {
       PATH =
         "$PATH:/etc/profiles/per-user/marmos91/bin:/opt/homebrew/bin:/run/current-system/sw/bin:$HOME/.local/bin";
+      # Ensure powerline symbols work
+      LC_ALL = "en_US.UTF-8";
+      LANG = "en_US.UTF-8";
     };
 
     initContent = ''
-      # Initialize Oh My Posh
-      if [ "$TERM_PROGRAM" != "Apple_Terminal" ]; then
-        eval "$(oh-my-posh init zsh --config $HOME/.config/ohmyposh/config.toml)"
+      zmodload zsh/zprof
+      # Lazy load Oh My Posh to improve startup time
+      # if [[ "$TERM_PROGRAM" != "Apple_Terminal" ]]; then
+      #   # Only initialize if not already done
+      #   if [[ -z "$OH_MY_POSH_INITIALIZED" ]]; then
+      #     eval "$(oh-my-posh init zsh --config $HOME/.config/ohmyposh/config.toml)"
+      #     export OH_MY_POSH_INITIALIZED=1
+      #   fi
+      # fi
+
+      # Optimize completion system
+      autoload -Uz compinit
+      if [[ ! -f ~/.zcompdump || ~/.zcompdump -ot ~/.zshrc ]]; then
+        compinit
+      else
+        compinit -C
       fi
 
       # Fish-like autosuggestions behavior
       ZSH_AUTOSUGGEST_STRATEGY=(history completion)
       ZSH_AUTOSUGGEST_BUFFER_MAX_SIZE=20
 
-      # Better history (fish-like)
+      # Better history configuration
+      HISTSIZE=50000
+      SAVEHIST=50000
       setopt HIST_IGNORE_DUPS
       setopt HIST_IGNORE_SPACE
       setopt SHARE_HISTORY
       setopt APPEND_HISTORY
       setopt INC_APPEND_HISTORY
+      setopt HIST_FIND_NO_DUPS
+      setopt HIST_REDUCE_BLANKS
 
       # Auto cd (fish-like)
       setopt AUTO_CD
@@ -118,6 +136,8 @@
       # Case insensitive completion
       zstyle ':completion:*' matcher-list 'm:{[:lower:][:upper:]}={[:upper:][:lower:]}'
       zstyle ':completion:*' menu select
+      zstyle ':completion:*' use-cache on
+      zstyle ':completion:*' cache-path ~/.zsh/cache
 
       # History substring search keybindings (fish-like up/down arrow)
       bindkey '^[[A' history-substring-search-up
@@ -125,25 +145,42 @@
       bindkey -M vicmd 'k' history-substring-search-up
       bindkey -M vicmd 'j' history-substring-search-down
 
-      # FZF integration (replaces fzf-fish)
-      if command -v fzf >/dev/null 2>&1; then
-        # Ctrl+R for command history
-        bindkey '^R' fzf-history-widget
-        # Ctrl+T for file search
-        bindkey '^T' fzf-file-widget
-        # Alt+C for directory search
-        bindkey '\ec' fzf-cd-widget
-      fi
+      # Terminal title
+      case $TERM in
+        xterm*|rxvt*|Eterm|aterm|kterm|gnome*|alacritty|kitty*|ghostty*)
+          precmd() {
+            print -Pn "\e]0;%n@%m: %~\a"
+          }
+          preexec() {
+            print -Pn "\e]0;%n@%m: %~ ($1)\a"
+          }
+          ;;
+      esac
+
+      # Enhanced git status colors for Starship
+      export STARSHIP_CONFIG_GIT_STATUS_MODIFIED="#ff9248"
+      export STARSHIP_CONFIG_GIT_STATUS_AHEAD_BEHIND="#f26d50"
+      export STARSHIP_CONFIG_GIT_STATUS_AHEAD="#89d1dc"
+      export STARSHIP_CONFIG_GIT_STATUS_BEHIND="#f17c37"
+
+      # PERFORMANCE: Lazy load kubectl completion
+      kubectl() {
+        if ! type __start_kubectl >/dev/null 2>&1; then
+          source <(command kubectl completion zsh)
+        fi
+        command kubectl "$@"
+      }
     '';
   };
 
-  # Enable fzf integration
   programs.fzf = {
     enable = true;
     enableZshIntegration = true;
+    defaultCommand =
+      "${pkgs.ripgrep}/bin/rg --files --hidden --follow --glob '!.git/*'";
+    defaultOptions = [ "--height 40%" "--border" ];
   };
 
-  # Enable zoxide (modern z replacement)
   programs.zoxide = {
     enable = true;
     enableZshIntegration = true;
@@ -277,7 +314,6 @@
 
   programs.git = {
     enable = true;
-
     userName = "marmos91";
 
     signing = {
@@ -287,31 +323,27 @@
     };
 
     extraConfig = {
-      "github" = { user = "marmos91"; };
-      "hub" = { protocol = "ssh"; };
-      "pull" = { rebase = true; };
-      "fetch" = { prune = true; };
-      "push" = { autoSetupRemote = true; };
-      "init" = { defaultBranch = "main"; };
-      "gpg" = {
-        format = "ssh";
-        "ssh" = {
-          program = "/Applications/1Password.app/Contents/MacOS/op-ssh-sign";
-        };
+      github.user = "marmos91";
+      hub.protocol = "ssh";
+      pull.rebase = true;
+      fetch.prune = true;
+      push.autoSetupRemote = true;
+      init.defaultBranch = "main";
+
+      gpg.format = "ssh";
+      "gpg \"ssh\"".program =
+        "/Applications/1Password.app/Contents/MacOS/op-ssh-sign";
+
+      filter.lfs = {
+        clean = "git-lfs clean -- %f";
+        smudge = "git-lfs smudge -- %f";
+        process = "git-lfs filter-process";
+        required = true;
       };
-      "filter" = {
-        "lfs" = {
-          clean = "git-lfs clean -- %f";
-          smudge = "git-lfs smudge -- %f";
-          process = "git-lfs filter-process";
-          required = true;
-        };
-      };
-      "alias" = {
-        "ls-subtrees" =
-          "!\"git log | grep git-subtree-dir | awk '{ print $2 }'";
-      };
-      "include" = { path = "~/.config/git/config.local"; };
+
+      alias.ls-subtrees =
+        "!\"git log | grep git-subtree-dir | awk '{ print $2 }'";
+      include.path = "~/.config/git/config.local";
     };
   };
 
@@ -323,6 +355,169 @@
     GITHUB_USERNAME = "marmos91";
     BACKUP_VOLUME = "/Volumes/BackupMarco";
     PNPM_HOME = "$HOME/Library/pnpm";
+  };
+
+  programs.starship = {
+    enable = true;
+    enableZshIntegration = true;
+    settings = {
+      # Beautiful powerline format with arrows
+      format = ''
+        [](#9A348E)$os$username[](bg:#DA627D fg:#9A348E)$directory[](fg:#DA627D bg:#FCA17D)$git_branch$git_status[](fg:#FCA17D bg:#86BBD8)$golang$nodejs$rust[](fg:#86BBD8 bg:#06969A)$docker_context[](fg:#06969A bg:#33658A)$time[ ](fg:#33658A)
+      '';
+
+      # Disable the blank line at the start
+      add_newline = false;
+
+      # Username module (replacing the os module for your setup)
+      username = {
+        show_always = true;
+        style_user = "bg:#9A348E fg:#ffffff";
+        style_root = "bg:#9A348E fg:#ffffff";
+        format = "[ $user ]($style)";
+        disabled = false;
+      };
+
+      # OS module (you can enable this instead of username if you prefer)
+      os = {
+        style = "bg:#9A348E fg:#ffffff";
+        disabled = true; # Set to false if you want OS icon instead of username
+        symbols = {
+          Macos = "";
+          Linux = "";
+          Windows = "";
+        };
+        format = "[ $symbol ]($style)";
+      };
+
+      # Directory module with custom substitutions
+      directory = {
+        style = "bg:#DA627D fg:#ffffff";
+        format = "[ $path ]($style)";
+        truncation_length = 3;
+        truncation_symbol = "…/";
+        substitutions = {
+          "Documents" = "󰈙 ";
+          "Downloads" = " ";
+          "Music" = " ";
+          "Pictures" = " ";
+          "Projects" = "󰲋 ";
+          "Development" = " ";
+          "Code" = " ";
+        };
+      };
+
+      # Git branch
+      git_branch = {
+        symbol = "";
+        style = "bg:#FCA17D fg:#000000";
+        format = "[ $symbol $branch ]($style)";
+      };
+
+      # Git status  
+      git_status = {
+        style = "bg:#FCA17D fg:#000000";
+        format = "[$all_status$ahead_behind ]($style)";
+        conflicted = "⚡";
+        ahead = "⇡\${count}";
+        behind = "⇣\${count}";
+        diverged = "⇕⇡\${ahead_count}⇣\${behind_count}";
+        up_to_date = "";
+        untracked = "?\${count}";
+        stashed = "📦\${count}";
+        modified = "!\${count}";
+        staged = "+\${count}";
+        renamed = "»\${count}";
+        deleted = "✘\${count}";
+      };
+
+      # Programming languages
+      golang = {
+        symbol = " ";
+        style = "bg:#86BBD8 fg:#000000";
+        format = "[ $symbol ($version) ]($style)";
+      };
+
+      nodejs = {
+        symbol = "";
+        style = "bg:#86BBD8 fg:#000000";
+        format = "[ $symbol ($version) ]($style)";
+      };
+
+      rust = {
+        symbol = "";
+        style = "bg:#86BBD8 fg:#000000";
+        format = "[ $symbol ($version) ]($style)";
+      };
+
+      # Python (added for your setup)
+      python = {
+        symbol = "";
+        style = "bg:#86BBD8 fg:#000000";
+        format = "[ $symbol ($version) ]($style)";
+        pyenv_version_name = true;
+        python_binary = [ "python3" "python" ];
+      };
+
+      # Docker context
+      docker_context = {
+        symbol = " ";
+        style = "bg:#06969A fg:#ffffff";
+        format = "[ $symbol $context ]($style)";
+      };
+
+      # Kubernetes (added for your setup)
+      kubernetes = {
+        symbol = "☸ ";
+        style = "bg:#06969A fg:#ffffff";
+        format = "[ $symbol$context( \\($namespace\\)) ]($style)";
+        disabled = false;
+      };
+
+      # Time module
+      time = {
+        disabled = false;
+        time_format = "%H:%M:%S"; # Changed to match your oh-my-posh format
+        style = "bg:#33658A fg:#ffffff";
+        format = "[ ♥ $time ]($style)";
+      };
+
+      # Fill for right-aligned elements
+      fill = { symbol = " "; };
+
+      # Battery (right-aligned)
+      battery = {
+        format = "[ $symbol$percentage ]($style)";
+        display = [
+          {
+            threshold = 20;
+            style = "bold fg:#f36943";
+          }
+          {
+            threshold = 50;
+            style = "bold fg:#FFCD58";
+          }
+          {
+            threshold = 100;
+            style = "bold fg:#33DD2D";
+          }
+        ];
+        full_symbol = "";
+        charging_symbol = "⚡";
+        discharging_symbol = "";
+      };
+
+      # Line break
+      line_break = { disabled = false; };
+
+      # Character prompt (new line)
+      character = {
+        success_symbol = "[⚡](bold yellow) [>](bold red)";
+        error_symbol = "[⚡](bold yellow) [>](bold red)";
+        vimcmd_symbol = "[⚡](bold yellow) [>](bold red)";
+        format = "$symbol ";
+      };
+    };
   };
 
   programs.fish = {
@@ -383,6 +578,7 @@
         };
       }
     ];
+
     shellAliases = {
       bazel = "bazelisk";
       g = "hub";
