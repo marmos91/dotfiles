@@ -361,33 +361,24 @@
     enable = true;
     enableZshIntegration = true;
     settings = {
-      # Beautiful powerline format with arrows
       format = ''
-        [](#9A348E)$os$username[](bg:#DA627D fg:#9A348E)$directory[](fg:#DA627D bg:#FCA17D)$git_branch$git_status[](fg:#FCA17D bg:#86BBD8)$golang$nodejs$rust[](fg:#86BBD8 bg:#06969A)$docker_context[](fg:#06969A bg:#33658A)$time[ ](fg:#33658A)
+        [](#9A348E)$os$username[](bg:#DA627D fg:#9A348E)$directory[](fg:#DA627D bg:#FCA17D)$git_branch$git_status[](fg:#FCA17D bg:#86BBD8)$golang$nodejs$rust[](fg:#06969A bg:#33658A)[ ](fg:#33658A)$fill$kubernetes$hostname$time$battery$line_break$character
       '';
 
       # Disable the blank line at the start
       add_newline = false;
 
-      # Username module (replacing the os module for your setup)
+      continuation_prompt = "▶▶ ";
+
+      fill = { symbol = "."; };
+
+      # Username module
       username = {
         show_always = true;
         style_user = "bg:#9A348E fg:#ffffff";
         style_root = "bg:#9A348E fg:#ffffff";
         format = "[ $user ]($style)";
         disabled = false;
-      };
-
-      # OS module (you can enable this instead of username if you prefer)
-      os = {
-        style = "bg:#9A348E fg:#ffffff";
-        disabled = true; # Set to false if you want OS icon instead of username
-        symbols = {
-          Macos = "";
-          Linux = "";
-          Windows = "";
-        };
-        format = "[ $symbol ]($style)";
       };
 
       # Directory module with custom substitutions
@@ -398,12 +389,10 @@
         truncation_symbol = "…/";
         substitutions = {
           "Documents" = "󰈙 ";
-          "Downloads" = " ";
-          "Music" = " ";
-          "Pictures" = " ";
+          "Downloads" = "󰉍 ";
+          "Music" = " ";
+          "Pictures" = " ";
           "Projects" = "󰲋 ";
-          "Development" = " ";
-          "Code" = " ";
         };
       };
 
@@ -414,7 +403,6 @@
         format = "[ $symbol $branch ]($style)";
       };
 
-      # Git status  
       git_status = {
         style = "bg:#FCA17D fg:#000000";
         format = "[$all_status$ahead_behind ]($style)";
@@ -422,7 +410,7 @@
         ahead = "⇡\${count}";
         behind = "⇣\${count}";
         diverged = "⇕⇡\${ahead_count}⇣\${behind_count}";
-        up_to_date = "";
+        up_to_date = "✓";
         untracked = "?\${count}";
         stashed = "📦\${count}";
         modified = "!\${count}";
@@ -459,31 +447,26 @@
         python_binary = [ "python3" "python" ];
       };
 
-      # Docker context
-      docker_context = {
-        symbol = " ";
-        style = "bg:#06969A fg:#ffffff";
-        format = "[ $symbol $context ]($style)";
-      };
-
-      # Kubernetes (added for your setup)
       kubernetes = {
         symbol = "☸ ";
-        style = "bg:#06969A fg:#ffffff";
+        style = "fg:#ffffff";
         format = "[ $symbol$context( \\($namespace\\)) ]($style)";
         disabled = false;
       };
 
-      # Time module
-      time = {
+      hostname = {
+        ssh_only = false;
+        style = "fg:#ffffff";
+        format = "[ 💻 $hostname ]($style)";
         disabled = false;
-        time_format = "%H:%M:%S"; # Changed to match your oh-my-posh format
-        style = "bg:#33658A fg:#ffffff";
-        format = "[ ♥ $time ]($style)";
       };
 
-      # Fill for right-aligned elements
-      fill = { symbol = " "; };
+      time = {
+        disabled = false;
+        time_format = "%H:%M:%S";
+        style = "fg:#ffffff";
+        format = "[  $time ]($style)";
+      };
 
       # Battery (right-aligned)
       battery = {
@@ -591,7 +574,7 @@
       vim = "nvim";
       obsidian = "open -a Obsidian";
       reload-nix =
-        "darwin-rebuild switch --flake ~/.config/nix-darwin#amaterasu";
+        "sudo darwin-rebuild switch --flake ~/.config/nix-darwin#amaterasu";
     };
     shellInit = ''
       fish_add_path /etc/profiles/per-user/marmos91/bin/
