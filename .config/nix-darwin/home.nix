@@ -633,7 +633,6 @@
     neovim
     nixfmt-classic
     nodejs
-    oh-my-posh
     python310
     reattach-to-user-namespace
     ripgrep
