@@ -64,14 +64,18 @@
       enable = true;
       plugins = [
         "bazel"
-        "git"
+        "colored-man-pages"
         "docker"
-        "kubectl"
-        "vi-mode"
+        "extract"
         "fzf"
         "gh"
+        "git"
+        "gitignore"
+        "kubectl"
         "rust"
+        "safe-paste"
         "tmux"
+        "vi-mode"
         "zoxide"
       ];
     };
@@ -86,27 +90,33 @@
       vim = "nvim";
       reload-nix =
         "darwin-rebuild switch --flake ~/.config/nix-darwin#amaterasu";
+
+      myip = "curl -s https://ipinfo.io/ip";
+
     };
 
     sessionVariables = {
       PATH =
         "$PATH:/etc/profiles/per-user/marmos91/bin:/opt/homebrew/bin:/run/current-system/sw/bin:$HOME/.local/bin";
+
       # Ensure powerline symbols work
       LC_ALL = "en_US.UTF-8";
       LANG = "en_US.UTF-8";
+
+      # Development environment variables
+      EDITOR = "nvim";
+      VISUAL = "nvim";
+      PAGER = "bat";
+      MANPAGER = "sh -c 'col -bx | bat -l man -p'";
+
+      # FZF configuration
+      FZF_DEFAULT_OPTS = "--height 40% --layout=reverse --border --inline-info";
+
+      # Bat theme
+      BAT_THEME = "Catppuccin-mocha";
     };
 
     initContent = ''
-      zmodload zsh/zprof
-      # Lazy load Oh My Posh to improve startup time
-      # if [[ "$TERM_PROGRAM" != "Apple_Terminal" ]]; then
-      #   # Only initialize if not already done
-      #   if [[ -z "$OH_MY_POSH_INITIALIZED" ]]; then
-      #     eval "$(oh-my-posh init zsh --config $HOME/.config/ohmyposh/config.toml)"
-      #     export OH_MY_POSH_INITIALIZED=1
-      #   fi
-      # fi
-
       # Optimize completion system
       autoload -Uz compinit
       if [[ ! -f ~/.zcompdump || ~/.zcompdump -ot ~/.zshrc ]]; then
@@ -132,18 +142,28 @@
 
       # Auto cd (fish-like)
       setopt AUTO_CD
+      setopt AUTO_PUSHD
+      setopt PUSHD_IGNORE_DUPS
+      setopt PUSHD_SILENT
 
-      # Case insensitive completion
-      zstyle ':completion:*' matcher-list 'm:{[:lower:][:upper:]}={[:upper:][:lower:]}'
+      # Case insensitive completion with smart matching
+      zstyle ':completion:*' matcher-list 'm:{[:lower:][:upper:]}={[:upper:][:lower:]}' 'r:|=*' 'l:|=* r:|=*'
       zstyle ':completion:*' menu select
       zstyle ':completion:*' use-cache on
       zstyle ':completion:*' cache-path ~/.zsh/cache
+      zstyle ':completion:*' list-colors "''${(s.:.)LS_COLORS}"
+      zstyle ':completion:*' group-name ""
+      zstyle ':completion:*:descriptions' format '[%d]'
 
-      # History substring search keybindings (fish-like up/down arrow)
-      bindkey '^[[A' history-substring-search-up
-      bindkey '^[[B' history-substring-search-down
-      bindkey -M vicmd 'k' history-substring-search-up
-      bindkey -M vicmd 'j' history-substring-search-down
+      # Better history search (using built-in functions for performance)
+      autoload -U up-line-or-beginning-search down-line-or-beginning-search
+      zle -N up-line-or-beginning-search
+      zle -N down-line-or-beginning-search
+      bindkey '^[[A' up-line-or-beginning-search
+      bindkey '^[[B' down-line-or-beginning-search
+      bindkey '^R' history-incremental-search-backward
+      bindkey -M vicmd 'k' up-line-or-beginning-search
+      bindkey -M vicmd 'j' down-line-or-beginning-search
 
       # Terminal title
       case $TERM in
@@ -157,12 +177,6 @@
           ;;
       esac
 
-      # Enhanced git status colors for Starship
-      export STARSHIP_CONFIG_GIT_STATUS_MODIFIED="#ff9248"
-      export STARSHIP_CONFIG_GIT_STATUS_AHEAD_BEHIND="#f26d50"
-      export STARSHIP_CONFIG_GIT_STATUS_AHEAD="#89d1dc"
-      export STARSHIP_CONFIG_GIT_STATUS_BEHIND="#f17c37"
-
       # PERFORMANCE: Lazy load kubectl completion
       kubectl() {
         if ! type __start_kubectl >/dev/null 2>&1; then
@@ -170,6 +184,27 @@
         fi
         command kubectl "$@"
       }
+
+      # Extract function for various archive types
+      function extract() {
+        if [ -f $1 ] ; then
+          case $1 in
+            *.tar.bz2)   tar xjf $1     ;;
+            *.tar.gz)    tar xzf $1     ;;
+            *.bz2)       bunzip2 $1     ;;
+            *.rar)       unrar e $1     ;;
+            *.gz)        gunzip $1      ;;
+            *.tar)       tar xf $1      ;;
+            *.tbz2)      tar xjf $1     ;;
+            *.tgz)       tar xzf $1     ;;
+            *.zip)       unzip $1       ;;
+            *.Z)         uncompress $1  ;;
+            *.7z)        7z x $1        ;;
+            *)     echo "'$1' cannot be extracted via extract()" ;;
+          esac
+        else
+          echo "'$1' is not a valid file"
+        fi
     '';
   };
 
@@ -362,7 +397,7 @@
     enableZshIntegration = true;
     settings = {
       format = ''
-        [](#9A348E)$os$username[](bg:#DA627D fg:#9A348E)$directory[](fg:#DA627D bg:#FCA17D)$git_branch$git_status[](fg:#FCA17D bg:#86BBD8)$golang$nodejs$rust[](fg:#06969A bg:#33658A)[ ](fg:#33658A)$fill$kubernetes$hostname$time$battery$line_break$character
+        [](#9A348E)$os$username[](bg:#DA627D fg:#9A348E)$directory[](fg:#DA627D bg:#FCA17D)$git_branch$git_status[](fg:#FCA17D bg:#86BBD8)$golang$nodejs$rust[](fg:#06969A bg:#33658A)[ ](fg:#33658A)$fill$kubernetes$package$mem_usage$cmd_duration$hostname$time$battery$line_break$character
       '';
 
       # Disable the blank line at the start
@@ -466,6 +501,26 @@
         time_format = "%H:%M:%S";
         style = "fg:#ffffff";
         format = "[  $time ]($style)";
+      };
+
+      package = {
+        format = "[ 📦 $version ]($style)";
+        style = "bg:#86BBD8 fg:#000000";
+        disabled = false;
+      };
+
+      memory_usage = {
+        disabled = false;
+        threshold = 70;
+        format = "[ 🐏 $ram ]($style)";
+        style = "bg:#f36943 fg:#ffffff";
+      };
+
+      # Command duration
+      cmd_duration = {
+        min_time = 2000; # Show duration for commands taking longer than 2s
+        format = "[ ⏱️ $duration ]($style)";
+        style = "yellow bold";
       };
 
       # Battery (right-aligned)
@@ -591,6 +646,7 @@
 
   home.packages = with pkgs; [
     _1password-cli
+    age
     ansible
     awscli2
     bazelisk
@@ -601,6 +657,7 @@
     commitlint
     diff-so-fancy
     envsubst
+    fd
     ffmpeg
     gh
     git-lfs
@@ -620,13 +677,16 @@
     reattach-to-user-namespace
     ripgrep
     rustup
+    sd
     stow
     tilt
     tldr
     tmuxinator
     tree
+    watch
     wget
     wireguard-tools
+    yq
     yt-dlp
     zstd
   ];
