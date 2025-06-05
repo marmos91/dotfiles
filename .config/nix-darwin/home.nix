@@ -28,55 +28,6 @@
     ];
   };
 
-  programs.nushell = {
-    enable = false;
-    shellAliases = {
-      g = "hub";
-      gg = "lazygit";
-      top = "btop";
-      python = "python3";
-      # pinentry = "pinentry-mac";
-      cat = "bat";
-      vim = "nvim";
-      obsidian = "^open -a Obsidian";
-      reload-nix =
-        "darwin-rebuild switch --flake ~/.config/nix-darwin#amaterasu";
-    };
-
-    extraConfig = ''
-      let carapace_completer = {|spans|
-       carapace $spans.0 nushell $spans | from json
-       }
-    '';
-
-    extraEnv = ''
-      path add /opt/homebrew/bin
-      path add /run/current-system/sw/bin
-      path add $HOME/.local/bin
-    '';
-  };
-
-  programs.carapace = {
-    enable = true;
-    enableNushellIntegration = true;
-  };
-
-  programs.starship = {
-    enable = true;
-
-    settings = {
-      add_newline = false;
-      character = {
-        success_symbol = "[➜](bold green)";
-        error_symbol = "[➜](bold red)";
-      };
-      # kubernetes = {
-      #   format = "[⛵ $context ($namespace)](dimmed green)";
-      #   disabled = false;
-      # };
-    };
-  };
-
   programs.ghostty = {
     enable = true;
     package = null; # Use the Cask version for now
@@ -86,8 +37,6 @@
       font-family = "MesloLGS Nerd Font Mono";
       font-size = 13;
       macos-option-as-alt = true;
-      # window-padding-x = 5;
-      # window-padding-y = 5;
       background-opacity = 0.96;
       background-blur-radius = 40;
       confirm-close-surface = false;
@@ -105,11 +54,104 @@
     git = true;
   };
 
-  programs.zsh = { enable = true; };
+  programs.zsh = {
+    enable = true;
+    enableCompletion = true;
+    autosuggestion.enable = true;
+    syntaxHighlighting.enable = true;
+
+    oh-my-zsh = {
+      enable = true;
+      plugins = [
+        "git"
+        "docker"
+        "kubectl"
+        "tmux"
+        "vi-mode"
+        "history-substring-search"
+        "colored-man-pages"
+        "command-not-found"
+        "nvm"
+        "z"
+      ];
+    };
+
+    shellAliases = {
+      bazel = "bazelisk";
+      g = "hub";
+      gg = "lazygit";
+      top = "btop";
+      python = "python3";
+      cat = "bat";
+      ta = "tmux attach";
+      ts = "tmux new -s";
+      vim = "nvim";
+      reload-nix =
+        "darwin-rebuild switch --flake ~/.config/nix-darwin#amaterasu";
+    };
+
+    sessionVariables = {
+      PATH =
+        "$PATH:/etc/profiles/per-user/marmos91/bin:/opt/homebrew/bin:/run/current-system/sw/bin:$HOME/.local/bin";
+    };
+
+    initContent = ''
+      # Initialize Oh My Posh
+      if [ "$TERM_PROGRAM" != "Apple_Terminal" ]; then
+        eval "$(oh-my-posh init zsh --config $HOME/.config/ohmyposh/config.toml)"
+      fi
+
+      # Fish-like autosuggestions behavior
+      ZSH_AUTOSUGGEST_STRATEGY=(history completion)
+      ZSH_AUTOSUGGEST_BUFFER_MAX_SIZE=20
+
+      # Better history (fish-like)
+      setopt HIST_IGNORE_DUPS
+      setopt HIST_IGNORE_SPACE
+      setopt SHARE_HISTORY
+      setopt APPEND_HISTORY
+      setopt INC_APPEND_HISTORY
+
+      # Auto cd (fish-like)
+      setopt AUTO_CD
+
+      # Case insensitive completion
+      zstyle ':completion:*' matcher-list 'm:{[:lower:][:upper:]}={[:upper:][:lower:]}'
+      zstyle ':completion:*' menu select
+
+      # History substring search keybindings (fish-like up/down arrow)
+      bindkey '^[[A' history-substring-search-up
+      bindkey '^[[B' history-substring-search-down
+      bindkey -M vicmd 'k' history-substring-search-up
+      bindkey -M vicmd 'j' history-substring-search-down
+
+      # FZF integration (replaces fzf-fish)
+      if command -v fzf >/dev/null 2>&1; then
+        # Ctrl+R for command history
+        bindkey '^R' fzf-history-widget
+        # Ctrl+T for file search
+        bindkey '^T' fzf-file-widget
+        # Alt+C for directory search
+        bindkey '\ec' fzf-cd-widget
+      fi
+    '';
+  };
+
+  # Enable fzf integration
+  programs.fzf = {
+    enable = true;
+    enableZshIntegration = true;
+  };
+
+  # Enable zoxide (modern z replacement)
+  programs.zoxide = {
+    enable = true;
+    enableZshIntegration = true;
+  };
 
   programs.tmux = {
     enable = true;
-    shell = "${pkgs.fish}/bin/fish";
+    shell = "${pkgs.zsh}/bin/zsh";
     clock24 = true;
     terminal = "tmux-256color";
     prefix = "C-Space";
@@ -154,9 +196,9 @@
       open
     ];
     extraConfig = ''
-      # Explicitly set fish as the default shell/command for new panes/windows
-      set -g default-shell "${pkgs.fish}/bin/fish"
-      set -g default-command "${pkgs.fish}/bin/fish"
+      # Explicitly set zsh as the default shell/command for new panes/windows
+      set -g default-shell "${pkgs.zsh}/bin/zsh"
+      set -g default-command "${pkgs.zsh}/bin/zsh"
 
       # Enable focus events (better vim/neovim integration)
       set -g focus-events on
@@ -283,9 +325,8 @@
     PNPM_HOME = "$HOME/Library/pnpm";
   };
 
-  # Configure fish shell
   programs.fish = {
-    enable = true;
+    enable = false;
     plugins = with pkgs.fishPlugins; [
       {
         name = "z";
@@ -382,7 +423,6 @@
     diff-so-fancy
     envsubst
     ffmpeg
-    fzf
     gh
     git-lfs
     go-task
@@ -397,6 +437,7 @@
     neovim
     nixfmt-classic
     nodejs
+    oh-my-posh
     python310
     reattach-to-user-namespace
     ripgrep
@@ -404,6 +445,7 @@
     stow
     tilt
     tldr
+    tmuxinator
     tree
     wget
     wireguard-tools
