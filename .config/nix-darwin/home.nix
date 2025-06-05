@@ -90,9 +90,6 @@
       vim = "nvim";
       reload-nix =
         "darwin-rebuild switch --flake ~/.config/nix-darwin#amaterasu";
-
-      myip = "curl -s https://ipinfo.io/ip";
-
     };
 
     sessionVariables = {
@@ -205,6 +202,7 @@
         else
           echo "'$1' is not a valid file"
         fi
+      }
     '';
   };
 
@@ -456,26 +454,26 @@
 
       # Programming languages
       golang = {
-        symbol = " ";
+        symbol = " ";
         style = "bg:#86BBD8 fg:#000000";
         format = "[ $symbol ($version) ]($style)";
       };
 
       nodejs = {
-        symbol = "";
+        symbol = " ";
         style = "bg:#86BBD8 fg:#000000";
         format = "[ $symbol ($version) ]($style)";
       };
 
       rust = {
-        symbol = "";
+        symbol = " ";
         style = "bg:#86BBD8 fg:#000000";
         format = "[ $symbol ($version) ]($style)";
       };
 
       # Python (added for your setup)
       python = {
-        symbol = "";
+        symbol = " ";
         style = "bg:#86BBD8 fg:#000000";
         format = "[ $symbol ($version) ]($style)";
         pyenv_version_name = true;
@@ -505,7 +503,7 @@
 
       package = {
         format = "[ 📦 $version ]($style)";
-        style = "bg:#86BBD8 fg:#000000";
+        style = "fg:#ffffff";
         disabled = false;
       };
 
