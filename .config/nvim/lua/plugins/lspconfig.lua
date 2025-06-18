@@ -8,12 +8,12 @@ return {
             "WhoIsSethDaniel/mason-tool-installer.nvim",
 
             -- Useful status updates for LSP.
-            { "j-hui/fidget.nvim", opts = {} },
+            { "j-hui/fidget.nvim",       opts = {} },
 
             -- `neodev` configures Lua LSP for your Neovim config, runtime and plugins
             -- used for completion, annotations and signatures of Neovim apis
-            { "folke/neodev.nvim", opts = {} },
-            { "towolf/vim-helm", ft = "helm" },
+            { "folke/neodev.nvim",       opts = {} },
+            { "towolf/vim-helm",         ft = "helm" },
         },
         config = function()
             local lsp_group = vim.api.nvim_create_augroup("lsp-group", { clear = true })
@@ -212,7 +212,7 @@ return {
             -- for you, so that they are available from within Neovim.
             local ensure_installed = vim.tbl_keys(servers or {})
             vim.list_extend(ensure_installed, {
-                "stylua", -- Used to format Lua code
+                "stylua",       -- Used to format Lua code
                 "markdownlint", -- Used to lint markdown files
                 "markdown-toc",
                 "eslint_d",
@@ -220,7 +220,6 @@ return {
                 "shfmt",
                 "buildifier",
             })
-            require("mason-tool-installer").setup({ ensure_installed = ensure_installed })
 
             require("mason-lspconfig").setup({
                 handlers = {
@@ -234,6 +233,8 @@ return {
                         require("lspconfig")[server_name].setup(server)
                     end,
                 },
+                ensure_installed = ensure_installed,
+                automatic_enable = true,
             })
         end,
     },
