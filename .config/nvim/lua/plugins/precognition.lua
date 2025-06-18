@@ -7,7 +7,7 @@ return {
             function()
                 require("precognition").toggle()
             end,
-            desc = "Toggle precognition",
+            desc = "[T]oggle [P]recognition",
         },
     },
 }
