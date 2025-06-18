@@ -40,8 +40,13 @@ return {
             "theHamsta/nvim-dap-virtual-text",
         },
     },
-    opts = {
-        configurations = {
+    init = function()
+        vim.fn.sign_define("DapBreakpoint", { text = "🔴" })
+    end,
+    config = function()
+        local dap = require("dap")
+
+        dap.configurations = {
             go = {
                 {
                     type = "delve",
@@ -65,10 +70,7 @@ return {
                     program = "./${relativeFileDirname}",
                 },
             },
-        },
-    },
-    init = function()
-        vim.fn.sign_define("DapBreakpoint", { text = "🐞" })
+        }
     end,
     keys = {
         {
@@ -146,11 +148,20 @@ return {
             remap = false,
         },
         {
-            "<leader>db",
+            "<leader>dbl",
             function()
                 require("dap").list_breakpoints()
             end,
             desc = "List Breakpoints",
+            nowait = true,
+            remap = false,
+        },
+        {
+            "<leader>dbc",
+            function()
+                require("dap").clear_breakpoints()
+            end,
+            desc = "Clear Breakpoints",
             nowait = true,
             remap = false,
         },
