@@ -145,8 +145,9 @@ return {
                 sources = {
                     { name = "nvim_lsp" },
                     { name = "luasnip" },
-                    { name = "crates" },
                     { name = "path" },
+                    { name = "crates" },
+                    { name = "lazydev", group_index = 0 },
                     -- { name = "copilot" },
                 },
             })
