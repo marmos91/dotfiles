@@ -13,8 +13,9 @@ return {
                 { "<leader>g", group = "[G]it" },
                 { "<leader>m", group = "[M]arkdown" },
                 { "<leader>n", group = "[N]otifications" },
-                { "<leader>o", group = "[O]bsidian" },
                 { "<leader>s", group = "[S]earch" },
+                { "<leader>r", group = "[R]ust" },
+                { "<leader>rc", group = "[C]rates" },
                 { "<leader>t", group = "[T]oggle" },
                 { "<leader>g", desc = "[G]it", mode = "v" },
             })
