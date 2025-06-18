@@ -667,6 +667,7 @@
     kubectl
     kubectx
     lazygit
+    luarocks
     neofetch
     neovim
     nixfmt-classic
