@@ -122,7 +122,7 @@
     caskArgs.no_quarantine = true;
 
     taps = [ "nikitabobko/tap" "FelixKratz/formulae" "netbirdio/tap" ];
-    brews = [ "borders" "helm" "ibazel" "netbird" ];
+    brews = [ "borders" "helm" "ibazel" "netbird" "pnpm" ];
     casks = [
       "1password"
       "adobe-creative-cloud"
@@ -136,11 +136,13 @@
       "dbeaver-community"
       "docker"
       "dropbox"
+      "epic-games"
       "ghostty"
       "gpg-suite"
       "handbrake"
       "ibkr"
       "istat-menus"
+      "mos"
       "netbird-ui"
       "nordvpn"
       "obs"
