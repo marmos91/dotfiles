@@ -71,6 +71,7 @@
         "gh"
         "git"
         "gitignore"
+        "helm"
         "kubectl"
         "rust"
         "safe-paste"
@@ -668,6 +669,7 @@
     kubectx
     lazygit
     luarocks
+    markdownlint-cli
     neofetch
     neovim
     nixfmt-classic
