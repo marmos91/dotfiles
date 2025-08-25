@@ -142,6 +142,7 @@
       "handbrake"
       "ibkr"
       "istat-menus"
+      "microsoft-teams"
       "mos"
       "netbird-ui"
       "nordvpn"
