@@ -639,7 +639,6 @@
     interactiveShellInit = ''
       set -U fish_greeting ""
       # source ~/.config/op/plugins.sh
-      neofetch
     '';
   };
 
@@ -652,6 +651,7 @@
     btop
     buildifier
     certbot
+    claude-code
     cmake
     commitlint
     diff-so-fancy
@@ -670,11 +670,10 @@
     lazygit
     luarocks
     markdownlint-cli
-    neofetch
     neovim
     nixfmt-classic
     nodejs
-    python310
+    python313
     reattach-to-user-namespace
     ripgrep
     rustup
