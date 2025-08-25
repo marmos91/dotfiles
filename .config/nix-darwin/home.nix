@@ -679,6 +679,7 @@
     ripgrep
     rustup
     sd
+    sshpass
     stow
     tilt
     tldr
