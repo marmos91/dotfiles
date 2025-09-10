@@ -54,7 +54,7 @@
     dock.autohide = true;
     dock.orientation = "left";
     dock.persistent-apps = [
-      "/Applications/Arc.app"
+      "/Applications/Zen.app"
       "/System/Applications/Mail.app"
       "/System/Applications/Messages.app"
       "/Applications/WhatsApp.app"
@@ -128,7 +128,6 @@
       "adobe-creative-cloud"
       "aerospace"
       "aldente"
-      "arc"
       "bartender"
       "bettertouchtool"
       "cleanmymac"
@@ -159,6 +158,7 @@
       "vlc"
       "wezterm"
       "whatsapp"
+      "zen"
       "zoom"
     ];
     masApps = {
