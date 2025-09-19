@@ -35,7 +35,7 @@
     enableZshIntegration = true;
 
     settings = {
-      theme = "catppuccin-mocha";
+      theme = "Catppuccin Mocha";
       font-family = "MesloLGS Nerd Font Mono";
       font-size = 13;
       macos-option-as-alt = true;
