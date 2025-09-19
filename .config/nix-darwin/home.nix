@@ -315,9 +315,7 @@
 
     matchBlocks = {
       "*" = {
-        identityAgent =
-          "~/Library/Group Containers/2BUA8C4S2C.com.1password/t/agent.sock";
-
+        # Current defaults that home-manager was setting
         forwardAgent = false;
         serverAliveInterval = 0;
         serverAliveCountMax = 3;
@@ -330,6 +328,12 @@
         controlPersist = "no";
       };
     };
+
+    # Use extraConfig for the 1Password agent since it needs special formatting
+    extraConfig = ''
+      Host *
+        IdentityAgent "~/Library/Group Containers/2BUA8C4S2C.com.1password/t/agent.sock"
+    '';
   };
 
   programs.git = {
