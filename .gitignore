@@ -62,3 +62,4 @@ Temporary Items
 # End of https://www.toptal.com/developers/gitignore/api/visualstudiocode,macos,fish
 
 .aws/*
+.config/cubbit/*
