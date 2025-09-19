@@ -656,7 +656,7 @@
     gh
     git-lfs
     go-task
-    go_1_23
+    go
     hub
     jq
     kubectl
