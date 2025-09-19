@@ -32,6 +32,8 @@
     enable = true;
     package = null; # Use the Cask version for now
 
+    enableZshIntegration = true;
+
     settings = {
       theme = "catppuccin-mocha";
       font-family = "MesloLGS Nerd Font Mono";
@@ -67,7 +69,6 @@
         "colored-man-pages"
         "docker"
         "extract"
-        "fzf"
         "gh"
         "git"
         "gitignore"
@@ -107,9 +108,6 @@
       PAGER = "bat";
       MANPAGER = "sh -c 'col -bx | bat -l man -p'";
 
-      # FZF configuration
-      FZF_DEFAULT_OPTS = "--height 40% --layout=reverse --border --inline-info";
-
       # Bat theme
       BAT_THEME = "Catppuccin-mocha";
     };
@@ -122,21 +120,6 @@
       else
         compinit -C
       fi
-
-      # Fish-like autosuggestions behavior
-      ZSH_AUTOSUGGEST_STRATEGY=(history completion)
-      ZSH_AUTOSUGGEST_BUFFER_MAX_SIZE=20
-
-      # Better history configuration
-      HISTSIZE=50000
-      SAVEHIST=50000
-      setopt HIST_IGNORE_DUPS
-      setopt HIST_IGNORE_SPACE
-      setopt SHARE_HISTORY
-      setopt APPEND_HISTORY
-      setopt INC_APPEND_HISTORY
-      setopt HIST_FIND_NO_DUPS
-      setopt HIST_REDUCE_BLANKS
 
       # Auto cd (fish-like)
       setopt AUTO_CD
@@ -152,16 +135,6 @@
       zstyle ':completion:*' list-colors "''${(s.:.)LS_COLORS}"
       zstyle ':completion:*' group-name ""
       zstyle ':completion:*:descriptions' format '[%d]'
-
-      # Better history search (using built-in functions for performance)
-      autoload -U up-line-or-beginning-search down-line-or-beginning-search
-      zle -N up-line-or-beginning-search
-      zle -N down-line-or-beginning-search
-      bindkey '^[[A' up-line-or-beginning-search
-      bindkey '^[[B' down-line-or-beginning-search
-      bindkey '^R' history-incremental-search-backward
-      bindkey -M vicmd 'k' up-line-or-beginning-search
-      bindkey -M vicmd 'j' down-line-or-beginning-search
 
       # Terminal title
       case $TERM in
@@ -210,8 +183,6 @@
   programs.fzf = {
     enable = true;
     enableZshIntegration = true;
-    defaultCommand =
-      "${pkgs.ripgrep}/bin/rg --files --hidden --follow --glob '!.git/*'";
     defaultOptions = [ "--height 40%" "--border" ];
   };
 
