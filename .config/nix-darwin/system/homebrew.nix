@@ -1,4 +1,5 @@
-{ ... }: {
+{ ... }:
+{
   homebrew = {
     enable = true;
     onActivation = {
@@ -8,9 +9,11 @@
     };
     caskArgs.no_quarantine = true;
 
-    taps = [ "nikitabobko/tap" "FelixKratz/formulae" "netbirdio/tap" ];
+    taps = [
+      "nikitabobko/tap"
+    ];
 
-    brews = [ "helm" "ibazel" "netbird" "pnpm" ];
+    brews = [ ];
 
     casks = [
       "1password"

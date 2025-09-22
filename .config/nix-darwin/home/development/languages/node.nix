@@ -1,9 +1,11 @@
-{ pkgs, ... }: {
-  home.packages = with pkgs;
-    [
-      nodejs
-      # pnpm is installed via Homebrew
-    ];
+{ pkgs, ... }:
+{
+  home.packages = with pkgs; [
+    nodejs
+    pnpm
+  ];
 
-  home.sessionVariables = { PNPM_HOME = "$HOME/Library/pnpm"; };
+  home.sessionVariables = {
+    PNPM_HOME = "$HOME/Library/pnpm";
+  };
 }

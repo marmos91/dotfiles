@@ -1,6 +1,8 @@
-{ pkgs, ... }: {
+{ pkgs, ... }:
+{
   home.packages = with pkgs; [
     # Build systems
+    bazel-watcher
     bazelisk
     cmake
     go-task
