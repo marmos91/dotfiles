@@ -64,9 +64,29 @@ if ! command -v nix &> /dev/null; then
 else
     log "Nix is already installed with version $(nix --version)"
 fi
-
 # Stow dotfiles
 log "Stowing dotfiles..."
 stow .
-
-log "Setup completed successfully!"
+# Initialize nix-darwin flake
+log "Initializing nix-darwin configuration..."
+if command -v nix &> /dev/null; then
+    # Build and activate the nix-darwin configuration
+    log "Building nix-darwin configuration for 'amaterasu'..."
+    log "This requires administrator privileges..."
+    
+    # Store the current user's home
+    USER_HOME="$HOME"
+    
+    # First time setup - use nix run
+    if ! command -v darwin-rebuild &> /dev/null; then
+        sudo -H nix --extra-experimental-features 'nix-command flakes' run nix-darwin -- switch --flake ${USER_HOME}/.config/nix-darwin#amaterasu
+    else
+        # Subsequent runs can use darwin-rebuild directly
+        darwin-rebuild switch --flake ${USER_HOME}/.config/nix-darwin#amaterasu
+    fi
+    
+    log "nix-darwin configuration activated successfully"
+    log "Note: You may need to restart your shell for all changes to take effect"
+else
+    log "Warning: Nix is not available. Skipping nix-darwin initialization."
+fi
