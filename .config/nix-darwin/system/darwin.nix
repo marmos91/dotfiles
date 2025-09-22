@@ -1,4 +1,5 @@
-{ pkgs, lib, ... }: {
+{ pkgs, lib, ... }:
+{
   users.users.marmos91 = {
     home = "/Users/marmos91";
     shell = pkgs.zsh;
@@ -15,7 +16,10 @@
       auto-optimise-store = true;
 
       # Security
-      trusted-users = [ "@admin" "marmos91" ];
+      trusted-users = [
+        "@admin"
+        "marmos91"
+      ];
       allowed-users = [ "@wheel" ];
 
       # Cache settings
@@ -54,7 +58,6 @@
       git
       gnused
       gawk
-      # Nix tools
       nixfmt-rfc-style
       nil
       nix-tree
