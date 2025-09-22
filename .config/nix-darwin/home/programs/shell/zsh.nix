@@ -1,4 +1,5 @@
-{ config, pkgs, ... }: {
+{ config, pkgs, ... }:
+{
   programs.zsh = {
     enable = true;
     enableCompletion = true;
@@ -48,7 +49,6 @@
       pip = "pip3";
 
       # Nix shortcuts
-      rebuild = "darwin-rebuild switch --flake ~/.config/nix-darwin#amaterasu";
       nix-gc = "nix-collect-garbage -d && nix-store --optimize";
       nix-search = "nix search nixpkgs";
 
@@ -128,6 +128,16 @@
           source <(command kubectl completion zsh)
         fi
         command kubectl "$@"
+      }
+
+      rebuild() {
+        if [[ $EUID -eq 0 ]]; then
+          # Already running as root
+          darwin-rebuild switch --flake ~/.config/nix-darwin#amaterasu "$@"
+        else
+          # Not root, use sudo
+          sudo darwin-rebuild switch --flake ~/.config/nix-darwin#amaterasu "$@"
+        fi
       }
     '';
   };
