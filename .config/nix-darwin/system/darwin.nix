@@ -39,26 +39,6 @@
       min-free = lib.mkDefault (1000 * 1000 * 1000); # 1GB
       max-free = lib.mkDefault (3000 * 1000 * 1000); # 3GB
     };
-
-    # Automatic maintenance
-    gc = {
-      automatic = true;
-      interval = {
-        Weekday = 0;
-        Hour = 0;
-        Minute = 0;
-      };
-      options = "--delete-older-than 30d";
-    };
-
-    optimise = {
-      automatic = true;
-      interval = {
-        Weekday = 0;
-        Hour = 1;
-        Minute = 0;
-      };
-    };
   };
 
   programs.zsh.enable = true;

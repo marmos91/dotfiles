@@ -57,7 +57,7 @@
       config = "cd ~/.config";
     };
 
-    initExtra = ''
+    initContent = ''
       # Performance: Only initialize compinit if needed
       autoload -Uz compinit
       if [[ $HOME/.zcompdump(#qNmh+24) ]]; then
