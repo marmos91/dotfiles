@@ -61,5 +61,17 @@ Temporary Items
 
 # End of https://www.toptal.com/developers/gitignore/api/visualstudiocode,macos,fish
 
-.aws/*
-.config/cubbit/*
+.config/*
+!.config/aerospace
+!.config/bat
+!.config/btop
+!.config/ds3ctl
+!.config/gh
+!.config/nix
+!.config/nix-darwin
+!.config/nvim
+
+.gnupg/*
+!.gnupg/dirmngr.conf
+!.gnupg/gpg-agent.conf
+!.gnupg/gpg.conf
