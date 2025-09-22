@@ -1,9 +1,11 @@
-{ pkgs, ... }: {
+{ pkgs, ... }:
+{
   home.packages = with pkgs; [
     # AWS
     awscli2
 
     # Kubernetes
+    kubernetes-helm
     kubectl
     kubectx
 

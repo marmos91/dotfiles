@@ -1,4 +1,5 @@
-{ pkgs, ... }: {
+{ pkgs, ... }:
+{
   home.packages = with pkgs; [
     # File management
     fd
@@ -24,5 +25,7 @@
     # Security
     age
     sshpass
+
+    netbird
   ];
 }
