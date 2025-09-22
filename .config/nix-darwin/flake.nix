@@ -2,18 +2,19 @@
   description = "Marmos91 Darwin Configuration";
 
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
+    determinate.url = "https://flakehub.com/f/DeterminateSystems/determinate/3";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";  # Use GitHub URL for consistency
     nix-darwin.url = "github:LnL7/nix-darwin";
     nix-darwin.inputs.nixpkgs.follows = "nixpkgs";
     home-manager = {
-      url = "github:nix-community/home-manager";
+      url = "github:nix-community/home-manager";  # This will track master/main
       inputs.nixpkgs.follows = "nixpkgs";
     };
     claude-code.url = "github:sadjow/claude-code-nix";
   };
 
   outputs =
-    inputs@{ self, nix-darwin, nixpkgs, claude-code, home-manager, ... }: {
+    inputs@{ self, nix-darwin, nixpkgs, claude-code, home-manager, determinate, ... }: {
       nixpkgs.config.allowUnfree = true;
 
       darwinConfigurations = {
@@ -23,8 +24,15 @@
             config.allowUnfree = true;
           };
           modules = [
+            inputs.determinate.darwinModules.default
             ./darwin.nix
             home-manager.darwinModules.home-manager
+            ({...}: {
+              nix.enable = false;
+              determinate-nix.customSettings = {
+                flake-registry = "/etc/nix/flake-registry.json";
+              };
+            })
             {
               nixpkgs.overlays = [ claude-code.overlays.default ];
 
