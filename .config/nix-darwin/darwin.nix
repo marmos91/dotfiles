@@ -56,7 +56,6 @@
     dock.persistent-apps = [
       "/Applications/Zen.app"
       "/System/Applications/Mail.app"
-      "/System/Applications/Messages.app"
       "/Applications/WhatsApp.app"
       "/Applications/Telegram.app"
       "/Applications/Slack.app"
@@ -122,14 +121,13 @@
     caskArgs.no_quarantine = true;
 
     taps = [ "nikitabobko/tap" "FelixKratz/formulae" "netbirdio/tap" ];
-    brews = [ "borders" "helm" "ibazel" "netbird" "pnpm" ];
+    brews = [ "helm" "ibazel" "netbird" "pnpm" ];
     casks = [
       "1password"
       "adobe-creative-cloud"
       "aerospace"
       "aldente"
-      "bartender"
-      "bettertouchtool"
+      "betterdisplay"
       "cleanmymac"
       "cursor"
       "dbeaver-community"
@@ -139,11 +137,9 @@
       "ghostty"
       "gpg-suite"
       "handbrake-app"
-      "ibkr"
+      "jordanbaird-ice"
       "istat-menus"
       "microsoft-teams"
-      "mos"
-      "netbird-ui"
       "nordvpn"
       "obs"
       "obsidian"
@@ -156,7 +152,6 @@
       "transmission"
       "tripmode"
       "vlc"
-      "wezterm"
       "whatsapp"
       "zen"
       "zoom"
