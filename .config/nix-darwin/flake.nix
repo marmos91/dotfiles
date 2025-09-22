@@ -15,8 +15,17 @@
     claude-code.url = "github:sadjow/claude-code-nix";
   };
 
-  outputs = inputs@{ self, nix-darwin, nixpkgs, claude-code, home-manager
-    , determinate, ... }: {
+  outputs =
+    inputs@{
+      self,
+      nix-darwin,
+      nixpkgs,
+      claude-code,
+      home-manager,
+      determinate,
+      ...
+    }:
+    {
       nixpkgs.config.allowUnfree = true;
 
       darwinConfigurations = {
@@ -30,12 +39,15 @@
             # Determinate Nix (replaces system nix)
             inputs.determinate.darwinModules.default
 
-            ({ ... }: {
-              nix.enable = false; # Disable system nix in favor of determinate
-              determinate-nix.customSettings = {
-                flake-registry = "/etc/nix/flake-registry.json";
-              };
-            })
+            (
+              { ... }:
+              {
+                nix.enable = false; # Disable system nix in favor of determinate
+                determinate-nix.customSettings = {
+                  flake-registry = "/etc/nix/flake-registry.json";
+                };
+              }
+            )
 
             # System modules
             ./system
