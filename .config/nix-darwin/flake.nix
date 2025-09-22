@@ -16,35 +16,38 @@
   };
 
   outputs = inputs@{ self, nix-darwin, nixpkgs, claude-code, home-manager
-    , determinate, ... }:
-    let lib = import ./lib { inherit (nixpkgs) lib; };
-    in {
+    , determinate, ... }: {
       nixpkgs.config.allowUnfree = true;
 
       darwinConfigurations = {
         amaterasu = nix-darwin.lib.darwinSystem {
-          specialArgs = { inherit inputs lib; };
           pkgs = import nixpkgs {
             system = "aarch64-darwin";
             config.allowUnfree = true;
             overlays = [ claude-code.overlays.default ];
           };
           modules = [
-            determinate.darwinModules.default
-            ./system
-            home-manager.darwinModules.home-manager
-            {
-              nix.enable = false;
+            # Determinate Nix (replaces system nix)
+            inputs.determinate.darwinModules.default
+
+            ({ ... }: {
+              nix.enable = false; # Disable system nix in favor of determinate
               determinate-nix.customSettings = {
                 flake-registry = "/etc/nix/flake-registry.json";
               };
+            })
 
+            # System modules
+            ./system
+
+            # Home Manager integration
+            home-manager.darwinModules.home-manager
+            {
               home-manager = {
                 useGlobalPkgs = true;
                 useUserPackages = true;
                 backupFileExtension = "backup";
                 users.marmos91 = ./home;
-                extraSpecialArgs = { inherit inputs lib; };
               };
             }
           ];
