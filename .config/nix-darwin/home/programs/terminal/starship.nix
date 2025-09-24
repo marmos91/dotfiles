@@ -1,10 +1,11 @@
-{ ... }: {
+{ ... }:
+{
   programs.starship = {
     enable = true;
     enableZshIntegration = true;
     settings = {
       format = ''
-        [](#9A348E)$os$username[](bg:#DA627D fg:#9A348E)$directory[](fg:#DA627D bg:#FCA17D)$git_branch$git_status[](fg:#FCA17D bg:#86BBD8)$golang$nodejs$rust[](fg:#06969A bg:#33658A)[ ](fg:#33658A)$fill$kubernetes$package$mem_usage$cmd_duration$hostname$time$battery$line_break$character
+        [](#9A348E)$os$username[](bg:#DA627D fg:#9A348E)$directory[](fg:#DA627D bg:#FCA17D)$git_branch$git_status[](fg:#FCA17D bg:#86BBD8)$golang$nodejs$rust[](fg:#06969A bg:#33658A)[](fg:#33658A)$fill$kubernetes$package$mem_usage$cmd_duration$hostname$time$battery$line_break$character
       '';
 
       add_newline = false;
@@ -27,8 +28,8 @@
         substitutions = {
           Documents = "󰈙 ";
           Downloads = "󰉍 ";
-          Music = " ";
-          Pictures = " ";
+          Music = " ";
+          Pictures = " ";
           Projects = "󰲋 ";
         };
       };
@@ -57,29 +58,32 @@
 
       # Programming languages
       golang = {
-        symbol = " ";
+        symbol = " ";
         style = "bg:#86BBD8 fg:#000000";
         format = "[ $symbol ($version) ]($style)";
       };
 
       nodejs = {
-        symbol = " ";
+        symbol = " ";
         style = "bg:#86BBD8 fg:#000000";
         format = "[ $symbol ($version) ]($style)";
       };
 
       rust = {
-        symbol = " ";
+        symbol = " ";
         style = "bg:#86BBD8 fg:#000000";
         format = "[ $symbol ($version) ]($style)";
       };
 
       python = {
-        symbol = " ";
+        symbol = " ";
         style = "bg:#86BBD8 fg:#000000";
         format = "[ $symbol ($version) ]($style)";
         pyenv_version_name = true;
-        python_binary = [ "python3" "python" ];
+        python_binary = [
+          "python3"
+          "python"
+        ];
       };
 
       kubernetes = {
