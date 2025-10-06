@@ -1,1 +1,8 @@
-{ ... }: { imports = [ ./build-tools.nix ./version-control.nix ./cloud.nix ]; }
+{ ... }:
+{
+  imports = [
+    ./build-tools.nix
+    ./version-control.nix
+    ./cloud.nix
+  ];
+}
