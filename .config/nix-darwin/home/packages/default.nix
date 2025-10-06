@@ -1,1 +1,8 @@
-{ ... }: { imports = [ ./system.nix ./media.nix ./productivity.nix ]; }
+{ ... }:
+{
+  imports = [
+    ./system.nix
+    ./media.nix
+    ./productivity.nix
+  ];
+}

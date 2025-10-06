@@ -1,1 +1,8 @@
-{ ... }: { imports = [ ./ghostty.nix ./tmux.nix ./starship.nix ]; }
+{ ... }:
+{
+  imports = [
+    ./ghostty.nix
+    ./tmux.nix
+    ./starship.nix
+  ];
+}

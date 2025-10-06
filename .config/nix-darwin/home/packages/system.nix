@@ -25,7 +25,5 @@
     # Security
     age
     sshpass
-
-    netbird
   ];
 }
