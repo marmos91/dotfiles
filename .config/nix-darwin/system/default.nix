@@ -1,4 +1,5 @@
-{ lib, ... }: {
+{ lib, ... }:
+{
   imports = [
     ./darwin.nix
     ./homebrew.nix

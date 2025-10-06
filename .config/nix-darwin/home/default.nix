@@ -1,5 +1,16 @@
-{ config, inputs, lib, ... }: {
-  imports = [ ./programs ./development ./packages ./services ];
+{
+  config,
+  inputs,
+  lib,
+  ...
+}:
+{
+  imports = [
+    ./programs
+    ./development
+    ./packages
+    ./services
+  ];
 
   home = {
     username = "marmos91";

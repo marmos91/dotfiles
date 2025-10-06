@@ -32,4 +32,8 @@ in
       };
     };
   };
+
+  home.sessionVariables = {
+    K9S_CONFIG_DIR = "$HOME/Library/Application\ Support/k9s";
+  };
 }

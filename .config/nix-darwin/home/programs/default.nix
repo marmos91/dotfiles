@@ -1,1 +1,9 @@
-{ ... }: { imports = [ ./terminal ./shell ./git ./utilities ]; }
+{ ... }:
+{
+  imports = [
+    ./terminal
+    ./shell
+    ./git
+    ./utilities
+  ];
+}
