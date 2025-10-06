@@ -1,1 +1,7 @@
-{ ... }: { imports = [ ./languages ./tools ./environments ]; }
+{ ... }:
+{
+  imports = [
+    ./languages
+    ./tools
+  ];
+}
