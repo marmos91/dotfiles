@@ -63,7 +63,6 @@ Temporary Items
 
 .config/*
 !.config/aerospace
-!.config/btop
 !.config/ds3ctl
 !.config/gh
 !.config/nix
