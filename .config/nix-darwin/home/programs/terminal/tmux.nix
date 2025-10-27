@@ -58,7 +58,11 @@
       set-option -sg escape-time 10
       set-option -sa terminal-features ',xterm-256color:RGB'
       set -g status-position bottom
-      set -g set-clipboard external
+
+      # Enable OSC 52 clipboard support for SSH sessions
+      set -g set-clipboard on
+      set -ag terminal-overrides "vte*:XT:Ms=\\E]52;c;%p2%s\\7,xterm*:XT:Ms=\\E]52;c;%p2%s\\7"
+      set -s set-clipboard on
 
       # Key bindings
       unbind r

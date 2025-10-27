@@ -21,7 +21,21 @@ vim.opt.showmode = false
 -- Sync clipboard between OS and Neovim.
 -- only set clipboard if not in ssh, to make sure the OSC 52
 -- integration works automatically. Requires Neovim >= 0.10.0
-vim.opt.clipboard = vim.env.SSH_TTY and "" or "unnamedplus" -- Sync with system clipboard
+if vim.env.SSH_TTY then
+    vim.g.clipboard = {
+        name = "OSC 52",
+        copy = {
+            ["+"] = require("vim.ui.clipboard.osc52").copy("+"),
+            ["*"] = require("vim.ui.clipboard.osc52").copy("*"),
+        },
+        paste = {
+            ["+"] = require("vim.ui.clipboard.osc52").paste("+"),
+            ["*"] = require("vim.ui.clipboard.osc52").paste("*"),
+        },
+    }
+else
+    vim.opt.clipboard = "unnamedplus"
+end
 
 vim.opt.completeopt = "menu,menuone,noselect"
 
@@ -111,10 +125,6 @@ vim.opt.wrapscan = true
 
 -- Completion improvements
 vim.opt.pumheight = 15 -- Limit popup menu height
-
--- Window title
-vim.opt.title = true
-vim.opt.titlestring = "%<%F%=%l/%L - nvim"
 
 -- Confirm instead of failing commands
 vim.opt.confirm = true
