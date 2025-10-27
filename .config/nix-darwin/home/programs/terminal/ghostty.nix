@@ -17,5 +17,7 @@
     confirm-close-surface = false
     mouse-hide-while-typing = true
     macos-titlebar-style = tabs
+    clipboard-read = allow
+    clipboard-write = allow
   '';
 }
