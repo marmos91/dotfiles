@@ -26,7 +26,7 @@
     sessionVariables = {
       EDITOR = "nvim";
       VISUAL = "nvim";
-      PAGER = "bat";
+      PAGER = "less";
       MANPAGER = "sh -c 'col -bx | bat -l man -p'";
 
       # XDG Base Directories
@@ -48,7 +48,6 @@
       PNPM_HOME = "$HOME/Library/pnpm";
 
       # Appearance
-      BAT_THEME = "Catppuccin-mocha";
       LC_ALL = "en_US.UTF-8";
       LANG = "en_US.UTF-8";
     };
