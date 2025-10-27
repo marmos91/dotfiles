@@ -5,8 +5,8 @@ return {
         event = "InsertEnter",
         opts = {
             suggestion = {
-                enabled = true,
-                auto_trigger = true,
+                enabled = false, -- Disabled because using copilot-cmp integration
+                auto_trigger = false,
             },
             panel = { enabled = false },
             filetypes = {
