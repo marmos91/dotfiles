@@ -206,13 +206,16 @@ return {
             -- for you, so that they are available from within Neovim.
             local ensure_installed = vim.tbl_keys(servers or {})
             vim.list_extend(ensure_installed, {
-                "stylua", -- Used to format Lua code
-                "markdownlint", -- Used to lint markdown files
-                "markdown-toc",
-                "eslint_d",
-                "black",
-                "shfmt",
-                "buildifier",
+                "stylua", -- Lua formatter
+                "markdownlint", -- Markdown linter
+                "markdown-toc", -- Markdown TOC generator
+                "eslint_d", -- Fast ESLint
+                "black", -- Python formatter
+                "shfmt", -- Shell formatter
+                "buildifier", -- Bazel formatter
+                "prettierd", -- Fast Prettier (for web dev)
+                "ruff", -- Fast Python linter
+                "taplo", -- TOML formatter
             })
 
             require("mason-lspconfig").setup({
