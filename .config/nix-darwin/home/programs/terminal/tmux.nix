@@ -1,7 +1,8 @@
-{ pkgs, ... }: {
+{ pkgs, ... }:
+{
   programs.tmux = {
     enable = true;
-    shell = "${pkgs.zsh}/bin/zsh";
+    shell = "/run/current-system/sw/bin/zsh";
     clock24 = true;
     terminal = "tmux-256color";
     prefix = "C-Space";
@@ -49,8 +50,8 @@
 
     extraConfig = ''
       # Shell configuration
-      set -g default-shell "${pkgs.zsh}/bin/zsh"
-      set -g default-command "${pkgs.zsh}/bin/zsh"
+      set -g default-shell "/run/current-system/sw/bin/zsh"
+      set -g default-command "/run/current-system/sw/bin/zsh"
 
       # Better terminal integration
       set -g focus-events on
