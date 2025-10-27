@@ -1,8 +1,9 @@
 { ... }:
 {
   imports = [
-    ./system.nix
+    ./editor.nix
     ./media.nix
     ./productivity.nix
+    ./system.nix
   ];
 }
