@@ -40,9 +40,13 @@
       # System
       top = "btop";
       cat = "bat";
-      vim = "nvim";
       python = "python3";
       pip = "pip3";
+
+      # Neovim
+      vim = "nvim";
+      vi = "nvim";
+      v = "nvim";
 
       # Nix shortcuts
       nix-gc = "nix-collect-garbage -d && nix-store --optimize";

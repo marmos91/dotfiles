@@ -2,9 +2,6 @@
 {
   home.packages = with pkgs; [
     # File management
-    fd
-    ripgrep
-    tree
     stow
 
     # Text processing

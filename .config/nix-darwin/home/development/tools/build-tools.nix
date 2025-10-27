@@ -13,7 +13,6 @@
     markdownlint-cli
 
     # Documentation
-    neovim
     luarocks
   ];
 }
