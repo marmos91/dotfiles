@@ -42,6 +42,7 @@
       cat = "bat";
       python = "python3";
       pip = "pip3";
+      cd = "z";
 
       # Neovim
       vim = "nvim";
