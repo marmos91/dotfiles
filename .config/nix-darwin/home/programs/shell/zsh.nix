@@ -18,20 +18,11 @@
     oh-my-zsh = {
       enable = true;
       plugins = [
-        "bazel"
         "colored-man-pages"
-        "docker"
         "extract"
-        "gh"
         "git"
-        "gitignore"
-        "helm"
-        "kubectl"
-        "rust"
         "safe-paste"
-        "tmux"
         "vi-mode"
-        "zoxide"
       ];
     };
 
@@ -40,6 +31,11 @@
       bazel = "bazelisk";
       g = "hub";
       gg = "lazygit";
+
+      # tmux
+      ta = "tmux attach";
+      ts = "tmux new -s";
+      tl = "tmux list-sessions";
 
       # System
       top = "btop";
@@ -58,9 +54,9 @@
     };
 
     initContent = ''
-      # Performance: Only initialize compinit if needed
+      # Performance: Only rebuild compinit once per day
       autoload -Uz compinit
-      if [[ $HOME/.zcompdump(#qNmh+24) ]]; then
+      if [[ -n $HOME/.zcompdump(#qNmh+24) ]]; then
         compinit
       else
         compinit -C
@@ -122,12 +118,32 @@
           ;;
       esac
 
-      # Lazy load kubectl completion for performance
+      bazel() {
+        unfunction bazel
+        # Load completion only when first used
+        source <(command bazel completion zsh 2>/dev/null || true)
+        bazel "$@"
+      }
+
+      # Lazy load kubectl (biggest offender)
       kubectl() {
-        if ! type __start_kubectl >/dev/null 2>&1; then
-          source <(command kubectl completion zsh)
-        fi
-        command kubectl "$@"
+        unfunction kubectl
+        source <(command kubectl completion zsh)
+        kubectl "$@"
+      }
+
+      # Lazy load helm
+      helm() {
+        unfunction helm
+        source <(command helm completion zsh)
+        helm "$@"
+      }
+
+      # Lazy load docker completion
+      docker() {
+        unfunction docker
+        # Docker completion is provided by the plugin, load it only when needed
+        docker "$@"
       }
 
       rebuild() {

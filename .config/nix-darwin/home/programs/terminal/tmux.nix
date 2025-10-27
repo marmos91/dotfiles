@@ -30,20 +30,12 @@
           set -agF status-right "#{E:@catppuccin_status_battery}"
         '';
       }
-      {
-        plugin = weather;
-        extraConfig = ''
-          set-option -g @tmux-weather-interval 1
-        '';
-      }
-      battery
-      cpu
       sensible
       yank
       resurrect
       {
         plugin = continuum;
-        extraConfig = "set -g @continuum-restore 'on'";
+        extraConfig = "set -g @continuum-restore 'off'";
       }
       open
     ];
