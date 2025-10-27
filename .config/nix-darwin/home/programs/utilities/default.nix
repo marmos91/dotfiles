@@ -2,11 +2,14 @@
 {
   imports = [
     ./bat.nix
-    ./eza.nix
-    ./fzf.nix
-    ./zoxide.nix
-    ./rclone.nix
-    ./k9s.nix
     ./btop.nix
+    ./delta.nix
+    ./eza.nix
+    ./fd.nix
+    ./fzf.nix
+    ./k9s.nix
+    ./rclone.nix
+    ./ripgrep.nix
+    ./zoxide.nix
   ];
 }

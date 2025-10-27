@@ -44,7 +44,7 @@
         behind = "⇣\${behind_count}";
         diverged = "⇕⇡\${ahead_count}⇣\${behind_count}";
         modified = "!";
-        staged = "[++\($count\)](green)";
+        staged = "[+\($count\)](green)";
         style = "bold yellow";
       };
 
