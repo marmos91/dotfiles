@@ -103,4 +103,29 @@ vim.opt.grepprg = "rg --vimgrep"
 vim.cmd([[let &t_Cs = "\e[4:3m"]])
 vim.cmd([[let &t_Ce = "\e[4:0m"]])
 
+-- Undo persistence - better defaults
+vim.opt.undolevels = 10000
+
+-- Search improvements
+vim.opt.wrapscan = true
+
+-- Completion improvements
+vim.opt.pumheight = 15 -- Limit popup menu height
+
+-- Window title
+vim.opt.title = true
+vim.opt.titlestring = "%<%F%=%l/%L - nvim"
+
+-- Confirm instead of failing commands
+vim.opt.confirm = true
+
+-- Better listchars
+vim.opt.listchars = {
+    tab = "» ",
+    trail = "·",
+    nbsp = "␣",
+    extends = "›",
+    precedes = "‹",
+}
+
 -- vim: ts=2 sts=2 sw=2 et
