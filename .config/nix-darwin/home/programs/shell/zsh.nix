@@ -52,6 +52,7 @@
       # Nix shortcuts
       nix-gc = "nix-collect-garbage -d && nix-store --optimize";
       nix-search = "nix search nixpkgs";
+      nix-shell = "nix-shell --command zsh";
 
       # Directory shortcuts
       dotfiles = "cd ~/.dotfiles";
