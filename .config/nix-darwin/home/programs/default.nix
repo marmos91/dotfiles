@@ -5,5 +5,6 @@
     ./shell
     ./git
     ./utilities
+    ./services
   ];
 }
