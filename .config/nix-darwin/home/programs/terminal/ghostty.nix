@@ -11,12 +11,20 @@
     theme = Catppuccin Mocha
     font-family = MesloLGS Nerd Font Mono
     font-size = 13
-    macos-option-as-alt = true
-    background-opacity = 0.96
-    background-blur-radius = 40
-    confirm-close-surface = false
+    shell-integration-features = no-cursor,sudo,no-title
+
     mouse-hide-while-typing = true
-    macos-titlebar-style = tabs
+    mouse-scroll-multiplier = 2
+
+    window-padding-balance = true
+    window-padding-x = 2
+    window-colorspace = "display-p3"
+    macos-titlebar-style = transparent
+    background-blur-radius = 40
+    background-opacity = 0.96
+
+    macos-option-as-alt = true
+    confirm-close-surface = false
     clipboard-read = allow
     clipboard-write = allow
   '';
