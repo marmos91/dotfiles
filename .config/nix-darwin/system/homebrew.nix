@@ -13,7 +13,7 @@
       "nikitabobko/tap"
     ];
 
-    brews = [ ];
+    brews = [ "mas" ];
 
     casks = [
       "1password"
