@@ -1,27 +1,43 @@
 { pkgs, ... }:
 {
   home.packages = with pkgs; [
-    # File management
-    stow
-
-    # Text processing
+    age
+    ansible
+    awscli2
+    bazel-watcher
+    bazelisk
+    btop
+    buildifier
+    certbot
+    claude-code
+    cmake
+    commitlint
+    ffmpeg
+    gh
+    git-lfs
+    go-task
+    hub
+    jq
+    kubectl
+    kubectx
+    kubernetes-helm
+    lazygit
+    luarocks
+    markdownlint-cli
+    neovim
+    reattach-to-user-namespace
     sd
-
-    # Archives
-    zstd
-
-    # Networking
+    sshpass
+    stow
+    tilt
+    tldr
+    tmuxinator
+    watch
     wget
     wireguard-tools
-
-    # System monitoring
-    btop
-    watch
-    tldr
-
-    # Security
-    age
-    sshpass
+    yq
+    yt-dlp
+    zstd
 
     # Custom scripts
     (pkgs.writeShellScriptBin "sync-nvim-remote" ''
@@ -51,5 +67,6 @@
         exit 1
       fi
     '')
+
   ];
 }

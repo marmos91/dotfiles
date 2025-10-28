@@ -1,4 +1,5 @@
-{ ... }: {
+{ ... }:
+{
   system = {
     keyboard = {
       enableKeyMapping = true;
@@ -26,7 +27,10 @@
           "/Applications/Spotify.app"
           "/System/Applications/System Settings.app"
         ];
-        persistent-others = [ "/Users/marmos91/Downloads" "/Applications" ];
+        persistent-others = [
+          "/Users/marmos91/Downloads"
+          "/Applications"
+        ];
         mru-spaces = false;
         showhidden = true;
         show-recents = false;

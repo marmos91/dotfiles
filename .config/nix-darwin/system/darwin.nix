@@ -45,7 +45,6 @@
     };
   };
 
-  programs.zsh.enable = true;
   system.stateVersion = 5;
   system.primaryUser = "marmos91";
   nixpkgs.hostPlatform = "aarch64-darwin";

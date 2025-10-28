@@ -1,7 +1,10 @@
 { ... }:
 {
   imports = [
-    ./languages
-    ./tools
+    ./rust.nix
+    ./go.nix
+    ./python.nix
+    ./node.nix
+    ./nix.nix
   ];
 }
