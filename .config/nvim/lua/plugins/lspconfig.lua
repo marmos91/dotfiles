@@ -210,6 +210,8 @@ return {
                 "markdown-toc", -- Markdown TOC generator
                 "eslint_d", -- Fast ESLint
                 "black", -- Python formatter
+                "gofumt",
+                "goimports",
                 "shfmt", -- Shell formatter
                 "buildifier", -- Bazel formatter
                 "prettierd", -- Fast Prettier (for web dev)
