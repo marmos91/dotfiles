@@ -54,18 +54,13 @@ return {
                 python = { "black" },
                 bzl = { "buildifier" },
                 bash = { "shfmt" },
-                ["markdown"] = { "markdownlint", "markdown-toc" },
-                ["markdown.mdx"] = { "markdownlint", "markdown-toc" },
+                sh = { "shfmt" },
+                ["markdown"] = { "markdownlint" },
+                ["markdown.mdx"] = { "markdownlint" },
                 nix = { "nixfmt" },
                 typescript = {},
                 typescriptreact = {},
                 rust = { "rustfmt" },
-                -- Conform can also run multiple formatters sequentially
-                -- python = { "isort", "black" },
-                --
-                -- You can use a sub-list to tell conform to run *until* a formatter
-                -- is found.
-                -- javascript = { { "prettierd", "prettier" } },
             },
         },
         config = function(_, opts)
