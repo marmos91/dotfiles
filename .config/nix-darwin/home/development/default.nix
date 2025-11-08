@@ -1,6 +1,7 @@
 { ... }:
 {
   imports = [
+    ./bash.nix
     ./rust.nix
     ./go.nix
     ./python.nix
