@@ -2,6 +2,7 @@ return {
     {
         "nvim-pack/nvim-spectre",
         dependencies = { "nvim-lua/plenary.nvim" },
+        enable = false,
         keys = {
             {
                 "<leader>ss",
