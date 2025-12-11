@@ -29,6 +29,7 @@
       "epic-games"
       "ghostty"
       "gpg-suite"
+      "google-chrome"
       "handbrake-app"
       "jordanbaird-ice@beta"
       "istat-menus"
