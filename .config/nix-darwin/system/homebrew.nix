@@ -17,7 +17,6 @@
 
     casks = [
       "1password"
-      "adobe-creative-cloud"
       "aerospace"
       "aldente"
       "betterdisplay"
