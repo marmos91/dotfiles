@@ -30,7 +30,7 @@
       "ghostty"
       "gpg-suite"
       "handbrake-app"
-      "jordanbaird-ice"
+      "jordanbaird-ice@beta"
       "istat-menus"
       "microsoft-teams"
       "nordvpn"
