@@ -19,7 +19,8 @@ titlize "
 \____ |\____/|__|  |__|  |__|____/ |__|   /____  >
      \/                                        \/ 
 "
-HOSTNAME="amaterasu"
+# Configuration - change this for a different machine
+HOSTNAME="${HOSTNAME:-amaterasu}"
 # Setting hostname and computer name
 log "Setting hostname and computer name to $HOSTNAME"
 sudo scutil --set HostName $HOSTNAME

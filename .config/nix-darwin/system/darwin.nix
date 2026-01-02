@@ -1,7 +1,7 @@
-{ pkgs, lib, ... }:
+{ pkgs, lib, username, ... }:
 {
-  users.users.marmos91 = {
-    home = "/Users/marmos91";
+  users.users.${username} = {
+    home = "/Users/${username}";
     shell = pkgs.zsh;
   };
 
@@ -18,7 +18,7 @@
       # Security
       trusted-users = [
         "@admin"
-        "marmos91"
+        username
       ];
       allowed-users = [ "@wheel" ];
 
@@ -46,7 +46,7 @@
   };
 
   system.stateVersion = 5;
-  system.primaryUser = "marmos91";
+  system.primaryUser = username;
   nixpkgs.hostPlatform = "aarch64-darwin";
 
   environment = {
@@ -57,10 +57,6 @@
       git
       gnused
       gawk
-      nixfmt-rfc-style
-      nil
-      nix-tree
-      nix-du
     ];
     systemPath = [ "/opt/homebrew/bin" ];
     pathsToLink = [ "/Applications" ];

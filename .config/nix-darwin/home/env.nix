@@ -1,8 +1,8 @@
-{ pkgs, ... }:
+{ pkgs, username, ... }:
 {
   home = {
-    username = "marmos91";
-    homeDirectory = "/Users/marmos91";
+    username = username;
+    homeDirectory = "/Users/${username}";
     stateVersion = "24.11";
 
     sessionPath = [

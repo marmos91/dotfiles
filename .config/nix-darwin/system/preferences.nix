@@ -1,4 +1,4 @@
-{ ... }:
+{ username, ... }:
 {
   system = {
     keyboard = {
@@ -28,7 +28,7 @@
           "/System/Applications/System Settings.app"
         ];
         persistent-others = [
-          "/Users/marmos91/Downloads"
+          "/Users/${username}/Downloads"
           "/Applications"
         ];
         mru-spaces = false;
