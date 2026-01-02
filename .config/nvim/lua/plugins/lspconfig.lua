@@ -151,7 +151,7 @@ return {
                 bashls = {},
                 bzl = {},
                 cssls = {},
-                eslint_d = {
+                eslint = {
                     settings = {
                         -- helps eslint find the eslintrc when it's placed in a subfolder instead of the cwd root
                         workingDirectories = { mode = "auto" },
@@ -159,8 +159,12 @@ return {
                 },
                 gopls = {},
                 helm_ls = {
-                    yamlls = {
-                        path = "yaml-language-server",
+                    settings = {
+                        ["helm-ls"] = {
+                            yamlls = {
+                                path = "yaml-language-server",
+                            },
+                        },
                     },
                 },
                 jsonls = {},
@@ -201,23 +205,24 @@ return {
             --  You can press `g?` for help in this menu.
             require("mason").setup()
 
-            -- You can add other tools here that you want Mason to install (e.g. formatters/linters)
-            -- for you, so that they are available from within Neovim.
-            local ensure_installed = vim.tbl_keys(servers or {})
-            vim.list_extend(ensure_installed, {
+            -- LSP servers to install via mason-lspconfig
+            local lsp_servers = vim.tbl_keys(servers or {})
+
+            -- Additional tools (formatters/linters) to install via mason-tool-installer
+            local tools = {
                 "stylua", -- Lua formatter
                 "markdownlint", -- Markdown linter
                 "markdown-toc", -- Markdown TOC generator
-                "eslint_d", -- Fast ESLint
+                "eslint_d", -- Fast ESLint daemon (used by conform/none-ls)
                 "black", -- Python formatter
-                "gofumt",
-                "goimports",
+                "gofumpt", -- Go formatter
+                "goimports", -- Go imports organizer
                 "shfmt", -- Shell formatter
                 "buildifier", -- Bazel formatter
                 "prettierd", -- Fast Prettier (for web dev)
                 "ruff", -- Fast Python linter
                 "taplo", -- TOML formatter
-            })
+            }
 
             require("mason-lspconfig").setup({
                 handlers = {
@@ -231,8 +236,13 @@ return {
                         require("lspconfig")[server_name].setup(server)
                     end,
                 },
-                ensure_installed = ensure_installed,
+                ensure_installed = lsp_servers,
                 automatic_enable = true,
+            })
+
+            -- Use mason-tool-installer for formatters/linters
+            require("mason-tool-installer").setup({
+                ensure_installed = tools,
             })
         end,
     },

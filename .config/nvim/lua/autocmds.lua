@@ -13,13 +13,6 @@ vim.api.nvim_create_autocmd({ "BufNewFile", "BufRead" }, {
     command = "setfiletype bzl",
 })
 
-vim.api.nvim_create_autocmd({ "BufRead", "BufNewFile" }, {
-    pattern = { os.getenv("HOME") .. "/.local/share/chezmoi/*" },
-    callback = function()
-        vim.schedule(require("chezmoi.commands.__edit").watch)
-    end,
-})
-
 -- Auto-create parent directories when saving
 vim.api.nvim_create_autocmd("BufWritePre", {
     pattern = "*",

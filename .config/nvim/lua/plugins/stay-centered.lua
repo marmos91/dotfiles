@@ -1,16 +1,16 @@
 return {
     "arnamak/stay-centered.nvim",
-    lazy = false,
+    event = "VeryLazy",
     opts = {
         skip_filetypes = {},
     },
     keys = {
         {
-            "<leader>sc",
+            "<leader>uc",
             function()
                 require("stay-centered").toggle()
             end,
-            desc = "Toggle Stay Centered",
+            desc = "Toggle Stay [C]entered",
         },
     },
 }

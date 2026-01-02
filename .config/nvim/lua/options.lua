@@ -3,7 +3,7 @@
 -- Set 24-bit colour
 vim.opt.termguicolors = true
 
--- Disable compatibility vith older version of vim
+-- Disable compatibility with older version of vim
 vim.opt.compatible = false
 
 -- Make line numbers default
@@ -49,7 +49,7 @@ vim.opt.breakindent = true
 -- Use spaces instead of tabs
 vim.opt.expandtab = true
 
--- Special carachters
+-- Special characters
 vim.opt.fillchars = {
     foldopen = "",
     foldclose = "",
@@ -91,7 +91,6 @@ vim.opt.splitbelow = true
 --  See `:help 'list'`
 --  and `:help 'listchars'`
 vim.opt.list = true
-vim.opt.listchars = { tab = "» ", trail = "·", nbsp = "␣" }
 
 -- Preview substitutions live, as you type!
 vim.opt.inccommand = "split"

@@ -4,7 +4,7 @@ return {
         ft = "lua",
         opts = {
             library = {
-                "nvim-dapi-ui",
+                "nvim-dap-ui",
                 "conform",
                 "cmp",
                 "lspconfig",

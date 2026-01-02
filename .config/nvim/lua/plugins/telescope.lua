@@ -19,6 +19,7 @@ return {
                 end,
             },
             { "nvim-telescope/telescope-ui-select.nvim" },
+            { "nvim-telescope/telescope-live-grep-args.nvim" },
 
             -- Useful for getting pretty icons, but requires a Nerd Font.
             { "nvim-tree/nvim-web-devicons", enabled = vim.g.have_nerd_font },
@@ -80,6 +81,10 @@ return {
             vim.keymap.set("n", "<leader>sr", builtin.resume, { desc = "[S]earch [R]esume" })
             vim.keymap.set("n", "<leader>s.", builtin.oldfiles, { desc = '[S]earch Recent Files ("." for repeat)' })
             vim.keymap.set("n", "<leader><leader>", builtin.buffers, { desc = "[ ] Find existing buffers" })
+            vim.keymap.set("n", "<leader>s:", builtin.command_history, { desc = "[S]earch Command History" })
+            vim.keymap.set("n", "<leader>sq", builtin.quickfix, { desc = "[S]earch [Q]uickfix" })
+            vim.keymap.set("n", "<leader>sm", builtin.marks, { desc = "[S]earch [M]arks" })
+            vim.keymap.set("n", "<leader>sj", builtin.jumplist, { desc = "[S]earch [J]umplist" })
 
             -- Slightly advanced example of overriding default behavior and theme
             vim.keymap.set("n", "<leader>/", function()
