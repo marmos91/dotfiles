@@ -32,10 +32,19 @@
       }
       sensible
       yank
-      resurrect
+      {
+        plugin = resurrect;
+        extraConfig = ''
+          set -g @resurrect-capture-pane-contents 'on'
+          set -g @resurrect-strategy-nvim 'session'
+        '';
+      }
       {
         plugin = continuum;
-        extraConfig = "set -g @continuum-restore 'off'";
+        extraConfig = ''
+          set -g @continuum-restore 'on'
+          set -g @continuum-save-interval '5'
+        '';
       }
       open
     ];
