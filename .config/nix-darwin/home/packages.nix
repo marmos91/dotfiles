@@ -21,7 +21,6 @@
     kubectl
     kubectx
     kubernetes-helm
-    lazygit
     luarocks
     markdownlint-cli
     neovim

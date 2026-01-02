@@ -1,4 +1,4 @@
-{ config, pkgs, ... }:
+{ config, pkgs, hostname, ... }:
 {
   programs.zsh = {
     enable = true;
@@ -155,10 +155,10 @@
       rebuild() {
         if [[ $EUID -eq 0 ]]; then
           # Already running as root
-          darwin-rebuild switch --flake ~/.config/nix-darwin#amaterasu "$@"
+          darwin-rebuild switch --flake ~/.config/nix-darwin#${hostname} "$@"
         else
           # Not root, use sudo
-          sudo darwin-rebuild switch --flake ~/.config/nix-darwin#amaterasu "$@"
+          sudo darwin-rebuild switch --flake ~/.config/nix-darwin#${hostname} "$@"
         fi
       }
     '';

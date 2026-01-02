@@ -25,16 +25,22 @@
       determinate,
       ...
     }:
+    let
+      # Configuration variables - change these for a different machine
+      username = "marmos91";
+      hostname = "amaterasu";
+    in
     {
       nixpkgs.config.allowUnfree = true;
 
       darwinConfigurations = {
-        amaterasu = nix-darwin.lib.darwinSystem {
+        ${hostname} = nix-darwin.lib.darwinSystem {
           pkgs = import nixpkgs {
             system = "aarch64-darwin";
             config.allowUnfree = true;
             overlays = [ claude-code.overlays.default ];
           };
+          specialArgs = { inherit username hostname; };
           modules = [
             # Determinate Nix (replaces system nix)
             inputs.determinate.darwinModules.default
@@ -59,7 +65,8 @@
                 useGlobalPkgs = true;
                 useUserPackages = true;
                 backupFileExtension = "backup";
-                users.marmos91 = ./home;
+                extraSpecialArgs = { inherit username hostname; };
+                users.${username} = ./home;
               };
             }
           ];

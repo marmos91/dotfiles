@@ -1,4 +1,7 @@
 { ... }:
 {
-  imports = [ ./config.nix ];
+  imports = [
+    ./config.nix
+    ./lazygit.nix
+  ];
 }

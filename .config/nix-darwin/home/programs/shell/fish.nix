@@ -1,4 +1,4 @@
-{ pkgs, ... }: {
+{ pkgs, username, hostname, ... }: {
   programs.fish = {
     enable = false; # Disabled by default, set to true if you prefer fish
     plugins = with pkgs.fishPlugins; [
@@ -34,11 +34,11 @@
       vim = "nvim";
       obsidian = "open -a Obsidian";
       reload-nix =
-        "darwin-rebuild switch --flake ~/.config/nix-darwin#amaterasu";
+        "darwin-rebuild switch --flake ~/.config/nix-darwin#${hostname}";
     };
 
     shellInit = ''
-      fish_add_path /etc/profiles/per-user/marmos91/bin/
+      fish_add_path /etc/profiles/per-user/${username}/bin/
       fish_add_path /opt/homebrew/bin
       fish_add_path /run/current-system/sw/bin
       fish_add_path $HOME/.local/bin

@@ -20,6 +20,7 @@
       "aerospace"
       "aldente"
       "betterdisplay"
+      "cyberduck"
       "cleanmymac"
       "cursor"
       "dbeaver-community"
