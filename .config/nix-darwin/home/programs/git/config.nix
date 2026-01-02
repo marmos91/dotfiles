@@ -48,7 +48,7 @@
 
       # Better diff and merge
       diff.algorithm = "histogram";
-      merge.conflictstyle = "diff3";
+      merge.conflictstyle = "zdiff3";
 
       # GPG settings
       gpg.format = "ssh";
