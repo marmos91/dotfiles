@@ -1,7 +1,7 @@
 return {
     {
         "apzelos/blamer.nvim",
-        lazy = false,
+        event = "VeryLazy",
         init = function(_)
             vim.g.blamer_enabled = 1
         end,
