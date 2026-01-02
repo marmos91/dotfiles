@@ -10,6 +10,9 @@ return {
             -- Useful status updates for LSP.
             { "j-hui/fidget.nvim", opts = {} },
 
+            -- JSON/YAML schema support
+            "b0o/schemastore.nvim",
+
             -- lazydev.nvim is already configured in lua/plugins/lazyedev.lua
             -- neodev.nvim has been removed as it's no longer needed with lazydev.nvim
             { "towolf/vim-helm", ft = "helm" },
@@ -151,13 +154,37 @@ return {
                 bashls = {},
                 bzl = {},
                 cssls = {},
+                dockerls = {},
+                docker_compose_language_service = {},
                 eslint = {
                     settings = {
                         -- helps eslint find the eslintrc when it's placed in a subfolder instead of the cwd root
                         workingDirectories = { mode = "auto" },
                     },
                 },
-                gopls = {},
+                gopls = {
+                    settings = {
+                        gopls = {
+                            gofumpt = true,
+                            staticcheck = true,
+                            usePlaceholders = true,
+                            completeUnimported = true,
+                            analyses = {
+                                unusedparams = true,
+                                shadow = true,
+                            },
+                            hints = {
+                                assignVariableTypes = true,
+                                compositeLiteralFields = true,
+                                compositeLiteralTypes = true,
+                                constantValues = true,
+                                functionTypeParameters = true,
+                                parameterNames = true,
+                                rangeVariableTypes = true,
+                            },
+                        },
+                    },
+                },
                 helm_ls = {
                     settings = {
                         ["helm-ls"] = {
@@ -167,11 +194,20 @@ return {
                         },
                     },
                 },
-                jsonls = {},
+                html = {},
+                jsonls = {
+                    settings = {
+                        json = {
+                            validate = { enable = true },
+                        },
+                    },
+                    -- Lazy-load schemastore when needed
+                    on_new_config = function(new_config)
+                        new_config.settings.json.schemas = new_config.settings.json.schemas or {}
+                        vim.list_extend(new_config.settings.json.schemas, require("schemastore").json.schemas())
+                    end,
+                },
                 lua_ls = {
-                    -- cmd = {...},
-                    -- filetypes = { ...},
-                    -- capabilities = {},
                     settings = {
                         Lua = {
                             completion = {
@@ -184,16 +220,50 @@ return {
                 },
                 marksman = {},
                 pylsp = {},
-                -- rust_analyzer = {},
+                -- rust_analyzer = {}, -- handled by rustaceanvim
+                taplo = {},
                 terraformls = {},
                 vtsls = {
-                    capabilities = vim.tbl_extend("keep", capabilities, {
+                    settings = {
+                        typescript = {
+                            inlayHints = {
+                                parameterNames = { enabled = "all" },
+                                parameterTypes = { enabled = true },
+                                variableTypes = { enabled = true },
+                                propertyDeclarationTypes = { enabled = true },
+                                functionLikeReturnTypes = { enabled = true },
+                            },
+                        },
+                        javascript = {
+                            inlayHints = {
+                                parameterNames = { enabled = "all" },
+                                parameterTypes = { enabled = true },
+                                variableTypes = { enabled = true },
+                                propertyDeclarationTypes = { enabled = true },
+                                functionLikeReturnTypes = { enabled = true },
+                            },
+                        },
+                    },
+                    capabilities = {
                         documentFormattingProvider = false,
                         documentRangeFormattingProvider = false,
-                    }),
+                    },
                 },
                 yamlls = {
-                    filetypes_exclude = { "helm" },
+                    filetypes = { "yaml", "yaml.docker-compose", "yaml.gitlab" },
+                    settings = {
+                        yaml = {
+                            schemaStore = {
+                                enable = false,
+                                url = "",
+                            },
+                            -- Lazy-load schemastore
+                            schemas = require("schemastore").yaml.schemas(),
+                            validate = true,
+                            completion = true,
+                            hover = true,
+                        },
+                    },
                 },
             }
 
