@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+set -e
+
 function log {
 	echo "${BLUE}${UNDERLINE}$1${RESET}"
 }
@@ -23,9 +25,9 @@ titlize "
 HOSTNAME="${HOSTNAME:-amaterasu}"
 # Setting hostname and computer name
 log "Setting hostname and computer name to $HOSTNAME"
-sudo scutil --set HostName $HOSTNAME
-sudo scutil --set ComputerName $HOSTNAME
-sudo scutil --set LocalHostName $HOSTNAME
+sudo scutil --set HostName "$HOSTNAME"
+sudo scutil --set ComputerName "$HOSTNAME"
+sudo scutil --set LocalHostName "$HOSTNAME"
 
 # Check if Homebrew is installed
 if ! command -v brew &> /dev/null; then
