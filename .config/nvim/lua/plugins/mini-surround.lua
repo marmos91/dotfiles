@@ -1,6 +1,6 @@
 return {
     "nvim-mini/mini.surround",
-    recommended = true,
+    event = "VeryLazy",
     config = function()
         require("mini.surround").setup({
             mappings = {
