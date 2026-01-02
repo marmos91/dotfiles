@@ -7,8 +7,6 @@
       autoUpdate = true;
       upgrade = true;
     };
-    caskArgs.no_quarantine = true;
-
     taps = [
       "nikitabobko/tap"
     ];

@@ -13,9 +13,10 @@
       # Performance optimizations
       max-jobs = 8;
       cores = 0;
-      auto-optimise-store = true;
+      auto-optimise-on-install = true;
 
       # Security
+      restrict-eval = true;
       trusted-users = [
         "@admin"
         username

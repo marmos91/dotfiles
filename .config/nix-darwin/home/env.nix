@@ -31,6 +31,7 @@
 
       # Language-specific
       GOPATH = "$HOME/go";
+      GOBIN = "$HOME/go/bin";
       CARGO_HOME = "$HOME/.cargo";
       RUSTUP_HOME = "$HOME/.rustup";
       PNPM_HOME = "$HOME/Library/pnpm";
