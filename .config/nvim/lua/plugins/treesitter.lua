@@ -5,7 +5,20 @@ return {
         cmd = { "TSUpdateSync", "TSUpdate", "TSInstall" },
         event = { "VeryLazy" },
         opts = {
-            ensure_installed = { "bash", "c", "diff", "html", "lua", "luadoc", "markdown", "vim", "vimdoc", "fish" },
+            ensure_installed = {
+                "bash",
+                "c",
+                "diff",
+                "fish",
+                "gitcommit",
+                "git_rebase",
+                "html",
+                "lua",
+                "luadoc",
+                "markdown",
+                "vim",
+                "vimdoc",
+            },
             -- Autoinstall languages that are not installed
             auto_install = true,
             highlight = {
