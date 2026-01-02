@@ -49,9 +49,6 @@
               { ... }:
               {
                 nix.enable = false; # Disable system nix in favor of determinate
-                determinate-nix.customSettings = {
-                  flake-registry = "/etc/nix/flake-registry.json";
-                };
               }
             )
 
