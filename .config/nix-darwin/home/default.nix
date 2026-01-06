@@ -3,6 +3,7 @@
   imports = [
     ./programs
     ./development
+    ./secrets
     ./env.nix
     ./packages.nix
     ./catppuccin.nix

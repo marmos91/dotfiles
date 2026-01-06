@@ -14,6 +14,10 @@
     };
     claude-code.url = "github:sadjow/claude-code-nix";
     catppuccin.url = "github:catppuccin/nix";
+    sops-nix = {
+      url = "github:Mic92/sops-nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs =
@@ -25,6 +29,7 @@
       home-manager,
       determinate,
       catppuccin,
+      sops-nix,
       ...
     }:
     let
@@ -73,6 +78,7 @@
                   imports = [
                     ./home
                     catppuccin.homeModules.catppuccin
+                    sops-nix.homeManagerModules.sops
                   ];
                 };
               };
@@ -89,6 +95,7 @@
           modules = [
             ./home
             catppuccin.homeModules.catppuccin
+            sops-nix.homeManagerModules.sops
           ];
         };
 
@@ -99,6 +106,7 @@
           modules = [
             ./home
             catppuccin.homeModules.catppuccin
+            sops-nix.homeManagerModules.sops
           ];
         };
       };
