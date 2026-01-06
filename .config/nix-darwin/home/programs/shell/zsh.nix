@@ -66,6 +66,12 @@ in
     };
 
     initContent = ''
+      # Override GNOME's SSH agent with 1Password (GNOME sets SSH_AUTH_SOCK at session start)
+      ${lib.optionalString (!isDarwin) ''
+      if [ -S "$HOME/.1password/agent.sock" ]; then
+        export SSH_AUTH_SOCK="$HOME/.1password/agent.sock"
+      fi
+      ''}
       # Performance: Only rebuild compinit once per day
       autoload -Uz compinit
       if [[ -n $HOME/.zcompdump(#qNmh+24) ]]; then
