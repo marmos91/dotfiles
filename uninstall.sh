@@ -29,6 +29,7 @@ function show_help {
     echo "  --keep-nix        Keep Nix installed, remove dotfiles and config"
     echo "  --keep-stow       Keep stow installed"
     echo "  --keep-1password  Keep 1Password installed (Linux only)"
+    echo "  --keep-docker     Keep Docker installed (Linux only)"
     echo "  -y, --yes         Skip confirmation prompt"
     echo "  --help            Show this help message"
     echo ""
@@ -44,6 +45,7 @@ DOTFILES_ONLY=false
 KEEP_NIX=false
 KEEP_STOW=false
 KEEP_1PASSWORD=false
+KEEP_DOCKER=false
 SKIP_CONFIRM=false
 
 while [[ $# -gt 0 ]]; do
@@ -62,6 +64,10 @@ while [[ $# -gt 0 ]]; do
             ;;
         --keep-1password)
             KEEP_1PASSWORD=true
+            shift
+            ;;
+        --keep-docker)
+            KEEP_DOCKER=true
             shift
             ;;
         -y|--yes)
@@ -113,6 +119,9 @@ if [[ "$DOTFILES_ONLY" == false ]]; then
     fi
     if [[ "$OS" == "Linux" && "$KEEP_1PASSWORD" == false ]]; then
         warn "  - 1Password app and CLI"
+    fi
+    if [[ "$OS" == "Linux" && "$KEEP_DOCKER" == false ]]; then
+        warn "  - Docker Engine"
     fi
 fi
 echo ""
@@ -224,6 +233,43 @@ if [[ "$OS" == "Linux" && "$KEEP_1PASSWORD" == false ]]; then
     fi
 elif [[ "$OS" == "Linux" && "$KEEP_1PASSWORD" == true ]]; then
     log "Keeping 1Password (--keep-1password flag)"
+fi
+
+# Remove Docker (Linux only, unless --keep-docker)
+if [[ "$OS" == "Linux" && "$KEEP_DOCKER" == false ]]; then
+    if command -v dockerd &> /dev/null; then
+        log "Removing Docker..."
+
+        # Stop Docker service
+        sudo systemctl stop docker.service 2>/dev/null || true
+        sudo systemctl stop docker.socket 2>/dev/null || true
+        sudo systemctl stop containerd.service 2>/dev/null || true
+
+        # Remove Docker packages
+        if command -v apt-get &> /dev/null; then
+            sudo apt-get remove -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin 2>/dev/null || true
+            sudo apt-get autoremove -y 2>/dev/null || true
+
+            # Remove Docker repository
+            sudo rm -f /etc/apt/sources.list.d/docker.list 2>/dev/null || true
+            sudo rm -f /etc/apt/keyrings/docker.asc 2>/dev/null || true
+        fi
+
+        # Remove Docker data (images, containers, volumes)
+        sudo rm -rf /var/lib/docker 2>/dev/null || true
+        sudo rm -rf /var/lib/containerd 2>/dev/null || true
+
+        # Remove Docker group
+        if getent group docker > /dev/null 2>&1; then
+            sudo groupdel docker 2>/dev/null || true
+        fi
+
+        log "Docker removed"
+    else
+        log "Docker not found, skipping"
+    fi
+elif [[ "$OS" == "Linux" && "$KEEP_DOCKER" == true ]]; then
+    log "Keeping Docker (--keep-docker flag)"
 fi
 
 # Remove home-manager/nix-darwin configuration

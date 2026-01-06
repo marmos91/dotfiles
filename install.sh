@@ -26,6 +26,7 @@ function show_help {
     echo "  --no-stow         Skip stowing dotfiles"
     echo "  --skip-nix        Skip Nix installation (use existing Nix)"
     echo "  --no-1password    Skip 1Password installation (Linux only)"
+    echo "  --no-docker       Skip Docker installation (Linux only)"
     echo "  --help            Show this help message"
     echo ""
     echo "Examples:"
@@ -43,6 +44,7 @@ CUSTOM_HOSTNAME=""
 NO_STOW=false
 SKIP_NIX=false
 SKIP_1PASSWORD=false
+SKIP_DOCKER=false
 
 while [[ $# -gt 0 ]]; do
     case $1 in
@@ -68,6 +70,10 @@ while [[ $# -gt 0 ]]; do
             ;;
         --no-1password)
             SKIP_1PASSWORD=true
+            shift
+            ;;
+        --no-docker)
+            SKIP_DOCKER=true
             shift
             ;;
         --help)
@@ -346,6 +352,58 @@ install_1password() {
 }
 
 install_1password
+
+# Install Docker on Linux
+install_docker() {
+    if [[ "$OS" != "Linux" ]]; then
+        return 0
+    fi
+
+    if [[ "$SKIP_DOCKER" == true ]]; then
+        log "Skipping Docker installation (--no-docker flag)"
+        return 0
+    fi
+
+    if command -v dockerd &> /dev/null; then
+        log "Docker is already installed"
+        return 0
+    fi
+
+    if ! command -v apt-get &> /dev/null; then
+        log "Warning: Docker installation only supported on Debian/Ubuntu"
+        return 1
+    fi
+
+    log "Installing Docker Engine..."
+
+    # Install dependencies
+    sudo apt-get update -qq
+    sudo apt-get install -y -qq ca-certificates curl
+
+    # Add Docker's official GPG key
+    sudo install -m 0755 -d /etc/apt/keyrings
+    sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+    sudo chmod a+r /etc/apt/keyrings/docker.asc
+
+    # Add Docker repository
+    echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+    # Install Docker Engine
+    sudo apt-get update -qq
+    sudo apt-get install -y -qq docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+
+    # Add user to docker group
+    sudo usermod -aG docker "$USER"
+
+    # Enable and start Docker service
+    sudo systemctl enable docker
+    sudo systemctl start docker
+
+    log "Docker installed successfully"
+    log "Note: Log out and back in for docker group membership to take effect"
+}
+
+install_docker
 
 # Initialize Nix configuration
 log "Initializing Nix configuration..."
