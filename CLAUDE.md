@@ -25,7 +25,10 @@ nix-gc                     # alias for nix-collect-garbage -d && nix-store --opt
 nix-search <package>       # alias for nix search nixpkgs
 
 # Initial setup (fresh install)
-chmod +x ~/.dotfiles/setup.sh && ~/.dotfiles/setup.sh
+chmod +x ~/.dotfiles/install.sh && ~/.dotfiles/install.sh
+
+# Uninstall
+chmod +x ~/.dotfiles/uninstall.sh && ~/.dotfiles/uninstall.sh
 
 # Re-stow dotfiles after adding new configs
 stow .
