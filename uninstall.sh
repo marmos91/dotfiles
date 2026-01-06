@@ -28,6 +28,7 @@ function show_help {
     echo "  --dotfiles-only   Only unstow dotfiles, keep Nix and packages"
     echo "  --keep-nix        Keep Nix installed, remove dotfiles and config"
     echo "  --keep-stow       Keep stow installed"
+    echo "  --keep-1password  Keep 1Password installed (Linux only)"
     echo "  -y, --yes         Skip confirmation prompt"
     echo "  --help            Show this help message"
     echo ""
@@ -42,6 +43,7 @@ function show_help {
 DOTFILES_ONLY=false
 KEEP_NIX=false
 KEEP_STOW=false
+KEEP_1PASSWORD=false
 SKIP_CONFIRM=false
 
 while [[ $# -gt 0 ]]; do
@@ -56,6 +58,10 @@ while [[ $# -gt 0 ]]; do
             ;;
         --keep-stow)
             KEEP_STOW=true
+            shift
+            ;;
+        --keep-1password)
+            KEEP_1PASSWORD=true
             shift
             ;;
         -y|--yes)
@@ -105,6 +111,9 @@ if [[ "$DOTFILES_ONLY" == false ]]; then
     else
         warn "  - Home-manager/nix-darwin configuration"
     fi
+    if [[ "$OS" == "Linux" && "$KEEP_1PASSWORD" == false ]]; then
+        warn "  - 1Password app and CLI"
+    fi
 fi
 echo ""
 
@@ -149,6 +158,66 @@ if [[ "$KEEP_STOW" == false ]]; then
     log "Stow removed"
 else
     log "Keeping stow (--keep-stow flag)"
+fi
+
+# Remove 1Password (Linux only, unless --keep-1password)
+if [[ "$OS" == "Linux" && "$KEEP_1PASSWORD" == false ]]; then
+    ARCH="$(uname -m)"
+
+    if command -v 1password &> /dev/null || [[ -f /opt/1Password/1password ]] || command -v op &> /dev/null; then
+        log "Removing 1Password..."
+
+        if [[ "$ARCH" == "x86_64" ]]; then
+            # x86_64: Remove via apt
+            if command -v apt-get &> /dev/null; then
+                sudo apt-get remove -y 1password 1password-cli 2>/dev/null || true
+                sudo apt-get autoremove -y 2>/dev/null || true
+
+                # Remove apt repository
+                sudo rm -f /etc/apt/sources.list.d/1password.list 2>/dev/null || true
+
+                # Remove GPG keys
+                sudo rm -f /usr/share/keyrings/1password-archive-keyring.gpg 2>/dev/null || true
+
+                # Remove debsig policy
+                sudo rm -rf /etc/debsig/policies/AC2D62742012EA22 2>/dev/null || true
+                sudo rm -rf /usr/share/debsig/keyrings/AC2D62742012EA22 2>/dev/null || true
+            fi
+        elif [[ "$ARCH" == "aarch64" || "$ARCH" == "arm64" ]]; then
+            # ARM64: Manual removal
+            # Remove 1Password app
+            if [[ -d /opt/1Password ]]; then
+                log "Removing 1Password app from /opt..."
+                sudo rm -rf /opt/1Password
+            fi
+
+            # Remove desktop file
+            sudo rm -f /usr/share/applications/1password.desktop 2>/dev/null || true
+
+            # Remove CLI
+            if [[ -f /usr/local/bin/op ]]; then
+                log "Removing 1Password CLI..."
+                sudo rm -f /usr/local/bin/op
+            fi
+
+            # Remove system integration files created by after-install.sh
+            sudo rm -f /usr/share/polkit-1/actions/com.1password.1Password.policy 2>/dev/null || true
+            sudo rm -f /etc/chromium/native-messaging-hosts/com.1password.1password.json 2>/dev/null || true
+            sudo rm -f /etc/opt/chrome/native-messaging-hosts/com.1password.1password.json 2>/dev/null || true
+            sudo rm -rf /etc/chromium/policies/managed 2>/dev/null || true
+            sudo rm -rf /etc/opt/chrome/policies/managed 2>/dev/null || true
+        fi
+
+        # Clean up user data (optional - keep by default for safety)
+        # rm -rf "${USER_HOME}/.config/1Password" 2>/dev/null || true
+        # rm -rf "${USER_HOME}/.1password" 2>/dev/null || true
+
+        log "1Password removed"
+    else
+        log "1Password not found, skipping"
+    fi
+elif [[ "$OS" == "Linux" && "$KEEP_1PASSWORD" == true ]]; then
+    log "Keeping 1Password (--keep-1password flag)"
 fi
 
 # Remove home-manager/nix-darwin configuration
