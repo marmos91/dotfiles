@@ -49,6 +49,7 @@ in
       python = "python3";
       pip = "pip3";
       cd = "z";
+      neofetch = "fastfetch";
 
       # Neovim
       vim = "nvim";
