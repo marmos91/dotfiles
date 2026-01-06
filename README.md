@@ -195,6 +195,7 @@ Key files to customize:
 | Neovim plugins | `.config/nvim/lua/plugins/` |
 | Terminal settings | `home/programs/terminal/` |
 | GNOME settings | `home/programs/desktop/gnome.nix` |
+| Secrets management | `home/secrets/` ([README](.config/nix-darwin/home/secrets/README.md)) |
 
 ## License
 
