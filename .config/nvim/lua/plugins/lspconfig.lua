@@ -152,7 +152,6 @@ return {
             --        For example, to see the options for `lua_ls`, you could go to: https://luals.github.io/wiki/settings/
             local servers = {
                 bashls = {},
-                bzl = {},
                 cssls = {},
                 dockerls = {},
                 docker_compose_language_service = {},
@@ -266,6 +265,11 @@ return {
                     },
                 },
             }
+
+            -- Add bzl only on macOS (Mason doesn't support it on Linux)
+            if vim.fn.has("mac") == 1 then
+                servers.bzl = {}
+            end
 
             -- Ensure the servers and tools above are installed
             --  To check the current status of installed tools and/or manually install
