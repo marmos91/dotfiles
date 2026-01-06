@@ -43,6 +43,7 @@
       "the-unarchiver"
       "transmission"
       "tripmode"
+      "utm"
       "vlc"
       "whatsapp"
       "zen"
