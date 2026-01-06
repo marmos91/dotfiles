@@ -110,6 +110,7 @@ chmod +x uninstall.sh && ./uninstall.sh
 | `--dotfiles-only` | Only unstow dotfiles, keep Nix and packages |
 | `--keep-nix` | Keep Nix installed, remove dotfiles and config |
 | `--keep-stow` | Keep stow installed |
+| `--keep-1password` | Keep 1Password installed (Linux only) |
 | `-y, --yes` | Skip confirmation prompt |
 | `--help` | Show help message |
 
@@ -120,15 +121,17 @@ chmod +x uninstall.sh && ./uninstall.sh
 ./uninstall.sh -y                 # Full uninstall (no confirmation)
 ./uninstall.sh --dotfiles-only    # Only remove dotfile symlinks
 ./uninstall.sh --keep-nix         # Remove dotfiles but keep Nix
+./uninstall.sh --keep-1password   # Keep 1Password installed on Linux
 ```
 
 ### What it removes
 
 1. Dotfile symlinks (unstow)
 2. Stow (unless `--keep-stow`)
-3. Home-manager/nix-darwin configuration
-4. Nix and all packages (unless `--keep-nix`)
-5. Nix cache files
+3. 1Password app and CLI (Linux, unless `--keep-1password`)
+4. Home-manager/nix-darwin configuration
+5. Nix and all packages (unless `--keep-nix`)
+6. Nix cache files
 
 **Warning**: Full uninstall is destructive and will remove all Nix-installed packages.
 
