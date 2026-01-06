@@ -9,9 +9,10 @@
         nerdFontsVersion = "3";
       };
       git = {
-        paging = {
-          colorArg = "always";
-          pager = "delta --dark --paging=never";
+        pager = {
+          diff = "delta --dark --paging=never";
+          log = "delta --dark --paging=never";
+          show = "delta --dark --paging=never";
         };
       };
       os = {
