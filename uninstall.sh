@@ -200,6 +200,12 @@ if [[ "$OS" == "Linux" && "$KEEP_1PASSWORD" == false ]]; then
                 sudo rm -f /usr/local/bin/op
             fi
 
+            # Remove onepassword-cli group
+            if getent group onepassword-cli > /dev/null 2>&1; then
+                log "Removing onepassword-cli group..."
+                sudo groupdel onepassword-cli 2>/dev/null || true
+            fi
+
             # Remove system integration files created by after-install.sh
             sudo rm -f /usr/share/polkit-1/actions/com.1password.1Password.policy 2>/dev/null || true
             sudo rm -f /etc/chromium/native-messaging-hosts/com.1password.1password.json 2>/dev/null || true
