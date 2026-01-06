@@ -1,6 +1,7 @@
 --target=~
 --ignore=.stowrc
 --ignore=DS_Store
---ignore=setup.sh
+--ignore=install.sh
+--ignore=uninstall.sh
 --ignore=.gitignore
 --ignore=assets
