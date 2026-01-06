@@ -6,5 +6,6 @@
     ./git
     ./utilities
     ./services
+    ./desktop
   ];
 }
