@@ -71,6 +71,8 @@
   ] ++ lib.optionals pkgs.stdenv.isDarwin [
     reattach-to-user-namespace
   ] ++ lib.optionals pkgs.stdenv.isLinux [
+    # Note: 1Password should be installed via official apt repo for full SSH agent support
+    # See: https://support.1password.com/install-linux/
     binutils
     docker
     gcc

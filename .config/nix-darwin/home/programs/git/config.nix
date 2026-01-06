@@ -1,4 +1,11 @@
-{ ... }:
+{ pkgs, lib, ... }:
+let
+  isDarwin = pkgs.stdenv.isDarwin;
+  # 1Password SSH signing binary path (official installation paths)
+  opSshSignPath = if isDarwin
+    then "/Applications/1Password.app/Contents/MacOS/op-ssh-sign"
+    else "/opt/1Password/op-ssh-sign";
+in
 {
   programs.delta = {
     enable = true;
@@ -16,7 +23,7 @@
     settings = {
       user = {
         name = "marmos91";
-        email = "marco.moschettini@gmail.com"; # Update with your email
+        email = "m.marmos@gmail.com";
       };
 
       alias = {
@@ -50,9 +57,9 @@
       diff.algorithm = "histogram";
       merge.conflictstyle = "zdiff3";
 
-      # GPG settings
+      # GPG settings (using 1Password for SSH signing)
       gpg.format = "ssh";
-      "gpg \"ssh\"".program = "/Applications/1Password.app/Contents/MacOS/op-ssh-sign";
+      "gpg \"ssh\"".program = opSshSignPath;
 
       # Git LFS
       filter.lfs = {

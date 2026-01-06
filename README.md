@@ -38,6 +38,7 @@ chmod +x install.sh && ./install.sh
 | `--hostname <name>` | Set hostname (macOS only). Default: `amaterasu` |
 | `--no-stow` | Skip stowing dotfiles |
 | `--skip-nix` | Skip Nix installation (use existing Nix) |
+| `--no-1password` | Skip 1Password installation (Linux only) |
 | `--help` | Show help message |
 
 **Examples:**
@@ -48,17 +49,47 @@ chmod +x install.sh && ./install.sh
 ./install.sh --hostname myhost        # Install with custom hostname (macOS)
 ./install.sh --shell-only             # Only set zsh as default (skip install)
 ./install.sh --no-stow --skip-nix     # Only apply Nix configuration
+./install.sh --no-1password           # Skip 1Password installation on Linux
 ```
 
 ### What it does
 
 1. Install [Stow](https://www.gnu.org/software/stow/) (via Homebrew on macOS, apt/dnf/pacman on Linux)
 2. Install [Nix](https://nixos.org/) using the [Determinate Systems installer](https://determinate.systems/nix-installer/)
-3. Symlink dotfiles to your home directory via Stow
-4. Apply the appropriate Nix configuration:
+3. Install [1Password](https://1password.com/) via official apt repository (Linux only, for SSH agent)
+4. Symlink dotfiles to your home directory via Stow
+5. Apply the appropriate Nix configuration:
    - **macOS**: nix-darwin + home-manager
    - **Linux**: standalone home-manager
-5. Set the default shell (Linux only)
+6. Set the default shell (Linux only)
+
+### 1Password SSH Agent Setup
+
+This configuration uses 1Password for SSH key management and Git commit signing. After installation:
+
+1. **Open 1Password** and sign in to your account
+2. **Enable SSH Agent**: Go to **Settings → Developer** and enable:
+   - "Use the SSH agent"
+   - "Integrate with 1Password CLI"
+3. **Add your SSH key** to 1Password (if not already there)
+4. **Authorize the key** for Git signing when prompted
+
+The git configuration automatically uses 1Password's `op-ssh-sign` for commit signing:
+- **macOS**: `/Applications/1Password.app/Contents/MacOS/op-ssh-sign`
+- **Linux**: `/opt/1Password/op-ssh-sign`
+
+To verify it's working:
+
+```bash
+# Test SSH agent
+ssh-add -l
+
+# Test commit signing
+echo "test" | git commit --allow-empty -m "Test signed commit"
+git log --show-signature -1
+```
+
+**Note**: On macOS, install 1Password from the [Mac App Store](https://apps.apple.com/app/1password-7-password-manager/id1333542190) or [official download](https://1password.com/downloads/mac/).
 
 ### Post-install
 

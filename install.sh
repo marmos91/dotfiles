@@ -25,6 +25,7 @@ function show_help {
     echo "  --hostname <name> Set hostname (macOS only). Default: amaterasu"
     echo "  --no-stow         Skip stowing dotfiles"
     echo "  --skip-nix        Skip Nix installation (use existing Nix)"
+    echo "  --no-1password    Skip 1Password installation (Linux only)"
     echo "  --help            Show this help message"
     echo ""
     echo "Examples:"
@@ -32,7 +33,7 @@ function show_help {
     echo "  $0 --shell bash             # Install with bash as default shell"
     echo "  $0 --hostname myhost        # Install with custom hostname (macOS)"
     echo "  $0 --shell-only             # Only set zsh as default shell"
-    echo "  $0 --no-stow --skip-nix     # Only apply Nix configuration"
+    echo "  $0 --no-1password           # Skip 1Password installation on Linux"
 }
 
 # Parse arguments
@@ -41,6 +42,7 @@ SHELL_ONLY=false
 CUSTOM_HOSTNAME=""
 NO_STOW=false
 SKIP_NIX=false
+SKIP_1PASSWORD=false
 
 while [[ $# -gt 0 ]]; do
     case $1 in
@@ -62,6 +64,10 @@ while [[ $# -gt 0 ]]; do
             ;;
         --skip-nix)
             SKIP_NIX=true
+            shift
+            ;;
+        --no-1password)
+            SKIP_1PASSWORD=true
             shift
             ;;
         --help)
@@ -221,6 +227,119 @@ else
         log "Nix is already installed with version $(nix --version)"
     fi
 fi
+
+# Install 1Password on Linux (for SSH agent and commit signing)
+install_1password() {
+    if [[ "$OS" != "Linux" ]]; then
+        return 0
+    fi
+
+    if [[ "$SKIP_1PASSWORD" == true ]]; then
+        log "Skipping 1Password installation (--no-1password flag)"
+        return 0
+    fi
+
+    # Install dependencies for 1Password (Electron app)
+    log "Installing 1Password dependencies..."
+    if command -v apt-get &> /dev/null; then
+        sudo apt-get update -qq
+        sudo apt-get install -y -qq \
+            libglib2.0-0 libgtk-3-0 libnss3 libatk1.0-0 libatk-bridge2.0-0 \
+            libcups2 libdrm2 libxkbcommon0 libxcomposite1 libxdamage1 \
+            libxfixes3 libxrandr2 libgbm1 libpango-1.0-0 libasound2t64 \
+            libsecret-1-0 libnotify4 2>/dev/null || \
+        sudo apt-get install -y -qq \
+            libglib2.0-0 libgtk-3-0 libnss3 libatk1.0-0 libatk-bridge2.0-0 \
+            libcups2 libdrm2 libxkbcommon0 libxcomposite1 libxdamage1 \
+            libxfixes3 libxrandr2 libgbm1 libpango-1.0-0 libasound2 \
+            libsecret-1-0 libnotify4 2>/dev/null || true
+    fi
+
+    local app_installed=false
+    local cli_installed=false
+
+    if command -v 1password &> /dev/null || [[ -f /opt/1Password/1password ]]; then
+        log "1Password app is already installed"
+        app_installed=true
+    fi
+
+    if command -v op &> /dev/null; then
+        log "1Password CLI is already installed"
+        cli_installed=true
+    fi
+
+    if [[ "$app_installed" == true && "$cli_installed" == true ]]; then
+        return 0
+    fi
+
+    if [[ "$ARCH" == "x86_64" ]]; then
+        # x86_64: Use apt repository
+        # Add 1Password GPG key (--yes to overwrite if exists)
+        curl -sS https://downloads.1password.com/linux/keys/1password.asc | sudo gpg --yes --dearmor --output /usr/share/keyrings/1password-archive-keyring.gpg
+
+        # Add 1Password repository
+        echo 'deb [arch=amd64 signed-by=/usr/share/keyrings/1password-archive-keyring.gpg] https://downloads.1password.com/linux/debian/amd64 stable main' | sudo tee /etc/apt/sources.list.d/1password.list > /dev/null
+
+        # Add debsig policy for package verification
+        sudo mkdir -p /etc/debsig/policies/AC2D62742012EA22/
+        curl -sS https://downloads.1password.com/linux/debian/debsig/1password.pol | sudo tee /etc/debsig/policies/AC2D62742012EA22/1password.pol > /dev/null
+        sudo mkdir -p /usr/share/debsig/keyrings/AC2D62742012EA22
+        curl -sS https://downloads.1password.com/linux/keys/1password.asc | sudo gpg --yes --dearmor --output /usr/share/debsig/keyrings/AC2D62742012EA22/debsig.gpg
+
+        # Install 1Password
+        sudo apt-get update && sudo apt-get install -y 1password 1password-cli
+    elif [[ "$ARCH" == "aarch64" || "$ARCH" == "arm64" ]]; then
+        # ARM64: Use tar.gz installation
+        if [[ "$app_installed" == false ]]; then
+            log "Installing 1Password app for ARM64 via tar.gz..."
+
+            # Create temp directory
+            TEMP_DIR=$(mktemp -d)
+            cd "$TEMP_DIR"
+
+            # Download and extract
+            curl -sSO https://downloads.1password.com/linux/tar/stable/aarch64/1password-latest.tar.gz
+            sudo tar -xf 1password-latest.tar.gz
+
+            # Install to /opt
+            sudo mkdir -p /opt/1Password
+            sudo mv 1password-*/* /opt/1Password
+
+            # Run post-install script
+            sudo /opt/1Password/after-install.sh
+
+            # Cleanup
+            cd -
+            rm -rf "$TEMP_DIR"
+        fi
+
+        # Install 1Password CLI separately for ARM64
+        if [[ "$cli_installed" == false ]]; then
+            log "Installing 1Password CLI for ARM64..."
+            TEMP_DIR_CLI=$(mktemp -d)
+            cd "$TEMP_DIR_CLI"
+            curl -sSO https://cache.agilebits.com/dist/1P/op2/pkg/v2.32.0/op_linux_arm64_v2.32.0.zip
+            unzip -q op_linux_arm64_v2.32.0.zip
+            sudo mv op /usr/local/bin/
+            cd -
+            rm -rf "$TEMP_DIR_CLI"
+        fi
+
+        # Patch desktop file for Wayland support and disable GPU (ARM64 compatibility)
+        if [[ -f /usr/share/applications/1password.desktop ]]; then
+            log "Patching 1Password desktop file for Wayland..."
+            sudo sed -i 's|Exec=/opt/1Password/1password|Exec=/opt/1Password/1password --ozone-platform=wayland --disable-gpu|' /usr/share/applications/1password.desktop
+        fi
+    else
+        log "Warning: Unsupported architecture for 1Password: $ARCH"
+        return 1
+    fi
+
+    log "1Password installed successfully"
+    log "Note: Open 1Password and enable SSH Agent in Settings → Developer"
+}
+
+install_1password
 
 # Initialize Nix configuration
 log "Initializing Nix configuration..."
