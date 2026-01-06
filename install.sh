@@ -321,6 +321,12 @@ install_1password() {
             curl -sSO https://cache.agilebits.com/dist/1P/op2/pkg/v2.32.0/op_linux_arm64_v2.32.0.zip
             unzip -q op_linux_arm64_v2.32.0.zip
             sudo mv op /usr/local/bin/
+
+            # Create onepassword-cli group and set permissions for CLI integration
+            sudo groupadd -f onepassword-cli
+            sudo chown root:onepassword-cli /usr/local/bin/op
+            sudo chmod g+s /usr/local/bin/op
+
             cd -
             rm -rf "$TEMP_DIR_CLI"
         fi
