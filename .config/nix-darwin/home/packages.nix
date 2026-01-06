@@ -27,6 +27,7 @@
     kubernetes-helm
     luarocks
     markdownlint-cli
+    fastfetch
     neovim
     sd
     sshpass
