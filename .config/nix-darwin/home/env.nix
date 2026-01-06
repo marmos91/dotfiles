@@ -1,8 +1,11 @@
-{ pkgs, username, ... }:
+{ pkgs, lib, username, homeDirectory, ... }:
+let
+  isDarwin = pkgs.stdenv.isDarwin;
+in
 {
   home = {
     username = username;
-    homeDirectory = "/Users/${username}";
+    homeDirectory = homeDirectory;
     stateVersion = "24.11";
 
     sessionPath = [
@@ -17,11 +20,6 @@
       PAGER = "less";
       MANPAGER = "sh -c 'col -bx | bat -l man -p'";
 
-      # XDG Base Directories
-      XDG_CONFIG_HOME = "$HOME/.config";
-      XDG_DATA_HOME = "$HOME/.local/share";
-      XDG_CACHE_HOME = "$HOME/.cache";
-
       # Development
       DOTFILES_DIR = "$HOME/.dotfiles";
       OBSIDIAN_VAULTS_DIR = "$HOME/vaults";
@@ -34,7 +32,7 @@
       GOBIN = "$HOME/go/bin";
       CARGO_HOME = "$HOME/.cargo";
       RUSTUP_HOME = "$HOME/.rustup";
-      PNPM_HOME = "$HOME/Library/pnpm";
+      PNPM_HOME = if isDarwin then "$HOME/Library/pnpm" else "$HOME/.local/share/pnpm";
 
       # Appearance
       LC_ALL = "en_US.UTF-8";

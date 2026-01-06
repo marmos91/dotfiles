@@ -1,6 +1,10 @@
-{ pkgs, ... }:
+{ pkgs, lib, ... }:
 {
   home.packages = with pkgs; [
+    # Fonts
+    nerd-fonts.fira-code
+    nerd-fonts.meslo-lg
+
     age
     ansible
     awscli2
@@ -24,7 +28,6 @@
     luarocks
     markdownlint-cli
     neovim
-    reattach-to-user-namespace
     sd
     sshpass
     stow
@@ -37,7 +40,6 @@
     yq
     yt-dlp
     zstd
-
     # Custom scripts
     (pkgs.writeShellScriptBin "sync-nvim-remote" ''
       #!/usr/bin/env bash
@@ -66,6 +68,15 @@
         exit 1
       fi
     '')
-
+  ] ++ lib.optionals pkgs.stdenv.isDarwin [
+    reattach-to-user-namespace
+  ] ++ lib.optionals pkgs.stdenv.isLinux [
+    binutils
+    docker
+    gcc
+    gnumake
+    mesa
+    wl-clipboard # Wayland clipboard (wl-copy/wl-paste)
+    xclip # X11 clipboard
   ];
 }

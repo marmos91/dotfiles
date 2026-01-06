@@ -1,8 +1,12 @@
-{ config, pkgs, hostname, ... }:
+{ config, pkgs, lib, hostname, username, ... }:
+let
+  isDarwin = pkgs.stdenv.isDarwin;
+in
 {
   programs.zsh = {
     enable = true;
     enableCompletion = true;
+    dotDir = "${config.xdg.configHome}/zsh";
     autosuggestion.enable = true;
     syntaxHighlighting.enable = true;
 
@@ -139,13 +143,20 @@
       }
 
       rebuild() {
+        ${if isDarwin then ''
         if [[ $EUID -eq 0 ]]; then
-          # Already running as root
           darwin-rebuild switch --flake ~/.config/nix-darwin#${hostname} "$@"
         else
-          # Not root, use sudo
           sudo darwin-rebuild switch --flake ~/.config/nix-darwin#${hostname} "$@"
         fi
+        '' else ''
+        local arch=$(uname -m)
+        if [[ "$arch" == "aarch64" || "$arch" == "arm64" ]]; then
+          home-manager switch --flake ~/.config/nix-darwin#${username}-aarch64 "$@"
+        else
+          home-manager switch --flake ~/.config/nix-darwin#${username} "$@"
+        fi
+        ''}
       }
     '';
   };
