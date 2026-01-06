@@ -1,12 +1,17 @@
-{ pkgs, lib, ... }:
+{ pkgs, lib, config, ... }:
 let
   isDarwin = pkgs.stdenv.isDarwin;
   # 1Password SSH signing binary path (official installation paths)
   opSshSignPath = if isDarwin
     then "/Applications/1Password.app/Contents/MacOS/op-ssh-sign"
     else "/opt/1Password/op-ssh-sign";
+  signingKey = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQC1Z1G84m2eZAGLJnXNiItcqUvaL36gG2/bam73es6wDhDpdQwhb1+1kBCf3Yqq98is7zACuzKgFhrLkKPWs+1TSTCOXrL0he6MNHUdpiYhZewKNMg4A8+RkpBgJpekQr0ulhhnH7aWKZ1x+qIBc/uPOumEG0SnJM7mzoZ1KO+M2Djk64ofXOeODgCyXut/8wdpRVXjv9fttdvyQOoTFPgLqzsBCnlRR1lo3mo+AffLjwnRdH2UThW4cDiQnPCfLUAopFobC8P8plNnBdrjl3GOaCcGbbgphiJVJ9Gfb6gPMvMkQjnGlCfhvxfvCya6D0oZGA/oMZMU4+qePaSJKeyYatIdHSWtD8cn3USLIIRe0NBzsgpsluxuqLN/wYWkLGZ8jWVsPBUYWl+0V2jNmJNrk0AZwgHuhpegBU+rpCR4+LYvdB43qSHvT1e2Bjz83M5Sqbf94SpfaV0UjiUSR4HhVdmeftIrIRJLc59MIRGfQvaiII5ozCJu4nNTJa/YklM=";
+  userEmail = "m.marmos@gmail.com";
 in
 {
+  # Create allowed_signers file for SSH signature verification
+  home.file.".config/git/allowed_signers".text = "${userEmail} ${signingKey}";
+
   programs.delta = {
     enable = true;
     enableGitIntegration = true;
@@ -17,13 +22,13 @@ in
 
     signing = {
       signByDefault = true;
-      key = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQC1Z1G84m2eZAGLJnXNiItcqUvaL36gG2/bam73es6wDhDpdQwhb1+1kBCf3Yqq98is7zACuzKgFhrLkKPWs+1TSTCOXrL0he6MNHUdpiYhZewKNMg4A8+RkpBgJpekQr0ulhhnH7aWKZ1x+qIBc/uPOumEG0SnJM7mzoZ1KO+M2Djk64ofXOeODgCyXut/8wdpRVXjv9fttdvyQOoTFPgLqzsBCnlRR1lo3mo+AffLjwnRdH2UThW4cDiQnPCfLUAopFobC8P8plNnBdrjl3GOaCcGbbgphiJVJ9Gfb6gPMvMkQjnGlCfhvxfvCya6D0oZGA/oMZMU4+qePaSJKeyYatIdHSWtD8cn3USLIIRe0NBzsgpsluxuqLN/wYWkLGZ8jWVsPBUYWl+0V2jNmJNrk0AZwgHuhpegBU+rpCR4+LYvdB43qSHvT1e2Bjz83M5Sqbf94SpfaV0UjiUSR4HhVdmeftIrIRJLc59MIRGfQvaiII5ozCJu4nNTJa/YklM=";
+      key = signingKey;
     };
 
     settings = {
       user = {
         name = "marmos91";
-        email = "m.marmos@gmail.com";
+        email = userEmail;
       };
 
       alias = {
@@ -60,6 +65,7 @@ in
       # GPG settings (using 1Password for SSH signing)
       gpg.format = "ssh";
       "gpg \"ssh\"".program = opSshSignPath;
+      "gpg \"ssh\"".allowedSignersFile = "~/.config/git/allowed_signers";
 
       # Git LFS
       filter.lfs = {
