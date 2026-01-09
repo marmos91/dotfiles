@@ -258,6 +258,13 @@ in
       }
       compdef _secrets secrets
 
+      flake-update() {
+        echo "Updating flake inputs..."
+        nix flake update --flake ~/.config/nix-darwin
+        echo ""
+        echo "Done! Run 'rebuild' to apply updates."
+      }
+
       rebuild() {
         ${if isDarwin then ''
         if [[ $EUID -eq 0 ]]; then
