@@ -1,7 +1,7 @@
 { pkgs, ... }:
 {
   home.packages = with pkgs; [
-    nixfmt-rfc-style
+    nixfmt
     nil # Nix LSP
     nix-tree
     nix-du
