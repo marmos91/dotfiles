@@ -1,6 +1,7 @@
 { config, pkgs, lib, hostname, username, ... }:
 let
   isDarwin = pkgs.stdenv.isDarwin;
+
 in
 {
   programs.zsh = {
@@ -280,6 +281,13 @@ in
           home-manager switch --flake ~/.config/nix-darwin#${username} "$@"
         fi
         ''}
+      }
+
+      # List available SSH hosts from config and config.d
+      ssh-hosts() {
+        echo "Available SSH hosts:"
+        echo ""
+        grep -h "^Host " ~/.ssh/config ~/.ssh/config.d/* 2>/dev/null | grep -v "[*?]" | awk '{print $2}' | sort | column
       }
     '';
   };

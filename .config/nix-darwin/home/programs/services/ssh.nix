@@ -11,6 +11,8 @@ in
     enable = true;
     enableDefaultConfig = false;
 
+    includes = [ "~/.ssh/config.d/*" ];
+
     matchBlocks = {
       "*" = {
         forwardAgent = false;

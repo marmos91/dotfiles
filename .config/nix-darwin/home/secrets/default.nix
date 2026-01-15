@@ -7,6 +7,10 @@
     ssh-to-age
   ];
 
+  # Fix sops-nix LaunchAgent PATH issue on macOS
+  # The default LaunchAgent has an empty PATH, which prevents getconf and newfs_hfs from being found
+  launchd.agents.sops-nix.config.EnvironmentVariables.PATH = lib.mkForce "/usr/bin:/bin:/usr/sbin:/sbin";
+
   sops = {
     age.keyFile = "${homeDirectory}/.config/sops/age/keys.txt";
     defaultSopsFile = ./secrets.yaml;
@@ -29,6 +33,11 @@
 
       rclone_config = {
         path = "${homeDirectory}/.config/rclone/rclone.conf";
+        mode = "0600";
+      };
+
+      ssh_hosts_config = {
+        path = "${homeDirectory}/.ssh/config.d/hosts";
         mode = "0600";
       };
     };
