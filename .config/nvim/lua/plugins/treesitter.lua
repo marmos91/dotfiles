@@ -2,14 +2,14 @@ return {
     { -- Highlight, edit, and navigate code
         "nvim-treesitter/nvim-treesitter",
         build = ":TSUpdate",
-        event = { "VeryLazy" },
+        event = { "BufReadPost", "BufNewFile" },
         config = function()
             -- Prefer git instead of curl in order to improve connectivity in some environments
             require("nvim-treesitter").prefer_git = true
 
             -- Install parsers
             require("nvim-treesitter").setup({
-                ensure_install = {
+                ensure_installed = {
                     "bash",
                     "c",
                     "css",
