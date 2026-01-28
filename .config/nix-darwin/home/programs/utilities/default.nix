@@ -8,6 +8,7 @@
     ./fd.nix
     ./fzf.nix
     ./k9s.nix
+    ./opencode.nix
     ./rclone.nix
     ./ripgrep.nix
     ./zoxide.nix

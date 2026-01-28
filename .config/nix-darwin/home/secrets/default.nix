@@ -40,6 +40,11 @@
         path = "${homeDirectory}/.ssh/config.d/hosts";
         mode = "0600";
       };
+
+      mimir_api_key = {
+        path = "${homeDirectory}/.config/opencode/mimir-key";
+        mode = "0600";
+      };
     };
   };
 }
