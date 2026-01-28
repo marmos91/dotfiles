@@ -29,6 +29,7 @@
     markdownlint-cli
     fastfetch
     neovim
+    opencode
     sd
     sshpass
     stow
