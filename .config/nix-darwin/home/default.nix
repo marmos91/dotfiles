@@ -7,6 +7,7 @@
     ./env.nix
     ./packages.nix
     ./catppuccin.nix
+    ./claude.nix
   ];
 
   # Enable desktop integration on non-NixOS Linux (Ubuntu, etc.)
