@@ -14,9 +14,9 @@
     fi
 
     # Install for root user
-    if [ ! -d "/root/.claude/commands/gsd" ]; then
+    if [ ! -d "/var/root/.claude/commands/gsd" ]; then
       echo "Installing Get Shit Done for Claude Code (root)..."
-      sudo HOME="/root" ${pkgs.nodejs}/bin/npx --yes get-shit-done-cc --claude --global
+      /usr/bin/sudo HOME="/var/root" ${pkgs.nodejs}/bin/npx --yes get-shit-done-cc --claude --global
     else
       echo "Get Shit Done already installed for root, skipping..."
     fi
