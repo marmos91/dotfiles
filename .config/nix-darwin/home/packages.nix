@@ -19,6 +19,7 @@
     ffmpeg
     gh
     git-lfs
+    goreleaser
     go-task
     hub
     jq
