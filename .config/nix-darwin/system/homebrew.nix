@@ -9,9 +9,14 @@
     };
     taps = [
       "nikitabobko/tap"
+      "marmos91/tap"
     ];
 
-    brews = [ "mas" ];
+    brews = [
+      "mas"
+      "marmos91/tap/dfs"
+      "marmos91/tap/dfsctl"
+    ];
 
     casks = [
       "1password"
