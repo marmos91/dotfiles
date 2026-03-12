@@ -55,6 +55,12 @@
       menuExtraClock.Show24Hour = true;
       WindowManager.EnableStandardClickToShowDesktop = false;
       trackpad.Clicking = true;
+
+      CustomUserPreferences = {
+        "com.apple.controlcenter" = {
+          AutoHideMenuBarOption = 0;
+        };
+      };
     };
   };
 }

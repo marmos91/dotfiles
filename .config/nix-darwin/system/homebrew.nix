@@ -37,7 +37,7 @@
       "gpg-suite"
       "google-chrome"
       "handbrake-app"
-      "jordanbaird-ice@beta"
+      "bartender"
       "istat-menus"
       "microsoft-teams"
       "nordvpn"
@@ -47,6 +47,7 @@
       "slack"
       "spotify"
       "steam"
+      "tailscale-app"
       "telegram"
       "the-unarchiver"
       "transmission"
@@ -61,6 +62,7 @@
     masApps = {
       LanScan = 472226235;
       WireGuard = 1451685025;
+      Xcode = 497799835;
     };
   };
 }
