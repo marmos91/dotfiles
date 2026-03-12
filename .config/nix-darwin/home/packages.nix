@@ -31,9 +31,13 @@
     fastfetch
     neovim
     opencode
+    pulumi
+    pulumiPackages.pulumi-language-go
+    scaleway-cli
     sd
     sshpass
     stow
+    swiftlint
     tilt
     tldr
     tmuxinator
