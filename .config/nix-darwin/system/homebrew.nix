@@ -13,6 +13,7 @@
     ];
 
     brews = [
+      "libimobiledevice"
       "mas"
       "marmos91/tap/dfs"
       "marmos91/tap/dfsctl"
