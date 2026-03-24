@@ -37,6 +37,7 @@
     sd
     sshpass
     stow
+    swiftformat
     swiftlint
     tilt
     tldr
