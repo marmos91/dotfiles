@@ -100,5 +100,6 @@ Edit `.config/nix-darwin/home/programs/shell/zsh.nix` in the `shellAliases` sect
 
 ## Commit Guidelines
 
-- Don't mention Claude Code in commits or PRs
+- Always sign commits (`git commit -S`) when possible
+- Never mention Claude Code, AI tools, or co-authored-by AI in commit messages or PR descriptions
 - Keep commit messages concise
