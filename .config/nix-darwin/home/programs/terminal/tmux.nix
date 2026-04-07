@@ -111,6 +111,10 @@
       # Window titles
       set -g set-titles on
       set -g set-titles-string "#T"
+
+      # Claude Code renames its own process to its version string (e.g. "2.1.92"),
+      # which leaks into tmux's automatic-rename. Rewrite version-looking names to "claude".
+      set -g automatic-rename-format '#{?#{m/r:^[0-9][0-9.]*$,#{pane_current_command}},claude,#{pane_current_command}}'
     '';
   };
 }
