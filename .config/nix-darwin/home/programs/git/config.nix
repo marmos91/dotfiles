@@ -23,6 +23,7 @@ in
     signing = {
       signByDefault = true;
       key = signingKey;
+      format = "ssh";
     };
 
     settings = {
