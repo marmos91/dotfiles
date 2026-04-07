@@ -13,7 +13,6 @@
     btop
     buildifier
     certbot
-    claude-code
     cmake
     commitlint
     ffmpeg
@@ -32,7 +31,7 @@
     neovim
     opencode
     pulumi
-    pulumiPackages.pulumi-language-go
+    pulumiPackages.pulumi-go
     scaleway-cli
     sd
     sshpass

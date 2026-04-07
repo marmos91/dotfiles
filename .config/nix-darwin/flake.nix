@@ -12,7 +12,6 @@
       url = "github:nix-community/home-manager";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    claude-code.url = "github:sadjow/claude-code-nix";
     catppuccin.url = "github:catppuccin/nix";
     sops-nix = {
       url = "github:Mic92/sops-nix";
@@ -25,7 +24,6 @@
       self,
       nix-darwin,
       nixpkgs,
-      claude-code,
       home-manager,
       determinate,
       catppuccin,
@@ -41,7 +39,7 @@
       mkPkgs = system: import nixpkgs {
         inherit system;
         config.allowUnfree = true;
-        overlays = [ claude-code.overlays.default ];
+        overlays = [ ];
       };
     in
     {
