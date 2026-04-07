@@ -60,6 +60,11 @@
         "com.apple.controlcenter" = {
           AutoHideMenuBarOption = 0;
         };
+        # Make a short press of the power/Touch ID button sleep the Mac
+        # instead of showing the shutdown dialog. Long-press still forces shutdown.
+        "com.apple.loginwindow" = {
+          PowerButtonSleepsSystem = true;
+        };
       };
     };
   };
