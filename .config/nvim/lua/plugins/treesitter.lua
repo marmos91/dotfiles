@@ -1,46 +1,53 @@
 return {
     { -- Highlight, edit, and navigate code
         "nvim-treesitter/nvim-treesitter",
-        build = ":TSUpdate",
-        event = { "BufReadPost", "BufNewFile" },
+        branch = "main",
+        lazy = false,
         config = function()
-            -- Prefer git instead of curl in order to improve connectivity in some environments
-            require("nvim-treesitter").prefer_git = true
+            local parsers = {
+                "bash",
+                "c",
+                "css",
+                "diff",
+                "dockerfile",
+                "fish",
+                "gitcommit",
+                "git_rebase",
+                "go",
+                "gomod",
+                "gosum",
+                "helm",
+                "html",
+                "javascript",
+                "json",
+                "lua",
+                "luadoc",
+                "markdown",
+                "markdown_inline",
+                "python",
+                "regex",
+                "rust",
+                "terraform",
+                "toml",
+                "tsx",
+                "typescript",
+                "vim",
+                "vimdoc",
+                "yaml",
+            }
 
-            -- Install parsers
-            require("nvim-treesitter").setup({
-                ensure_installed = {
-                    "bash",
-                    "c",
-                    "css",
-                    "diff",
-                    "dockerfile",
-                    "fish",
-                    "gitcommit",
-                    "git_rebase",
-                    "go",
-                    "gomod",
-                    "gosum",
-                    "helm",
-                    "html",
-                    "javascript",
-                    "json",
-                    "lua",
-                    "luadoc",
-                    "markdown",
-                    "markdown_inline",
-                    "python",
-                    "regex",
-                    "rust",
-                    "terraform",
-                    "toml",
-                    "tsx",
-                    "typescript",
-                    "vim",
-                    "vimdoc",
-                    "yaml",
-                },
-                auto_install = true,
+            local function install_parsers()
+                if vim.fn.executable("tree-sitter") == 1 then
+                    require("nvim-treesitter").install(parsers)
+                end
+            end
+
+            -- tree-sitter CLI is provided by Mason; install parsers either now
+            -- (if Mason already has it) or once Mason finishes installing it.
+            install_parsers()
+            vim.api.nvim_create_autocmd("User", {
+                pattern = "MasonToolsUpdateCompleted",
+                callback = install_parsers,
             })
 
             -- Enable treesitter-based highlighting

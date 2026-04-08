@@ -296,6 +296,7 @@ return {
                 "prettierd", -- Fast Prettier (for web dev)
                 "ruff", -- Fast Python linter
                 "taplo", -- TOML formatter
+                "tree-sitter-cli", -- Required by nvim-treesitter (main branch) to compile parsers
             }
 
             require("mason-lspconfig").setup({
