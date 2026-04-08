@@ -26,6 +26,7 @@
       "aldente"
       "betterdisplay"
       "boosteroid"
+      "claude"
       "cyberduck"
       "cleanmymac"
       "crossover"
