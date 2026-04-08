@@ -68,6 +68,9 @@ in
     };
 
     initContent = ''
+      # Raise file descriptor limit (macOS default is too low for many dev tools)
+      ulimit -n 10240
+
       # Override GNOME's SSH agent with 1Password (GNOME sets SSH_AUTH_SOCK at session start)
       ${lib.optionalString (!isDarwin) ''
       if [ -S "$HOME/.1password/agent.sock" ]; then
