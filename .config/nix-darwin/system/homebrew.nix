@@ -10,6 +10,7 @@
     taps = [
       "nikitabobko/tap"
       "marmos91/tap"
+      "netbirdio/tap"
     ];
 
     brews = [
@@ -17,6 +18,7 @@
       "mas"
       "marmos91/tap/dfs"
       "marmos91/tap/dfsctl"
+      "netbirdio/tap/netbird"
     ];
 
     casks = [
@@ -42,6 +44,7 @@
       "bartender"
       "istat-menus"
       "microsoft-teams"
+      "netbirdio/tap/netbird-ui"
       "nordvpn"
       "obs"
       "obsidian"
