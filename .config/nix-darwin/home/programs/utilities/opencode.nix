@@ -20,5 +20,6 @@
       };
     };
     model = "cubbit/qwen";
+    theme = "catppuccin-mocha";
   };
 }
