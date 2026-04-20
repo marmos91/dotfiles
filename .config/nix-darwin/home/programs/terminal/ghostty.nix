@@ -3,7 +3,7 @@ let
   isDarwin = pkgs.stdenv.isDarwin;
 
   commonSettings = {
-    theme = "Catppuccin Mocha";
+    # theme is managed by the catppuccin nix module (see home/catppuccin.nix)
     font-family = "MesloLGS Nerd Font Mono";
     font-size = 13;
     shell-integration-features = "no-cursor,sudo,no-title";
