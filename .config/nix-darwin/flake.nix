@@ -39,7 +39,12 @@
       mkPkgs = system: import nixpkgs {
         inherit system;
         config.allowUnfree = true;
-        overlays = [ ];
+        overlays = [
+          # nushell 0.112.1 has two SHLVL tests that fail in the Nix sandbox
+          (final: prev: {
+            nushell = prev.nushell.overrideAttrs (_: { doCheck = false; });
+          })
+        ];
       };
     in
     {
