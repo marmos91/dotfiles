@@ -45,6 +45,16 @@
         path = "${homeDirectory}/.config/opencode/mimir-key";
         mode = "0600";
       };
+
+      google_docs_mcp_client_id = {
+        path = "${homeDirectory}/.config/google-docs-mcp/client-id";
+        mode = "0600";
+      };
+
+      google_docs_mcp_client_secret = {
+        path = "${homeDirectory}/.config/google-docs-mcp/client-secret";
+        mode = "0600";
+      };
     };
   };
 }
