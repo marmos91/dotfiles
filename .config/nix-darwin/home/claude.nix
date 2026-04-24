@@ -26,5 +26,11 @@
       else
         echo "Get Shit Done already installed for user, skipping..."
       fi
+
+      # Installer ships cli.js without the executable bit — fix it so the gsd-sdk symlink works
+      gsd_cli="${homeDirectory}/.local/lib/node_modules/@gsd-build/sdk/dist/cli.js"
+      if [ -f "$gsd_cli" ] && [ ! -x "$gsd_cli" ]; then
+        chmod +x "$gsd_cli"
+      fi
     )
   '';}
