@@ -14,23 +14,18 @@
   '';
 
   # Install Get Shit Done for Claude Code
-  # https://github.com/glittercowboy/get-shit-done
+  # https://github.com/open-gsd/get-shit-done-redux
   home.activation.installGSD = lib.hm.dag.entryAfter [ "installClaude" ] ''
     (
-      if [ ! -d "${homeDirectory}/.claude/commands/gsd" ]; then
+      export PATH="${pkgs.nodejs}/bin:${homeDirectory}/.claude/local/bin:${homeDirectory}/.local/bin:$PATH"
+      # npm_config_prefix must point to a writable location — the Nix store is read-only
+      export npm_config_prefix="${homeDirectory}/.local"
+
+      if [ ! -d "${homeDirectory}/.claude/skills/gsd-help" ]; then
         echo "Installing Get Shit Done for Claude Code (user)..."
-        export PATH="${pkgs.nodejs}/bin:${homeDirectory}/.claude/local/bin:${homeDirectory}/.local/bin:$PATH"
-        # npm_config_prefix must point to a writable location — the Nix store is read-only
-        export npm_config_prefix="${homeDirectory}/.local"
-        HOME="${homeDirectory}" npx --yes get-shit-done-cc --claude --global
+        HOME="${homeDirectory}" npx --yes @opengsd/get-shit-done-redux@latest --claude --global
       else
         echo "Get Shit Done already installed for user, skipping..."
-      fi
-
-      # Installer ships cli.js without the executable bit — fix it so the gsd-sdk symlink works
-      gsd_cli="${homeDirectory}/.local/lib/node_modules/@gsd-build/sdk/dist/cli.js"
-      if [ -f "$gsd_cli" ] && [ ! -x "$gsd_cli" ]; then
-        chmod +x "$gsd_cli"
       fi
     )
   '';}
