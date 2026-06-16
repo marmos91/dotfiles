@@ -8,7 +8,6 @@
     ./packages.nix
     ./catppuccin.nix
     ./claude.nix
-    ./homebrew-trust.nix
   ];
 
   # Enable desktop integration on non-NixOS Linux (Ubuntu, etc.)
