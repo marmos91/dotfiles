@@ -5,6 +5,10 @@
   # Global Catppuccin settings
   catppuccin = {
     enable = true;
+    # Pin pre-deprecation behavior: autoEnable mirrors the old `enable = true`
+    # semantics (auto-enroll all ports). Set false to theme only the ports
+    # explicitly enabled below.
+    autoEnable = true;
     flavor = "mocha";
     accent = "lavender";
 
