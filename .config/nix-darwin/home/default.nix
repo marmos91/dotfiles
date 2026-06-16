@@ -8,6 +8,7 @@
     ./packages.nix
     ./catppuccin.nix
     ./claude.nix
+    ./homebrew-trust.nix
   ];
 
   # Enable desktop integration on non-NixOS Linux (Ubuntu, etc.)
@@ -18,4 +19,7 @@
 
   # Ensure XDG directories are set up
   xdg.enable = true;
+
+  # HM 26.05 vs nixpkgs-unstable 26.11 — HM hasn't bumped yet
+  home.enableNixpkgsReleaseCheck = false;
 }
