@@ -1,10 +1,6 @@
 { pkgs, lib, ... }:
 let
   isDarwin = pkgs.stdenv.isDarwin;
-  # 1Password agent paths differ by platform
-  onePasswordAgentPath = if isDarwin
-    then "~/Library/Group Containers/2BUA8C4S2C.com.1password/t/agent.sock"
-    else "~/.1password/agent.sock";
 in
 {
   programs.ssh = {
@@ -13,24 +9,29 @@ in
 
     includes = [ "~/.ssh/config.d/*" ];
 
-    matchBlocks = {
+    settings = {
       "*" = {
-        forwardAgent = false;
-        serverAliveInterval = 0;
-        serverAliveCountMax = 3;
-        compression = false;
-        addKeysToAgent = "no";
-        hashKnownHosts = false;
-        userKnownHostsFile = "~/.ssh/known_hosts";
-        controlMaster = "no";
-        controlPath = "~/.ssh/master-%r@%n:%p";
-        controlPersist = "no";
+        ForwardAgent = false;
+        ServerAliveInterval = 0;
+        ServerAliveCountMax = 3;
+        Compression = false;
+        AddKeysToAgent = "yes";
+        HashKnownHosts = false;
+        UserKnownHostsFile = "~/.ssh/known_hosts";
+        ControlMaster = "no";
+        ControlPath = "~/.ssh/master-%r@%n:%p";
+        ControlPersist = "no";
+      } // lib.optionalAttrs isDarwin {
+        UseKeychain = "yes";
       };
     };
 
-    extraConfig = ''
+    # On Linux keep 1Password as the SSH agent. On macOS rely on the
+    # native launchd ssh-agent (SSH_AUTH_SOCK set automatically) plus
+    # Keychain-stored passphrases; no IdentityAgent override needed.
+    extraConfig = lib.optionalString (!isDarwin) ''
       Host *
-        IdentityAgent "${onePasswordAgentPath}"
+        IdentityAgent "~/.1password/agent.sock"
     '';
   };
 }

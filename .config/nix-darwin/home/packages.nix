@@ -34,7 +34,7 @@
       opencode
       pulumi
       pulumiPackages.pulumi-go
-      scaleway-cli
+      (scaleway-cli.overrideAttrs (_: { doCheck = false; }))
       sd
       sshpass
       stow

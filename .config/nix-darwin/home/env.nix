@@ -19,11 +19,12 @@ in
       VISUAL = "nvim";
       PAGER = "less";
       MANPAGER = "sh -c 'col -bx | bat -l man -p'";
-
-      # 1Password SSH agent
-      SSH_AUTH_SOCK = if isDarwin
-        then "$HOME/Library/Group Containers/2BUA8C4S2C.com.1password/t/agent.sock"
-        else "$HOME/.1password/agent.sock";
+    } // lib.optionalAttrs (!isDarwin) {
+      # 1Password SSH agent (Linux only — macOS uses the native launchd ssh-agent
+      # so keys in ~/.ssh work with Keychain-stored passphrases and don't
+      # require unlocking 1Password for every SSH op).
+      SSH_AUTH_SOCK = "$HOME/.1password/agent.sock";
+    } // {
 
       # Development
       DOTFILES_DIR = "$HOME/.dotfiles";
