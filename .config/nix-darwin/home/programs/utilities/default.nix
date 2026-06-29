@@ -9,6 +9,7 @@
     ./fzf.nix
     ./k9s.nix
     ./opencode.nix
+    ./openfortivpn.nix
     ./rclone.nix
     ./ripgrep.nix
     ./zoxide.nix

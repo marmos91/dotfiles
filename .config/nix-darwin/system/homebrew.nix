@@ -87,6 +87,7 @@ in
 
     masApps = {
       LanScan = 472226235;
+      VMwareRemoteConsole = 1230249825;
       WireGuard = 1451685025;
       Xcode = 497799835;
     };
