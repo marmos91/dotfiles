@@ -39,6 +39,9 @@ in
       g = "hub";
       gg = "lazygit";
 
+      # AI agents (route Claude Code through Headroom context compression)
+      claude = "headroom wrap claude --memory --code-graph";
+
       # tmux
       ta = "tmux attach";
       ts = "tmux new -s";

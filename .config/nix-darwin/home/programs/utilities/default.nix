@@ -7,6 +7,7 @@
     ./eza.nix
     ./fd.nix
     ./fzf.nix
+    ./headroom.nix
     ./k9s.nix
     ./opencode.nix
     ./openfortivpn.nix
