@@ -1,0 +1,6 @@
+{ ... }:
+{
+  programs.openfortivpn = {
+    enable = true;
+  };
+}
