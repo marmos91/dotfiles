@@ -73,3 +73,9 @@ Temporary Items
 !.gnupg/dirmngr.conf
 !.gnupg/gpg-agent.conf
 !.gnupg/gpg.conf
+
+# Generated artifacts (regenerable, not source)
+graphify-out/
+.tokensave/
+# nix-darwin build symlink
+result

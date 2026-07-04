@@ -7,10 +7,10 @@
     ./eza.nix
     ./fd.nix
     ./fzf.nix
+    ./graphify.nix
     ./headroom.nix
     ./k9s.nix
     ./opencode.nix
-    ./openfortivpn.nix
     ./rclone.nix
     ./ripgrep.nix
     ./zoxide.nix

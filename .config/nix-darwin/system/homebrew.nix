@@ -33,10 +33,11 @@ in
 
     brews = [
       "libimobiledevice"
-      "mas"
       "marmos91/tap/dfs"
       "marmos91/tap/dfsctl"
+      "mas"
       "netbirdio/tap/netbird"
+      "openfortivpn"
       "rclone"
     ];
 
