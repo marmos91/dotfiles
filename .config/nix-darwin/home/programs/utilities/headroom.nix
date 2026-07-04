@@ -12,7 +12,7 @@
 let
   venv = "${config.home.homeDirectory}/.local/share/headroom-venv";
   bin = "${config.home.homeDirectory}/.local/bin/headroom";
-  pin = "0.27.0";
+  pin = "0.30.0";
 in
 {
   home.activation.headroom = lib.hm.dag.entryAfter [ "writeBoundary" ] ''

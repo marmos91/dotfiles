@@ -31,6 +31,9 @@ in
       OBSIDIAN_VAULTS_DIR = "$HOME/vaults";
       GPG_TTY = "$(tty)";
       GITHUB_USERNAME = "marmos91";
+      # GitHub MCP server auth — derived from the gh CLI keyring at shell init
+      # (no secret stored in the repo). Empty if gh is not logged in.
+      GITHUB_PERSONAL_ACCESS_TOKEN = "$(gh auth token 2>/dev/null)";
       BACKUP_VOLUME = "/Volumes/BackupMarco";
 
       # Language-specific
