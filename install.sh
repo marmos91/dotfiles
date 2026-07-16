@@ -481,11 +481,15 @@ if command -v nix &> /dev/null; then
         log "Building home-manager configuration for '$HM_CONFIG'..."
 
         # Install home-manager if not available
+        # -b backup: a fresh Linux account already has real (non-symlink)
+        # ~/.bashrc, ~/.profile, etc. from /etc/skel, which home-manager
+        # refuses to clobber by default. Back them up (*.hm-backup) instead
+        # of failing outright.
         if ! command -v home-manager &> /dev/null; then
             log "Installing home-manager..."
-            nix run home-manager -- switch --flake "${USER_HOME}/.config/nix-darwin#${HM_CONFIG}"
+            nix run home-manager -- switch -b hm-backup --flake "${USER_HOME}/.config/nix-darwin#${HM_CONFIG}"
         else
-            home-manager switch --flake "${USER_HOME}/.config/nix-darwin#${HM_CONFIG}"
+            home-manager switch -b hm-backup --flake "${USER_HOME}/.config/nix-darwin#${HM_CONFIG}"
         fi
 
         log "home-manager configuration activated successfully"
