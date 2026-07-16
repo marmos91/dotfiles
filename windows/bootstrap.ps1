@@ -20,6 +20,10 @@
 .PARAMETER DotfilesRepo
     Git URL to clone inside WSL. Default: this repo.
 
+.PARAMETER SkipApps
+    Internal - set automatically when this script re-launches itself elevated,
+    so the winget apps step (already run non-elevated) doesn't run twice.
+
 .EXAMPLE
     .\bootstrap.ps1 -DryRun
     .\bootstrap.ps1
@@ -28,7 +32,8 @@
 param(
     [switch]$DryRun,
     [string]$Distro = "Ubuntu",
-    [string]$DotfilesRepo = "https://github.com/marmos91/dotfiles.git"
+    [string]$DotfilesRepo = "https://github.com/marmos91/dotfiles.git",
+    [switch]$SkipApps
 )
 
 $ErrorActionPreference = "Stop"
@@ -39,20 +44,10 @@ function Write-Done($msg) { Write-Host "    $msg" -ForegroundColor Green }
 function Write-Warn($msg) { Write-Host "    $msg" -ForegroundColor Yellow }
 function Write-DryRun($msg) { Write-Host "    [DryRun] $msg" -ForegroundColor Yellow }
 
-# ---------------------------------------------------------------------------
-# Elevation
-# ---------------------------------------------------------------------------
 function Test-IsAdmin {
     $identity = [Security.Principal.WindowsIdentity]::GetCurrent()
     $principal = New-Object Security.Principal.WindowsPrincipal($identity)
     return $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
-}
-
-if (-not $DryRun -and -not (Test-IsAdmin)) {
-    Write-Host "Re-launching elevated (admin rights are required for WSL/winget/registry steps)..." -ForegroundColor Yellow
-    $argList = @('-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', $PSCommandPath, '-Distro', $Distro, '-DotfilesRepo', $DotfilesRepo)
-    Start-Process powershell -Verb RunAs -ArgumentList $argList
-    exit
 }
 
 Write-Host "marmos91 dotfiles - Windows bootstrap$(if ($DryRun) { ' (dry run)' })" -ForegroundColor Magenta
@@ -110,7 +105,69 @@ if ($hardFailures.Count -gt 0 -and -not $DryRun) {
 }
 
 # ---------------------------------------------------------------------------
-# Step 1: WSL2 + distro
+# Step 1: Windows apps (winget)
+# ---------------------------------------------------------------------------
+# Runs BEFORE elevation, on purpose: several winget packages (Spotify, Store
+# apps like WhatsApp) refuse to install from an administrator context and
+# fail with opaque error codes if we force it. Running here lets winget
+# elevate per-package via its own UAC prompt only when a package actually
+# needs it.
+if ($SkipApps) {
+    Write-Step "Windows apps (winget)"
+    Write-Info "Already installed in the non-elevated pass - skipping"
+} else {
+    Write-Step "Windows apps (winget)"
+
+    $appsFile = Join-Path $PSScriptRoot "apps.txt"
+    $appIds = Get-Content $appsFile | ForEach-Object { $_.Trim() } | Where-Object { $_ -and -not $_.StartsWith('#') }
+
+    if (-not (Get-Command winget -ErrorAction SilentlyContinue)) {
+        Write-Warn "winget not found. Install 'App Installer' from the Microsoft Store, then re-run this script."
+    } else {
+        $failed = @()
+        foreach ($id in $appIds) {
+            $listed = winget list --id $id -e --accept-source-agreements 2>$null | Out-String
+            if ($listed -match [regex]::Escape($id)) {
+                Write-Done "$id already installed"
+                continue
+            }
+
+            if ($DryRun) {
+                Write-DryRun "would run: winget install --id $id -e"
+                continue
+            }
+
+            Write-Info "Installing $id..."
+            try {
+                winget install --id $id -e --accept-package-agreements --accept-source-agreements --silent | Out-Null
+                if ($LASTEXITCODE -ne 0) { throw "winget exited with code $LASTEXITCODE" }
+                Write-Done "$id installed"
+            } catch {
+                Write-Warn "Failed to install $id`: $_"
+                $failed += $id
+            }
+        }
+        if ($failed.Count -gt 0) {
+            Write-Warn "Some packages failed to install: $($failed -join ', ')"
+            Write-Warn "Check the exact ID with 'winget search <name>' and retry manually."
+        }
+    }
+}
+
+# ---------------------------------------------------------------------------
+# Elevation
+# ---------------------------------------------------------------------------
+# Everything from here on (WSL2, registry preferences, taskbar pins) needs
+# admin rights. Re-launch elevated, skipping the apps step we just did.
+if (-not $DryRun -and -not (Test-IsAdmin)) {
+    Write-Host "Re-launching elevated (admin rights are required for WSL/registry steps)..." -ForegroundColor Yellow
+    $argList = @('-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', $PSCommandPath, '-Distro', $Distro, '-DotfilesRepo', $DotfilesRepo, '-SkipApps')
+    Start-Process powershell -Verb RunAs -ArgumentList $argList
+    exit
+}
+
+# ---------------------------------------------------------------------------
+# Step 2: WSL2 + distro
 # ---------------------------------------------------------------------------
 Write-Step "WSL2 + $Distro"
 
@@ -149,7 +206,7 @@ if (-not $DryRun -and -not $wslReady) {
 }
 
 # ---------------------------------------------------------------------------
-# Step 2: clone dotfiles into WSL and run install.sh
+# Step 3: clone dotfiles into WSL and run install.sh
 # ---------------------------------------------------------------------------
 Write-Step "Dotfiles inside WSL ($Distro)"
 
@@ -160,46 +217,6 @@ if ($DryRun) {
     wsl.exe -d $Distro -- bash -lc "test -d ~/.dotfiles || git clone $DotfilesRepo ~/.dotfiles"
     wsl.exe -d $Distro -- bash -lc "chmod +x ~/.dotfiles/install.sh && ~/.dotfiles/install.sh"
     Write-Done "install.sh finished inside $Distro"
-}
-
-# ---------------------------------------------------------------------------
-# Step 3: winget apps
-# ---------------------------------------------------------------------------
-Write-Step "Windows apps (winget)"
-
-$appsFile = Join-Path $PSScriptRoot "apps.txt"
-$appIds = Get-Content $appsFile | ForEach-Object { $_.Trim() } | Where-Object { $_ -and -not $_.StartsWith('#') }
-
-if (-not (Get-Command winget -ErrorAction SilentlyContinue)) {
-    Write-Warn "winget not found. Install 'App Installer' from the Microsoft Store, then re-run this script."
-} else {
-    $failed = @()
-    foreach ($id in $appIds) {
-        $listed = winget list --id $id -e --accept-source-agreements 2>$null | Out-String
-        if ($listed -match [regex]::Escape($id)) {
-            Write-Done "$id already installed"
-            continue
-        }
-
-        if ($DryRun) {
-            Write-DryRun "would run: winget install --id $id -e"
-            continue
-        }
-
-        Write-Info "Installing $id..."
-        try {
-            winget install --id $id -e --accept-package-agreements --accept-source-agreements --silent | Out-Null
-            if ($LASTEXITCODE -ne 0) { throw "winget exited with code $LASTEXITCODE" }
-            Write-Done "$id installed"
-        } catch {
-            Write-Warn "Failed to install $id`: $_"
-            $failed += $id
-        }
-    }
-    if ($failed.Count -gt 0) {
-        Write-Warn "Some packages failed to install: $($failed -join ', ')"
-        Write-Warn "Check the exact ID with 'winget search <name>' and retry manually."
-    }
 }
 
 # ---------------------------------------------------------------------------
@@ -224,9 +241,17 @@ function Set-PrefValue {
     }
 
     if (-not (Test-Path $Path)) { New-Item -Path $Path -Force | Out-Null }
-    Set-ItemProperty -Path $Path -Name $Name -Value $Value -Type $Type
-    Write-Done "set $Path\$Name = $Value"
-    return $true
+    try {
+        Set-ItemProperty -Path $Path -Name $Name -Value $Value -Type $Type -ErrorAction Stop
+        Write-Done "set $Path\$Name = $Value"
+        return $true
+    } catch {
+        # A handful of Explorer\Advanced values (e.g. TaskbarDa, TaskbarMn) are
+        # locked down by recent Windows builds even for elevated admins - skip
+        # rather than aborting the whole script.
+        Write-Warn "could not set $Path\$Name (skipping): $($_.Exception.Message)"
+        return $false
+    }
 }
 
 # Keyboard: max repeat speed, shortest delay
