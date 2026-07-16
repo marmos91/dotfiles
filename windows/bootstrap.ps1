@@ -470,6 +470,14 @@ function Find-StartMenuShortcut([string]$NameLike) {
         "$env:ProgramData\Microsoft\Windows\Start Menu\Programs",
         "$env:AppData\Microsoft\Windows\Start Menu\Programs"
     )
+    # Prefer an exact "$NameLike.lnk" match first (e.g. "Zen" -> Zen.lnk, not
+    # Zen Private Browsing.lnk) before falling back to a loose substring match.
+    foreach ($root in $roots) {
+        if (Test-Path $root) {
+            $hit = Get-ChildItem -Path $root -Filter "$NameLike.lnk" -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1
+            if ($hit) { return $hit.FullName }
+        }
+    }
     foreach ($root in $roots) {
         if (Test-Path $root) {
             $hit = Get-ChildItem -Path $root -Filter "*$NameLike*.lnk" -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1
@@ -480,7 +488,7 @@ function Find-StartMenuShortcut([string]$NameLike) {
 }
 
 # Mirrors macOS Dock's persistent-apps list, mapped to Windows equivalents
-$pinNames = @("WezTerm", "1Password", "Slack", "WhatsApp", "Telegram", "Spotify", "Chrome")
+$pinNames = @("WezTerm", "Zen", "Slack", "Spotify", "WhatsApp", "Telegram")
 $pinPaths = @()
 foreach ($name in $pinNames) {
     $path = Find-StartMenuShortcut $name
