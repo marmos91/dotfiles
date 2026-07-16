@@ -1,0 +1,42 @@
+# winget package IDs installed by windows/bootstrap.ps1
+# One ID per line. Lines starting with # (and blank lines) are ignored.
+# This mirrors the cross-platform subset of .config/nix-darwin/system/homebrew.nix's
+# `casks` list, plus a few Windows-specific additions. Verify an ID with:
+#   winget search --id <id>
+
+# Core / dev tooling
+Git.Git
+Microsoft.VisualStudioCode
+Microsoft.VisualStudio.Community
+Microsoft.PowerToys
+wez.wezterm
+AgileBits.1Password
+AgileBits.1Password.CLI
+Docker.DockerDesktop
+DBeaver.DBeaver.Community
+Anysphere.Cursor
+Anthropic.Claude
+
+# Browsers
+Google.Chrome
+Zen-Team.Zen-Browser
+
+# Communication
+SlackTechnologies.Slack
+Discord.Discord
+WhatsApp.WhatsApp
+Telegram.TelegramDesktop
+Microsoft.Teams
+
+# Media / misc
+Spotify.Spotify
+VideoLAN.VLC
+7zip.7zip
+
+# Notes / productivity
+Notion.Notion
+Obsidian.Obsidian
+
+# Networking
+Tailscale.Tailscale
+NordSecurity.NordVPN

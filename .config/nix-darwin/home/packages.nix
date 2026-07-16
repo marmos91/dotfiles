@@ -1,4 +1,4 @@
-{ pkgs, lib, ... }:
+{ pkgs, lib, isWSL, ... }:
 {
   home.packages =
     with pkgs;
@@ -85,10 +85,12 @@
       # Note: 1Password should be installed via official apt repo for full SSH agent support
       # See: https://support.1password.com/install-linux/
       binutils
-      docker
       gcc
       gnumake
       mesa
+    ]
+    ++ lib.optionals (pkgs.stdenv.isLinux && !isWSL) [
+      docker # Under WSL2, use Docker Desktop's WSL2 integration instead
       wl-clipboard # Wayland clipboard (wl-copy/wl-paste)
       xclip # X11 clipboard
     ];

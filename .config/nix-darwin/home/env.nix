@@ -1,4 +1,4 @@
-{ pkgs, lib, username, homeDirectory, ... }:
+{ pkgs, lib, username, homeDirectory, isWSL, ... }:
 let
   isDarwin = pkgs.stdenv.isDarwin;
 in
@@ -19,10 +19,11 @@ in
       VISUAL = "nvim";
       PAGER = "less";
       MANPAGER = "sh -c 'col -bx | bat -l man -p'";
-    } // lib.optionalAttrs (!isDarwin) {
-      # 1Password SSH agent (Linux only — macOS uses the native launchd ssh-agent
-      # so keys in ~/.ssh work with Keychain-stored passphrases and don't
-      # require unlocking 1Password for every SSH op).
+    } // lib.optionalAttrs (!isDarwin && !isWSL) {
+      # 1Password SSH agent (native Linux desktop app only — macOS uses the
+      # native launchd ssh-agent, and under WSL2 1Password's agent runs on
+      # the Windows host instead, reached via ssh.exe/WSL interop rather
+      # than a forwarded Unix socket; see home/programs/git/config.nix).
       SSH_AUTH_SOCK = "$HOME/.1password/agent.sock";
     } // {
 

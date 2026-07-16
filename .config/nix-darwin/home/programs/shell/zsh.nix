@@ -281,7 +281,9 @@ in
         fi
         '' else ''
         local arch=$(uname -m)
-        if [[ "$arch" == "aarch64" || "$arch" == "arm64" ]]; then
+        if grep -qi microsoft /proc/version 2>/dev/null; then
+          home-manager switch --flake ~/.config/nix-darwin#${username}-wsl "$@"
+        elif [[ "$arch" == "aarch64" || "$arch" == "arm64" ]]; then
           home-manager switch --flake ~/.config/nix-darwin#${username}-aarch64 "$@"
         else
           home-manager switch --flake ~/.config/nix-darwin#${username} "$@"
