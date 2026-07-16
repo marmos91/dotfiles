@@ -9,7 +9,7 @@ Cross-platform dotfiles for **macOS** and **Linux** (Ubuntu/GNOME), powered by N
 - **Cross-platform**: Works on macOS (Apple Silicon & Intel) and Linux (x86_64 & aarch64)
 - **Declarative configuration**: Managed with [Nix Darwin](https://github.com/LnL7/nix-darwin) (macOS) and [Home Manager](https://github.com/nix-community/home-manager) (Linux)
 - **Consistent theming**: [Catppuccin Mocha](https://github.com/catppuccin/catppuccin) across all tools via [catppuccin/nix](https://github.com/catppuccin/nix)
-- **Terminal emulators**: [Ghostty](https://github.com/ghostty-org/ghostty), [Kitty](https://sw.kovidgoyal.net/kitty/), [Wezterm](https://wezfurlong.org/wezterm/index.html)
+- **Terminal emulators**: [Ghostty](https://github.com/ghostty-org/ghostty)
 - **Shell**: Zsh with [Starship](https://starship.rs/) prompt
 - **Editor**: [Neovim](https://neovim.io/) with custom Lua configuration
 - **Terminal multiplexer**: [Tmux](https://github.com/tmux/tmux/wiki) with catppuccin theme
@@ -159,7 +159,7 @@ This automatically detects your platform and runs the appropriate command:
 │   │       ├── catppuccin.nix      # Global theme config
 │   │       ├── programs/
 │   │       │   ├── desktop/        # GNOME settings (Linux)
-│   │       │   ├── terminal/       # ghostty, kitty, tmux, starship
+│   │       │   ├── terminal/       # ghostty, tmux, starship
 │   │       │   ├── shell/          # zsh, fish
 │   │       │   ├── git/            # git, lazygit, delta
 │   │       │   └── utilities/      # bat, fzf, btop, k9s, etc.

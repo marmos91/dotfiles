@@ -39,6 +39,7 @@ in
       "netbirdio/tap/netbird"
       "openfortivpn"
       "rclone"
+      "rtk"
     ];
 
     casks = [
