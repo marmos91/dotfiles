@@ -1,6 +1,11 @@
 #!/usr/bin/env bash
 set -e
 
+# Always operate from the repo root, regardless of the caller's cwd
+# (e.g. windows/bootstrap.ps1 invokes this via `~/.dotfiles/install.sh`
+# from a login shell whose cwd is $HOME, not the repo).
+cd "$(dirname "$(readlink -f "$0")")"
+
 ######## COLORS ########
 YELLOW=$(tput setaf 3)
 BLUE=$(tput setaf 4)
