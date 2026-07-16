@@ -38,8 +38,6 @@
       sd
       sshpass
       stow
-      swiftformat
-      swiftlint
       tilt
       tldr
       tmuxinator
@@ -80,6 +78,11 @@
     ]
     ++ lib.optionals pkgs.stdenv.isDarwin [
       reattach-to-user-namespace
+      # Swift toolchain builds from source and fails on Linux in this
+      # nixpkgs pin (clang-16-unwrapped doesn't support -mtls-dialect=gnu2);
+      # these are macOS/iOS dev tools anyway.
+      swiftformat
+      swiftlint
     ]
     ++ lib.optionals pkgs.stdenv.isLinux [
       # Note: 1Password should be installed via official apt repo for full SSH agent support
