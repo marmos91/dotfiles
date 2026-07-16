@@ -24,7 +24,8 @@ Zen-Team.Zen-Browser
 # Communication
 SlackTechnologies.Slack
 Discord.Discord
-WhatsApp.WhatsApp
+# WhatsApp - msstore-only now, WhatsApp.WhatsApp was removed from the winget repo
+9NKSQGP7F2NH
 Telegram.TelegramDesktop
 Microsoft.Teams
 
