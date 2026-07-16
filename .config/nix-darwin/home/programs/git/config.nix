@@ -1,4 +1,4 @@
-{ pkgs, lib, config, ... }:
+{ pkgs, lib, config, isWSL, ... }:
 let
   # Local ed25519 signing key (lives at ~/.ssh/id_ed25519). Git signs via the
   # native ssh-agent / ssh-keygen — no 1Password unlock required.
@@ -84,6 +84,11 @@ in
       # Include local config
       include.path = "~/.config/git/config.local";
 
+    } // lib.optionalAttrs isWSL {
+      # Under WSL2, route git's SSH operations through the Windows OpenSSH
+      # client so they reach 1Password's agent via WSL interop (no forwarded
+      # Unix socket — see home/env.nix and 1Password's WSL SSH agent docs).
+      core.sshCommand = "ssh.exe";
     };
   };
 }

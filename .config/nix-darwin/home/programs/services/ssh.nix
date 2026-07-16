@@ -1,4 +1,4 @@
-{ pkgs, lib, ... }:
+{ pkgs, lib, isWSL, ... }:
 let
   isDarwin = pkgs.stdenv.isDarwin;
 in
@@ -26,10 +26,12 @@ in
       };
     };
 
-    # On Linux keep 1Password as the SSH agent. On macOS rely on the
+    # On native Linux keep 1Password as the SSH agent. On macOS rely on the
     # native launchd ssh-agent (SSH_AUTH_SOCK set automatically) plus
-    # Keychain-stored passphrases; no IdentityAgent override needed.
-    extraConfig = lib.optionalString (!isDarwin) ''
+    # Keychain-stored passphrases; no IdentityAgent override needed. Under
+    # WSL2 there's no forwarded agent socket — 1Password is reached via
+    # ssh.exe/WSL interop instead (git only; see programs/git/config.nix).
+    extraConfig = lib.optionalString (!isDarwin && !isWSL) ''
       Host *
         IdentityAgent "~/.1password/agent.sock"
     '';

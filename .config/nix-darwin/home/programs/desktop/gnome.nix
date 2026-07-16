@@ -1,4 +1,4 @@
-{ pkgs, lib, ... }:
+{ pkgs, lib, isWSL, ... }:
 let
   # Catppuccin Mocha palette for GNOME Terminal (not supported by catppuccin/nix)
   catppuccin = {
@@ -17,7 +17,7 @@ let
     base = "#1e1e2e";
   };
 in
-lib.mkIf pkgs.stdenv.isLinux {
+lib.mkIf (pkgs.stdenv.isLinux && !isWSL) {
   # GNOME Shell extensions
   home.packages = with pkgs.gnomeExtensions; [
     dash-to-dock

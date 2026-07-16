@@ -1,15 +1,15 @@
 # marmos91 dotfiles
 
-Cross-platform dotfiles for **macOS** and **Linux** (Ubuntu/GNOME), powered by Nix, Home Manager, and Stow.
+Cross-platform dotfiles for **macOS**, **Linux** (Ubuntu/GNOME), and **Windows** (via WSL2), powered by Nix, Home Manager, and Stow.
 
 ![result](./assets/setup.png)
 
 ## Highlights
 
-- **Cross-platform**: Works on macOS (Apple Silicon & Intel) and Linux (x86_64 & aarch64)
+- **Cross-platform**: Works on macOS (Apple Silicon & Intel), Linux (x86_64 & aarch64), and Windows (via WSL2)
 - **Declarative configuration**: Managed with [Nix Darwin](https://github.com/LnL7/nix-darwin) (macOS) and [Home Manager](https://github.com/nix-community/home-manager) (Linux)
 - **Consistent theming**: [Catppuccin Mocha](https://github.com/catppuccin/catppuccin) across all tools via [catppuccin/nix](https://github.com/catppuccin/nix)
-- **Terminal emulators**: [Ghostty](https://github.com/ghostty-org/ghostty)
+- **Terminal emulators**: [Ghostty](https://github.com/ghostty-org/ghostty), [Kitty](https://sw.kovidgoyal.net/kitty/), [WezTerm](https://wezfurlong.org/wezterm/index.html) (also native on Windows)
 - **Shell**: Zsh with [Starship](https://starship.rs/) prompt
 - **Editor**: [Neovim](https://neovim.io/) with custom Lua configuration
 - **Terminal multiplexer**: [Tmux](https://github.com/tmux/tmux/wiki) with catppuccin theme
@@ -61,6 +61,7 @@ chmod +x install.sh && ./install.sh
 5. Apply the appropriate Nix configuration:
    - **macOS**: nix-darwin + home-manager
    - **Linux**: standalone home-manager
+   - **WSL2**: standalone home-manager, auto-detected, using a WSL-specific configuration (skips GNOME/GUI-terminal modules; see [Windows](#windows-via-wsl2) below)
 6. Set the default shell (Linux only)
 
 ### 1Password SSH Agent Setup
@@ -94,6 +95,65 @@ git log --show-signature -1
 ### Post-install
 
 Restart your terminal or log out/in for all changes to take effect.
+
+## Windows (via WSL2)
+
+Nix has no native Windows support, so Windows is set up in two parts:
+
+1. **WSL2** hosts the real, Nix-managed environment — shell, Neovim, tmux, dev
+   toolchains, git. This reuses the exact same `install.sh` path as Linux
+   (auto-detected, uses the `<username>-wsl` home-manager configuration).
+2. **Native Windows** gets a small, explicitly non-Nix PowerShell layer for
+   what WSL2 can't reach: installing GUI apps, WezTerm, system preferences,
+   and taskbar pins.
+
+### Prerequisites
+
+- Windows 11, with an admin PowerShell.
+- `git` for Windows to clone this repo (`winget install Git.Git` if you don't
+  have it yet).
+
+### One-command setup
+
+```powershell
+git clone https://github.com/marmos91/dotfiles.git $env:USERPROFILE\.dotfiles
+cd $env:USERPROFILE\.dotfiles\windows
+.\bootstrap.ps1
+```
+
+Preview what it would do first with `.\bootstrap.ps1 -DryRun`.
+
+`bootstrap.ps1` is safe to run more than once — every step checks its current
+state first. What it does:
+
+1. Installs WSL2 + Ubuntu if missing. **If this is the first time WSL has
+   been enabled on the machine, Windows may require a reboot** — re-run the
+   script afterwards and it'll pick up where it left off.
+2. Clones this repo into WSL and runs `install.sh` there (same Linux path as
+   above).
+3. Installs GUI apps via `winget` from [`windows/apps.txt`](./windows/apps.txt).
+4. Applies system preferences (max keyboard repeat speed, dark theme, show
+   file extensions), disables Start menu/lock screen/Settings ads and
+   suggestions (mirroring `system/preferences.nix`), and removes common
+   preinstalled bloatware (Solitaire, Candy Crush, Facebook, Skype, Cortana,
+   etc. — see the list in `bootstrap.ps1`).
+5. Writes a WezTerm config (`%USERPROFILE%\.config\wezterm\wezterm.lua`) with
+   the same Catppuccin Mocha theme as macOS/Linux, configured to open
+   straight into WSL2.
+6. Best-effort pins the same app set to the taskbar as the macOS Dock's
+   `persistent-apps`. Taskbar pinning is an undocumented Windows API that
+   Microsoft has changed across releases — if it's a no-op on your build,
+   pin manually (right-click an app → **Pin to taskbar**).
+
+### What's still manual
+
+1Password's WSL integration requires an interactive login, so it can't be
+scripted:
+
+1. Open 1Password for Windows and sign in.
+2. **Settings → Developer** → enable "Use the SSH agent" and check this WSL
+   distro under SSH agent integration.
+3. Verify from inside WSL: `ssh-add.exe -l`.
 
 ## Uninstallation
 
@@ -165,6 +225,9 @@ This automatically detects your platform and runs the appropriate command:
 │   │       │   └── utilities/      # bat, fzf, btop, k9s, etc.
 │   │       └── development/        # Language toolchains
 │   └── nvim/                # Neovim configuration
+├── windows/                  # Native Windows automation (non-Nix, WSL2 host setup)
+│   ├── bootstrap.ps1         # Single entry point: WSL2, winget apps, prefs, WezTerm, taskbar
+│   └── apps.txt              # winget package IDs to install
 ├── install.sh               # Installation script
 ├── uninstall.sh             # Uninstallation script
 └── README.md
@@ -183,6 +246,14 @@ This automatically detects your platform and runs the appropriate command:
 - GNOME Terminal with Catppuccin theme
 - Window buttons on left (macOS-style)
 
+### Windows (via WSL2)
+- WSL2 + Ubuntu, running the same home-manager config as native Linux
+- winget-installed GUI apps (see `windows/apps.txt`)
+- System preferences (keyboard repeat, dark theme, file extensions) and
+  ads/suggestions disabled via registry
+- WezTerm with Catppuccin theme, launching straight into WSL2
+- Taskbar pins mirroring the macOS Dock (best-effort)
+
 ## Customization
 
 Key files to customize:
@@ -196,6 +267,8 @@ Key files to customize:
 | Terminal settings | `home/programs/terminal/` |
 | GNOME settings | `home/programs/desktop/gnome.nix` |
 | Secrets management | `home/secrets/` ([README](.config/nix-darwin/home/secrets/README.md)) |
+| Windows apps (winget) | `windows/apps.txt` |
+| Windows preferences/taskbar | `windows/bootstrap.ps1` |
 
 ## License
 

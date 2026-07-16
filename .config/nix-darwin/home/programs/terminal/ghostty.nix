@@ -1,4 +1,4 @@
-{ pkgs, lib, config, ... }:
+{ pkgs, lib, config, isWSL, ... }:
 let
   isDarwin = pkgs.stdenv.isDarwin;
 
@@ -36,7 +36,7 @@ let
     window-decoration = true;
   };
 in
-{
+lib.mkIf (!isWSL) {
   programs.ghostty = {
     enable = true;
     package = if isDarwin then null else pkgs.ghostty; # Use Cask on macOS, nixpkgs on Linux

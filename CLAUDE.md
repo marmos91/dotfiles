@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Repository Overview
 
-Personal dotfiles for macOS using Nix Darwin, Home Manager, and GNU Stow. Manages system configuration, development environment, and editor setup declaratively.
+Personal dotfiles for macOS, Linux, and Windows (via WSL2), using Nix Darwin, Home Manager, and GNU Stow. Manages system configuration, development environment, and editor setup declaratively.
 
 ## Key Commands
 
@@ -83,6 +83,20 @@ init.lua                     # Entry point
 ### Stow Structure
 
 Files in `.dotfiles/` are symlinked to `~` via Stow. The `.stowrc` configures target as home and ignores setup scripts.
+
+### Windows / WSL2 (`windows/`)
+
+Not Nix-managed — plain PowerShell, since Nix has no native Windows support.
+`windows/bootstrap.ps1` is the single entry point run from Windows: installs
+WSL2 + Ubuntu, clones this repo into WSL and runs `install.sh` there (using
+the `<username>-wsl` home-manager configuration in `flake.nix`, which skips
+GNOME/GUI-terminal modules that have nowhere to run under WSL2), then
+installs GUI apps from `windows/apps.txt` via winget, applies system
+preferences and disables ads/suggestions via registry, writes a WezTerm
+config, and best-effort pins the taskbar. `install.sh` auto-detects WSL2
+(`grep -qi microsoft /proc/version`) and adjusts the 1Password (CLI-only)
+and Docker (skipped, use Docker Desktop's WSL2 integration) install steps
+accordingly.
 
 ## Making Changes
 

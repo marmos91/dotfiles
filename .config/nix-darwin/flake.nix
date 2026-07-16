@@ -76,7 +76,7 @@
                 useGlobalPkgs = true;
                 useUserPackages = true;
                 backupFileExtension = "backup";
-                extraSpecialArgs = { inherit username hostname; homeDirectory = "/Users/${username}"; };
+                extraSpecialArgs = { inherit username hostname; homeDirectory = "/Users/${username}"; isWSL = false; };
                 users.${username} = {
                   imports = [
                     ./home
@@ -94,7 +94,7 @@
       homeConfigurations = {
         ${username} = home-manager.lib.homeManagerConfiguration {
           pkgs = mkPkgs "x86_64-linux";
-          extraSpecialArgs = { inherit username hostname; homeDirectory = "/home/${username}"; };
+          extraSpecialArgs = { inherit username hostname; homeDirectory = "/home/${username}"; isWSL = false; };
           modules = [
             ./home
             catppuccin.homeModules.catppuccin
@@ -105,7 +105,21 @@
         # ARM Linux variant (e.g., Raspberry Pi, ARM servers)
         "${username}-aarch64" = home-manager.lib.homeManagerConfiguration {
           pkgs = mkPkgs "aarch64-linux";
-          extraSpecialArgs = { inherit username hostname; homeDirectory = "/home/${username}"; };
+          extraSpecialArgs = { inherit username hostname; homeDirectory = "/home/${username}"; isWSL = false; };
+          modules = [
+            ./home
+            catppuccin.homeModules.catppuccin
+            sops-nix.homeManagerModules.sops
+          ];
+        };
+
+        # Windows via WSL2 (Ubuntu) — same Linux home-manager config, minus
+        # GUI-only pieces (GNOME desktop, GUI terminal emulators) that have
+        # nowhere to run inside WSL2. The GUI terminal (WezTerm) is installed
+        # natively on the Windows side instead (see windows/bootstrap.ps1).
+        "${username}-wsl" = home-manager.lib.homeManagerConfiguration {
+          pkgs = mkPkgs "x86_64-linux";
+          extraSpecialArgs = { inherit username hostname; homeDirectory = "/home/${username}"; isWSL = true; };
           modules = [
             ./home
             catppuccin.homeModules.catppuccin

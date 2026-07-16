@@ -5,3 +5,4 @@
 --ignore=uninstall.sh
 --ignore=.gitignore
 --ignore=assets
+--ignore=windows

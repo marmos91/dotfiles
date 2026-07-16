@@ -29,6 +29,10 @@ function show_help {
     echo "  --no-docker       Skip Docker installation (Linux only)"
     echo "  --help            Show this help message"
     echo ""
+    echo "WSL2 is auto-detected: 1Password installs CLI-only (use 1Password for Windows"
+    echo "for the desktop app/SSH agent) and Docker Engine install is skipped (use Docker"
+    echo "Desktop's WSL2 integration instead). See windows/bootstrap.ps1 for the Windows side."
+    echo ""
     echo "Examples:"
     echo "  $0                          # Full install with defaults"
     echo "  $0 --shell bash             # Install with bash as default shell"
@@ -141,7 +145,18 @@ titlize "
 # Detect OS and architecture
 OS="$(uname -s)"
 ARCH="$(uname -m)"
-log "Detected OS: $OS ($ARCH)"
+
+# Detect WSL2 (Windows Subsystem for Linux)
+IS_WSL=false
+if [[ "$OS" == "Linux" ]] && grep -qi microsoft /proc/version 2>/dev/null; then
+    IS_WSL=true
+fi
+
+if [[ "$IS_WSL" == true ]]; then
+    log "Detected OS: $OS ($ARCH) — WSL2"
+else
+    log "Detected OS: $OS ($ARCH)"
+fi
 log "Default shell: $DEFAULT_SHELL"
 
 # Configuration - use flag, env var, or default
@@ -242,6 +257,24 @@ install_1password() {
 
     if [[ "$SKIP_1PASSWORD" == true ]]; then
         log "Skipping 1Password installation (--no-1password flag)"
+        return 0
+    fi
+
+    if [[ "$IS_WSL" == true ]]; then
+        log "WSL2 detected: skipping the 1Password desktop app (no GUI story under WSL2)"
+        if command -v op &> /dev/null; then
+            log "1Password CLI is already installed"
+        else
+            log "Installing 1Password CLI..."
+            curl -sS https://downloads.1password.com/linux/keys/1password.asc | sudo gpg --yes --dearmor --output /usr/share/keyrings/1password-archive-keyring.gpg
+            echo 'deb [arch=amd64 signed-by=/usr/share/keyrings/1password-archive-keyring.gpg] https://downloads.1password.com/linux/debian/amd64 stable main' | sudo tee /etc/apt/sources.list.d/1password.list > /dev/null
+            sudo apt-get update && sudo apt-get install -y 1password-cli
+        fi
+        log ""
+        log "Note: Install 1Password for Windows on the Windows side (see windows/bootstrap.ps1),"
+        log "sign in, then enable Settings → Developer → \"Use the SSH agent\" and check this WSL"
+        log "distro under SSH agent / \"Integrate with 1Password CLI\"."
+        log "Verify from inside WSL with: ssh-add.exe -l"
         return 0
     fi
 
@@ -359,6 +392,13 @@ install_docker() {
         return 0
     fi
 
+    if [[ "$IS_WSL" == true ]]; then
+        log "WSL2 detected: skipping Docker Engine install — use Docker Desktop's WSL2"
+        log "integration instead (Docker Desktop on Windows → Settings → Resources → WSL"
+        log "Integration → enable this distro)."
+        return 0
+    fi
+
     if [[ "$SKIP_DOCKER" == true ]]; then
         log "Skipping Docker installation (--no-docker flag)"
         return 0
@@ -425,8 +465,10 @@ if command -v nix &> /dev/null; then
         log "nix-darwin configuration activated successfully"
     elif [[ "$OS" == "Linux" ]]; then
         # Linux: use standalone home-manager
-        # Determine the correct configuration based on architecture
-        if [[ "$ARCH" == "aarch64" || "$ARCH" == "arm64" ]]; then
+        # Determine the correct configuration based on WSL/architecture
+        if [[ "$IS_WSL" == true ]]; then
+            HM_CONFIG="${USERNAME}-wsl"
+        elif [[ "$ARCH" == "aarch64" || "$ARCH" == "arm64" ]]; then
             HM_CONFIG="${USERNAME}-aarch64"
         else
             HM_CONFIG="${USERNAME}"
