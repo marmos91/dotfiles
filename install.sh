@@ -485,14 +485,23 @@ if command -v nix &> /dev/null; then
         # ~/.bashrc, ~/.profile, etc. from /etc/skel, which home-manager
         # refuses to clobber by default. Back them up (*.hm-backup) instead
         # of failing outright.
+        hmStatus=0
         if ! command -v home-manager &> /dev/null; then
             log "Installing home-manager..."
-            nix run home-manager -- switch -b hm-backup --flake "${USER_HOME}/.config/nix-darwin#${HM_CONFIG}"
+            nix run home-manager -- switch -b hm-backup --flake "${USER_HOME}/.config/nix-darwin#${HM_CONFIG}" || hmStatus=$?
         else
-            home-manager switch -b hm-backup --flake "${USER_HOME}/.config/nix-darwin#${HM_CONFIG}"
+            home-manager switch -b hm-backup --flake "${USER_HOME}/.config/nix-darwin#${HM_CONFIG}" || hmStatus=$?
         fi
 
-        log "home-manager configuration activated successfully"
+        if [[ $hmStatus -eq 0 ]]; then
+            log "home-manager configuration activated successfully"
+        else
+            log "Warning: home-manager switch reported errors (exit $hmStatus), but files/packages"
+            log "may still have applied. A common cause on a brand-new machine: sops-nix can't"
+            log "decrypt secrets yet because ~/.config/sops/age/keys.txt doesn't exist - see"
+            log "${USER_HOME}/.config/nix-darwin/home/secrets/README.md (\"Adding Another Machine\")."
+            log "Continuing with the remaining setup steps."
+        fi
 
         # Set default shell on Linux
         set_default_shell "$DEFAULT_SHELL" "$USER_HOME"
