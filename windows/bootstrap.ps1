@@ -58,6 +58,58 @@ if (-not $DryRun -and -not (Test-IsAdmin)) {
 Write-Host "marmos91 dotfiles - Windows bootstrap$(if ($DryRun) { ' (dry run)' })" -ForegroundColor Magenta
 
 # ---------------------------------------------------------------------------
+# Step 0: prerequisites
+# ---------------------------------------------------------------------------
+Write-Step "Prerequisites"
+
+$hardFailures = @()
+
+$buildNumber = [int](Get-CimInstance Win32_OperatingSystem).BuildNumber
+if ($buildNumber -ge 19041) {
+    Write-Done "Windows build $buildNumber (WSL2 needs 19041+)"
+} else {
+    Write-Warn "Windows build $buildNumber is too old for WSL2 (needs 19041+)"
+    $hardFailures += "Windows build too old"
+}
+
+if ([Environment]::Is64BitOperatingSystem) {
+    Write-Done "64-bit OS"
+} else {
+    Write-Warn "32-bit OS - WSL2 requires 64-bit Windows"
+    $hardFailures += "Not 64-bit"
+}
+
+$hyperVPresent = (Get-CimInstance Win32_ComputerSystem).HypervisorPresent
+if ($hyperVPresent) {
+    Write-Done "Virtualization is active (hypervisor detected)"
+} else {
+    Write-Warn "No hypervisor detected - virtualization may be disabled in BIOS/UEFI."
+    Write-Warn "wsl --install will report this properly; enable virtualization and retry if it fails."
+}
+
+$freeGb = [math]::Round((Get-PSDrive C).Free / 1GB, 1)
+if ($freeGb -ge 20) {
+    Write-Done "$freeGb GB free on C: (plenty for WSL2 + apps)"
+} else {
+    Write-Warn "$freeGb GB free on C: - installing WSL2 plus the winget app list may be tight"
+}
+
+if (Get-Command winget -ErrorAction SilentlyContinue) {
+    Write-Done "winget available ($(winget --version))"
+} else {
+    Write-Warn "winget not found - install 'App Installer' from the Microsoft Store first"
+    $hardFailures += "winget missing"
+}
+
+if ($hardFailures.Count -gt 0 -and -not $DryRun) {
+    Write-Warn "Blocking prerequisite(s) not met: $($hardFailures -join ', ')"
+    Write-Warn "Fix the above and re-run this script."
+    exit 1
+} elseif ($hardFailures.Count -gt 0) {
+    Write-DryRun "would exit here for real - blocking prerequisite(s) not met: $($hardFailures -join ', ')"
+}
+
+# ---------------------------------------------------------------------------
 # Step 1: WSL2 + distro
 # ---------------------------------------------------------------------------
 Write-Step "WSL2 + $Distro"
