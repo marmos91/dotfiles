@@ -109,29 +109,47 @@ Nix has no native Windows support, so Windows is set up in two parts:
 
 ### Prerequisites
 
-- Windows 11, with an admin PowerShell.
+- Windows 10 2004+ (build 19041+) or Windows 11, 64-bit, with virtualization
+  enabled (checked automatically — see Step 0 below).
 - `git` for Windows to clone this repo (`winget install Git.Git` if you don't
   have it yet).
 
 ### One-command setup
 
+Open **PowerShell as Administrator** (Start → type "PowerShell" → right-click
+→ "Run as Administrator") — do this up front rather than letting the script
+self-elevate, so all output stays in the window you're watching instead of
+a second window that closes when it's done.
+
 ```powershell
 git clone https://github.com/marmos91/dotfiles.git $env:USERPROFILE\.dotfiles
 cd $env:USERPROFILE\.dotfiles\windows
-.\bootstrap.ps1
+powershell -ExecutionPolicy Bypass -File .\bootstrap.ps1
 ```
 
-Preview what it would do first with `.\bootstrap.ps1 -DryRun`.
+(`-ExecutionPolicy Bypass` is needed since the script isn't signed.)
+
+Preview what it would do first with `.\bootstrap.ps1 -DryRun` (no admin
+needed for a dry run).
 
 `bootstrap.ps1` is safe to run more than once — every step checks its current
 state first. What it does:
 
+0. Checks prerequisites (Windows build, 64-bit, virtualization/hypervisor
+   presence, free disk space, winget availability) and stops early with a
+   clear reason if a hard requirement isn't met.
 1. Installs WSL2 + Ubuntu if missing. **If this is the first time WSL has
-   been enabled on the machine, Windows may require a reboot** — re-run the
-   script afterwards and it'll pick up where it left off.
+   been enabled on the machine, Windows will require a reboot** — after it
+   reboots, Ubuntu launches itself and asks you to create a UNIX username
+   and password; that part is interactive and can't be scripted. Once
+   that's done, re-run the same command above and it'll pick up where it
+   left off.
 2. Clones this repo into WSL and runs `install.sh` there (same Linux path as
-   above).
+   above) — this will prompt for your `sudo` password inside WSL a few
+   times, which is normal.
 3. Installs GUI apps via `winget` from [`windows/apps.txt`](./windows/apps.txt).
+   A few packages (Visual Studio, Docker Desktop) may pop their own installer
+   UI despite the silent flags — let them finish.
 4. Applies system preferences (max keyboard repeat speed, dark theme, show
    file extensions), disables Start menu/lock screen/Settings ads and
    suggestions (mirroring `system/preferences.nix`), and removes common
