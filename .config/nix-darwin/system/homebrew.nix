@@ -25,9 +25,13 @@ in
   homebrew = {
     enable = true;
     onActivation = {
+      # Declarative: removes anything not listed below.
       cleanup = "uninstall";
-      autoUpdate = true;
-      upgrade = true;
+      # Non-deterministic third-party upgrades don't belong in activation — they
+      # make `rebuild` slow, interactive (sudo prompts) and able to fail on
+      # unrelated brew errors. Run `brew update && brew upgrade` on your own time.
+      autoUpdate = false;
+      upgrade = false;
     };
     taps = trustedTaps;
 
