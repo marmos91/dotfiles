@@ -49,7 +49,11 @@ in
     casks = [
       "1password"
       "1password-cli"
-      "aerospace"
+      # Must be tap-qualified. `brew bundle --cleanup` rewrites the trust store
+      # from the Brewfile, and an unqualified name resolves to the core cask —
+      # so nikitabobko/tap/aerospace was left untrusted and `brew cleanup`
+      # exited 1 on every activation.
+      "nikitabobko/tap/aerospace"
       "aldente"
       "bartender"
       "betterdisplay"
