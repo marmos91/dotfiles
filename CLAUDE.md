@@ -18,8 +18,12 @@ darwin-rebuild switch --flake ~/.config/nix-darwin#amaterasu
 # Update flake inputs
 nix flake update ~/.config/nix-darwin
 
-# Garbage collection
+# Garbage collection — normally unnecessary; determinate-nixd collects in the
+# background (determinateNix.determinateNixd.garbageCollector.strategy)
 nix-gc                     # alias for nix-collect-garbage -d && nix-store --optimize
+
+# Restore SSH keys from 1Password into ~/.ssh (new machine, or after rotating)
+op-ssh-restore [--force] [--dry-run] [key...]
 
 # Search for packages
 nix-search <package>       # alias for nix search nixpkgs
@@ -88,6 +92,27 @@ Files in `.dotfiles/` are symlinked to `~` via Stow. The `.stowrc` configures ta
 
 ### Adding a new Homebrew cask
 Edit `.config/nix-darwin/system/homebrew.nix`, add to `casks` list, then run `rebuild`.
+
+Casks and brews from a third-party tap **must be tap-qualified**
+(`nikitabobko/tap/aerospace`, not `aerospace`). `brew bundle --cleanup` rewrites
+Homebrew's trust store from the generated Brewfile, and an unqualified name
+resolves to the core cask — leaving the tap's version untrusted, which makes
+`brew cleanup` exit 1 and fails the whole activation.
+
+`onActivation.autoUpdate`/`upgrade` are deliberately `false`: non-deterministic
+third-party upgrades during activation made `rebuild` slow, interactive, and
+able to fail on unrelated brew errors. Run `brew update && brew upgrade` manually.
+
+### Changing Nix settings
+Not via `nix.settings` — the determinate module sets `nix.enable = mkForce false`,
+so nix-darwin never writes it and the setting is silently dropped. Use
+`determinateNix.customSettings` (freeform nix.conf) in `system/darwin.nix`, and
+`determinateNix.determinateNixd.*` for daemon behaviour such as GC.
+
+Prefer `extra-substituters` / `extra-trusted-public-keys`; the plain forms
+*replace* Determinate's own lists. Determinate already owns
+`experimental-features`, `max-jobs`, `sandbox`, `netrc-file` and `ssl-cert-file` —
+don't restate them.
 
 ### Adding a new Nix package
 Edit `.config/nix-darwin/home/packages.nix` or the relevant program file, then run `rebuild`.
