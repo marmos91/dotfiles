@@ -1,6 +1,6 @@
 { config, pkgs, lib, hostname, username, ... }:
 let
-  isDarwin = pkgs.stdenv.isDarwin;
+  isDarwin = pkgs.stdenv.hostPlatform.isDarwin;
 
 in
 {

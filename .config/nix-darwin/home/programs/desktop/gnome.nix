@@ -17,7 +17,7 @@ let
     base = "#1e1e2e";
   };
 in
-lib.mkIf pkgs.stdenv.isLinux {
+lib.mkIf pkgs.stdenv.hostPlatform.isLinux {
   # GNOME Shell extensions
   home.packages = with pkgs.gnomeExtensions; [
     dash-to-dock
