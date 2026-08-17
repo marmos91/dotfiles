@@ -63,29 +63,42 @@ chmod +x install.sh && ./install.sh
    - **Linux**: standalone home-manager
 6. Set the default shell (Linux only)
 
-### 1Password SSH Agent Setup
+### SSH keys and commit signing
 
-This configuration uses 1Password for SSH key management and Git commit signing. After installation:
+1Password stores the keys; how they're used differs per platform.
 
-1. **Open 1Password** and sign in to your account
-2. **Enable SSH Agent**: Go to **Settings → Developer** and enable:
-   - "Use the SSH agent"
-   - "Integrate with 1Password CLI"
-3. **Add your SSH key** to 1Password (if not already there)
-4. **Authorize the key** for Git signing when prompted
+**macOS** — keys live on disk and 1Password is only the backup, so nothing
+prompts for a fingerprint on every commit or `ssh`. On a new machine:
 
-The git configuration automatically uses 1Password's `op-ssh-sign` for commit signing:
-- **macOS**: `/Applications/1Password.app/Contents/MacOS/op-ssh-sign`
-- **Linux**: `/opt/1Password/op-ssh-sign`
+1. **Open 1Password**, sign in, and enable **Settings → Developer → "Integrate
+   with 1Password CLI"** (the SSH agent itself is not needed here)
+2. **Restore the keys** into `~/.ssh`:
 
-To verify it's working:
+   ```bash
+   op-ssh-restore --dry-run   # preview
+   op-ssh-restore             # write; skips keys already present
+   ```
+
+   Pass `--force` to replace existing files (the old one is kept as `.bak`), and
+   bare key names to limit the run: `op-ssh-restore --force id_ed25519`. Set
+   `OP_SSH_VAULT` if the keys aren't in `Private`.
+
+Git signs with `ssh-keygen` reading `~/.ssh/id_ed25519` directly — no agent is
+involved. `user.signingkey` must therefore be a **path**; a literal public key
+makes git use `ssh-keygen -Y sign -U`, which requires an agent and fails with
+`Couldn't find key in agent?`.
+
+Keys come out of 1Password without a passphrase, so anyone who can read
+`~/.ssh` can use them. That is the trade for never being prompted.
+
+**Linux** — the 1Password SSH agent is used directly: `SSH_AUTH_SOCK` points at
+`~/.1password/agent.sock` (see `home/env.nix`), so enable **Settings → Developer
+→ "Use the SSH agent"** there.
+
+To verify:
 
 ```bash
-# Test SSH agent
-ssh-add -l
-
-# Test commit signing
-echo "test" | git commit --allow-empty -m "Test signed commit"
+git commit --allow-empty -m "Test signed commit"
 git log --show-signature -1
 ```
 
