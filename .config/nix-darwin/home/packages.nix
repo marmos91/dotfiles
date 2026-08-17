@@ -90,11 +90,14 @@
         VAULT="''${OP_SSH_VAULT:-Private}"
         force=0
         dry=0
+        only=""
         for arg in "$@"; do
           case "$arg" in
             --force) force=1 ;;
             --dry-run) dry=1 ;;
-            *) echo "usage: op-ssh-restore [--force] [--dry-run]" >&2; exit 1 ;;
+            -*) echo "usage: op-ssh-restore [--force] [--dry-run] [key...]" >&2; exit 1 ;;
+            # Bare names limit the run to those keys; default is all of them.
+            *) only="$only $arg" ;;
           esac
         done
 
@@ -108,6 +111,9 @@
           | while IFS= read -r title; do
               dest="$HOME/.ssh/$title"
 
+              if [ -n "$only" ] && [[ " $only " != *" $title "* ]]; then
+                continue
+              fi
               if [ -e "$dest" ] && [ "$force" -eq 0 ]; then
                 echo "skip    $title (exists — --force to replace)"
                 continue
