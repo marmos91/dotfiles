@@ -1,6 +1,6 @@
 { pkgs, lib, config, ... }:
 let
-  isDarwin = pkgs.stdenv.isDarwin;
+  isDarwin = pkgs.stdenv.hostPlatform.isDarwin;
 
   commonSettings = {
     # theme is managed by the catppuccin nix module (see home/catppuccin.nix)
