@@ -1,49 +1,37 @@
-{ pkgs, lib, username, ... }:
+{ pkgs, username, ... }:
 {
   users.users.${username} = {
     home = "/Users/${username}";
     shell = pkgs.zsh;
   };
 
-  # Nix configuration
-  nix = {
-    settings = {
-      experimental-features = "nix-command flakes";
-
-      # Performance optimizations
-      max-jobs = 8;
-      cores = 0;
-      auto-optimise-on-install = true;
-
-      # Security
-      restrict-eval = true;
-      trusted-users = [
-        "@admin"
-        username
-      ];
-      allowed-users = [ "@wheel" ];
-
-      # Cache settings
-      substituters = [
-        "https://cache.nixos.org/"
+  # Nix configuration.
+  #
+  # The determinate module forces `nix.enable = false`, so nix-darwin's
+  # `nix.settings` is never written anywhere. Custom nix.conf settings go
+  # through `determinateNix.customSettings`, daemon behaviour through
+  # `determinateNix.determinateNixd`. Determinate owns experimental-features,
+  # max-jobs, sandbox and the cache keys — don't restate them here.
+  determinateNix = {
+    # `extra-*` appends; plain `substituters` would drop Determinate's own.
+    customSettings = {
+      extra-substituters = [
         "https://nix-community.cachix.org"
         "https://devenv.cachix.org"
       ];
-      trusted-public-keys = [
-        "cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY="
+      extra-trusted-public-keys = [
         "nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs="
         "devenv.cachix.org-1:w1cLUi8dv3hnoSPGAuibQv+f9TZLr6cv/Hm9XgU50cw="
       ];
-
-      # Build settings
-      keep-outputs = true;
-      keep-derivations = true;
-      sandbox = true;
-
-      # Garbage collection thresholds
-      min-free = lib.mkDefault (1000 * 1000 * 1000); # 1GB
-      max-free = lib.mkDefault (3000 * 1000 * 1000); # 3GB
+      trusted-users = [
+        "root"
+        "@admin"
+        username
+      ];
     };
+
+    # Background GC. Replaces the min-free/max-free thresholds that never applied.
+    determinateNixd.garbageCollector.strategy = "automatic";
   };
 
   system.stateVersion = 5;
