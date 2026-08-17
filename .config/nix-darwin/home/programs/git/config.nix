@@ -1,7 +1,13 @@
 { pkgs, lib, config, ... }:
 let
-  # Local ed25519 signing key (lives at ~/.ssh/id_ed25519). Git signs via the
-  # native ssh-agent / ssh-keygen — no 1Password unlock required.
+  # Local ed25519 signing key. The private half lives at ~/.ssh/id_ed25519,
+  # restored from 1Password by `op-ssh-restore`.
+  #
+  # `signing.key` must be the PATH, not the literal public key: given a literal
+  # key git calls `ssh-keygen -Y sign -U`, which demands an agent holding the
+  # private half and fails with "Couldn't find key in agent?". Given a path it
+  # reads the file directly — no agent, no 1Password prompt.
+  signingKeyFile = "~/.ssh/id_ed25519";
   signingKey = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIHC3Xm+j0b1OJdfk2hmqPNxnbvh2knC25EX2wEtSB5DK";
   # Previous 1Password-managed RSA key. Kept in allowed_signers so historical
   # commits signed with it still verify locally via `git log --show-signature`.
@@ -26,15 +32,22 @@ in
 
     signing = {
       signByDefault = true;
-      key = signingKey;
+      key = signingKeyFile;
       format = "ssh";
     };
 
     settings = {
       user = {
-        name = "marmos91";
+        # The name commits are actually authored with — an unmanaged
+        # ~/.gitconfig used to override this with "Marco Moschettini".
+        name = "Marco Moschettini";
         email = userEmail;
       };
+
+      # Written by `gh auth login` into ~/.gitconfig; declared here so the
+      # unmanaged file isn't the only place they live.
+      "credential \"https://github.com\"".helper = "!gh auth git-credential";
+      "credential \"https://gist.github.com\"".helper = "!gh auth git-credential";
 
       alias = {
         st = "status";
@@ -68,8 +81,8 @@ in
       merge.conflictstyle = "zdiff3";
 
       # SSH signing with the native toolchain (ssh-keygen -Y sign). No
-      # `gpg.ssh.program` override — falls back to the default, which resolves
-      # the signing key through ssh-agent / ~/.ssh.
+      # `gpg.ssh.program` override — the default reads user.signingkey, which
+      # is a path to the on-disk key, so no agent is involved.
       gpg.format = "ssh";
       "gpg \"ssh\"".allowedSignersFile = "~/.config/git/allowed_signers";
 
