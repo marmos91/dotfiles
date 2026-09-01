@@ -8,19 +8,21 @@ let
   # private half and fails with "Couldn't find key in agent?". Given a path it
   # reads the file directly — no agent, no 1Password prompt.
   signingKeyFile = "~/.ssh/id_ed25519";
-  signingKey = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIHC3Xm+j0b1OJdfk2hmqPNxnbvh2knC25EX2wEtSB5DK";
-  # Previous 1Password-managed RSA key. Kept in allowed_signers so historical
-  # commits signed with it still verify locally via `git log --show-signature`.
-  legacySigningKey = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQC1Z1G84m2eZAGLJnXNiItcqUvaL36gG2/bam73es6wDhDpdQwhb1+1kBCf3Yqq98is7zACuzKgFhrLkKPWs+1TSTCOXrL0he6MNHUdpiYhZewKNMg4A8+RkpBgJpekQr0ulhhnH7aWKZ1x+qIBc/uPOumEG0SnJM7mzoZ1KO+M2Djk64ofXOeODgCyXut/8wdpRVXjv9fttdvyQOoTFPgLqzsBCnlRR1lo3mo+AffLjwnRdH2UThW4cDiQnPCfLUAopFobC8P8plNnBdrjl3GOaCcGbbgphiJVJ9Gfb6gPMvMkQjnGlCfhvxfvCya6D0oZGA/oMZMU4+qePaSJKeyYatIdHSWtD8cn3USLIIRe0NBzsgpsluxuqLN/wYWkLGZ8jWVsPBUYWl+0V2jNmJNrk0AZwgHuhpegBU+rpCR4+LYvdB43qSHvT1e2Bjz83M5Sqbf94SpfaV0UjiUSR4HhVdmeftIrIRJLc59MIRGfQvaiII5ozCJu4nNTJa/YklM=";
-  userEmail = "2795616+marmos91@users.noreply.github.com";
 in
 {
-  # allowed_signers: trust both the active key and the legacy 1Password key for
-  # verification of past commits.
-  home.file.".config/git/allowed_signers".text = ''
-    ${userEmail} ${signingKey}
-    ${userEmail} ${legacySigningKey}
-  '';
+  # Identities and allowed_signers are sops secrets (`git_identity`,
+  # `git_identity_work`, `git_allowed_signers` in home/secrets), so the email
+  # addresses stay out of this public repo. sops decrypts them to
+  # ~/.config/git/ at activation; git reads them at runtime via `includes`.
+  #
+  # The default identity is the GitHub noreply address, so no real address is
+  # published in commit metadata. Work repos under ~/Projects/cubbit still get
+  # the Cubbit address, which their org needs for attribution.
+  #
+  # allowed_signers lists both the active ed25519 key and the legacy
+  # 1Password RSA key under every address ever used — noreply, personal and
+  # work — so older signed commits still verify via `git log --show-signature`.
+  # A signer is matched by the commit's email, not by the key alone.
 
   programs.delta = {
     enable = true;
@@ -36,12 +38,23 @@ in
       format = "ssh";
     };
 
+    # Order matters: the personal identity applies everywhere, then work repos
+    # override the address under ~/Projects/cubbit. Same signing key, so
+    # nothing else has to change per-repo.
+    includes = [
+      { path = "~/.config/git/identity"; }
+      {
+        condition = "gitdir:~/Projects/cubbit/";
+        path = "~/.config/git/identity-work";
+      }
+    ];
+
     settings = {
       user = {
         # The name commits are actually authored with — an unmanaged
         # ~/.gitconfig used to override this with "Marco Moschettini".
+        # `email` deliberately lives in the sops-backed includes above.
         name = "Marco Moschettini";
-        email = userEmail;
       };
 
       # Written by `gh auth login` into ~/.gitconfig; declared here so the
