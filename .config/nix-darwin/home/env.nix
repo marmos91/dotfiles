@@ -19,6 +19,10 @@ in
       VISUAL = "nvim";
       PAGER = "less";
       MANPAGER = "sh -c 'col -bx | bat -l man -p'";
+
+      # starship warns whenever a fat directory (/nix/store) blows scan_timeout;
+      # the bail-out is intended, so only the log is noise.
+      STARSHIP_LOG = "error";
     } // lib.optionalAttrs (!isDarwin) {
       # 1Password SSH agent (Linux only — macOS uses the native launchd ssh-agent
       # so keys in ~/.ssh work with Keychain-stored passphrases and don't

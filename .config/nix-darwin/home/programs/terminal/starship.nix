@@ -7,7 +7,7 @@
 
     settings = {
       # Fast loading - scan timeout
-      scan_timeout = 10;
+      scan_timeout = 50;
 
       # Palette managed by catppuccin/nix module (see home/catppuccin.nix)
       palette = "catppuccin_mocha";
