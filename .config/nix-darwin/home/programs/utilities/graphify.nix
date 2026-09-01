@@ -19,7 +19,7 @@ in
 {
   home.activation.graphify = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
     if ! "${venv}/bin/graphify" --version 2>/dev/null | grep -q "${pin}"; then
-      $DRY_RUN_CMD ${pkgs.python313}/bin/python3 -m venv "${venv}"
+      $DRY_RUN_CMD ${pkgs.python313}/bin/python3 -m venv --clear "${venv}"
       $DRY_RUN_CMD "${venv}/bin/pip" install --quiet --upgrade pip
       $DRY_RUN_CMD "${venv}/bin/pip" install --quiet "graphifyy==${pin}"
     fi
