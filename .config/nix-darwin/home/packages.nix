@@ -32,6 +32,7 @@
       fastfetch
       neovim
       opencode
+      pi-coding-agent
       pulumi
       pulumiPackages.pulumi-go
       (scaleway-cli.overrideAttrs (_: { doCheck = false; }))
