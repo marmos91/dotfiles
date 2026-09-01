@@ -59,6 +59,8 @@
       set-option -sg escape-time 10
       set-option -sa terminal-features ',xterm-256color:RGB'
       set -g status-position bottom
+      set -g extended-keys on
+      set -g extended-keys-format csi-u
 
       # Enable OSC 52 clipboard support for SSH sessions
       set -g set-clipboard on
