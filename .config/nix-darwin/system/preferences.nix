@@ -60,10 +60,25 @@
         "com.apple.controlcenter" = {
           AutoHideMenuBarOption = 0;
         };
+        # BetterTouchTool. Only the app-level settings live here — the actual
+        # triggers/gestures are a Core Data store in
+        # ~/Library/Application Support/BetterTouchTool and can't be expressed
+        # declaratively; BTT's own cloud sync restores them.
+        "com.hegenberg.BetterTouchTool" = {
+          launchOnStartup = true;
+          SUAutomaticallyUpdate = true;
+          BTTDropboxSyncActive = true;
+          BTTSyncCloudProvider = 1;
+          BTTRemoteEnabled = false;
+        };
+
         # Make a short press of the power/Touch ID button sleep the Mac
         # instead of showing the shutdown dialog. Long-press still forces shutdown.
         "com.apple.loginwindow" = {
           PowerButtonSleepsSystem = true;
+          # Reopen apps/windows after a restart, so an accidental power-button
+          # shutdown doesn't throw away the session.
+          TALLogoutSavesState = true;
         };
       };
     };
