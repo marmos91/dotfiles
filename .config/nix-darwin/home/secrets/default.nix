@@ -55,6 +55,40 @@
         path = "${homeDirectory}/.config/google-docs-mcp/client-secret";
         mode = "0600";
       };
+
+      # Internal Cubbit endpoints. Not credentials, but they name company
+      # infrastructure, so they stay out of the public repo. opencode resolves
+      # `{file:...}` in any config value and trims the trailing newline.
+      mimir_base_url = {
+        path = "${homeDirectory}/.config/opencode/mimir-base-url";
+        mode = "0600";
+      };
+
+      ds3ctl_config = {
+        path = "${homeDirectory}/.config/ds3ctl/config.yaml";
+        mode = "0600";
+      };
+
+      # Git identities. These are gitconfig fragments pulled in by `includes`
+      # in programs/git/config.nix, so the addresses stay out of the public
+      # repo. Keeping them here (rather than in nix) means git reads them at
+      # runtime — sops values are never available at eval time.
+      git_identity = {
+        path = "${homeDirectory}/.config/git/identity";
+        mode = "0600";
+      };
+
+      git_identity_work = {
+        path = "${homeDirectory}/.config/git/identity-work";
+        mode = "0600";
+      };
+
+      # Signer trust list — matched by the commit's email, so it carries the
+      # addresses too. Replaces the former home.file entry.
+      git_allowed_signers = {
+        path = "${homeDirectory}/.config/git/allowed_signers";
+        mode = "0600";
+      };
     };
   };
 }

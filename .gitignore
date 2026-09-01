@@ -79,3 +79,6 @@ graphify-out/
 .tokensave/
 # nix-darwin build symlink
 result
+
+### Secrets materialised by sops-nix (see .config/nix-darwin/home/secrets)
+.config/ds3ctl/

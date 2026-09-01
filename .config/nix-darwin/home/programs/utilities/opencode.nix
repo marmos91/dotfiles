@@ -7,7 +7,7 @@
         npm = "@ai-sdk/openai-compatible";
         name = "Cubbit Mimir";
         options = {
-          baseURL = "https://mimir.cubbit.dev/v1";
+          baseURL = "{file:${config.sops.secrets.mimir_base_url.path}}";
           apiKey = "{file:${config.sops.secrets.mimir_api_key.path}}";
         };
         models = {
