@@ -57,6 +57,7 @@ in
       "aldente"
       "bartender"
       "betterdisplay"
+      "bettertouchtool"
       "boosteroid"
       "claude"
       "cleanmymac"
