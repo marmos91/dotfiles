@@ -1,0 +1,21 @@
+{
+  "lastChangelogVersion": "0.84.1",
+  "theme": "dark",
+  "tuiMode": "fullscreen",
+  "defaultProvider": "cubbit",
+  "defaultModel": "vllm/mimir",
+  "defaultThinkingLevel": "medium",
+  "packages": [
+    "npm:pi-web-access",
+    "npm:pi-vision-handoff",
+    "npm:pi-simplify",
+    "npm:@dietrichgebert/ponytail",
+    "npm:bigpowers",
+    "npm:pi-lens",
+    "npm:pi-subagents",
+    "npm:pi-background-tasks",
+    "npm:pi-zentui",
+    "npm:pi-observational-memory"
+  ],
+  "hideThinkingBlock": true
+}
