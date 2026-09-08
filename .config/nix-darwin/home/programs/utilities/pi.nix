@@ -38,6 +38,7 @@ let
       id = "cubbit/mimir-small";
       name = "Mimir Small";
       reasoning = true;
+      input = [ "text" "image" ];
       contextWindow = 262144;
       maxTokens = 32000;
     }
