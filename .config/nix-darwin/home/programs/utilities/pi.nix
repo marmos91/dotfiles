@@ -15,8 +15,8 @@
 # version, OAuth refresh), so they are patched in place instead of symlinked
 # into the store — a store symlink would make pi's writeFileSync fail.
 #
-# The Catppuccin Mocha theme is a plain home.file symlink: pi only reads
-# theme files, so the store is safe.
+# The Catppuccin Mocha theme and the pi-zentui config are plain home.file
+# symlinks: pi only reads those files, so the store is safe.
 {
   config,
   pkgs,
@@ -145,6 +145,10 @@ in
       }
     }
   '';
+
+  # pi-zentui TUI component styling (footer, editor, spinners, ...). pi only
+  # reads this file, so a store symlink is safe — same reasoning as themes.
+  home.file.".pi/agent/zentui.json".source = ./zentui.json;
 
   sops.templates."pi-models.json" = {
     path = "${piDir}/models.json";
