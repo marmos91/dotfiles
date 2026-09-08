@@ -201,6 +201,9 @@ in
         figma = {
           url = "https://mcp.figma.com/mcp";
         };
+        context7 = {
+          url = "https://mcp.context7.com/mcp";
+        };
       };
     };
   };
