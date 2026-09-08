@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Repository Overview
 
-Personal dotfiles for macOS using Nix Darwin, Home Manager, and GNU Stow. Manages system configuration, development environment, and editor setup declaratively.
+Cross-platform personal dotfiles for macOS and Linux using Nix Darwin, Home Manager, and GNU Stow. Manages system configuration, development environment, and editor setup declaratively.
 
 ## Key Commands
 
@@ -63,9 +63,12 @@ flake.nix                    # Main entry point, defines inputs and outputs
 ```
 
 **Key settings:**
+
 - Hostname: `amaterasu`
 - System: `aarch64-darwin` (Apple Silicon)
 - Uses Determinate Nix with flakes enabled
+- **Linux support**: standalone home-manager outputs (`marmos91`, `marmos91-aarch64`) share the same `home/` modules; `install.sh` auto-detects OS
+- **Secrets**: sops-nix + age (`home/secrets/`) — kubeconfig, AWS, rclone, SSH hosts, git identities, MCP credentials are encrypted in `secrets.yaml` and decrypted at activation
 
 ### Neovim Configuration (`.config/nvim/`)
 
@@ -91,6 +94,7 @@ Files in `.dotfiles/` are symlinked to `~` via Stow. The `.stowrc` configures ta
 ## Making Changes
 
 ### Adding a new Homebrew cask
+
 Edit `.config/nix-darwin/system/homebrew.nix`, add to `casks` list, then run `rebuild`.
 
 Casks and brews from a third-party tap **must be tap-qualified**
@@ -104,6 +108,7 @@ third-party upgrades during activation made `rebuild` slow, interactive, and
 able to fail on unrelated brew errors. Run `brew update && brew upgrade` manually.
 
 ### Changing Nix settings
+
 Not via `nix.settings` — the determinate module sets `nix.enable = mkForce false`,
 so nix-darwin never writes it and the setting is silently dropped. Use
 `determinateNix.customSettings` (freeform nix.conf) in `system/darwin.nix`, and
@@ -115,12 +120,15 @@ Prefer `extra-substituters` / `extra-trusted-public-keys`; the plain forms
 don't restate them.
 
 ### Adding a new Nix package
+
 Edit `.config/nix-darwin/home/packages.nix` or the relevant program file, then run `rebuild`.
 
 ### Adding a Neovim plugin
+
 Create a new file in `.config/nvim/lua/plugins/`, Lazy.nvim auto-discovers it.
 
 ### Adding shell aliases
+
 Edit `.config/nix-darwin/home/programs/shell/zsh.nix` in the `shellAliases` section.
 
 ## Commit Guidelines
@@ -134,6 +142,7 @@ Edit `.config/nix-darwin/home/programs/shell/zsh.nix` in the `shellAliases` sect
 This project has a knowledge graph at graphify-out/ with god nodes, community structure, and cross-file relationships.
 
 Rules:
+
 - For codebase questions, first run `graphify query "<question>"` when graphify-out/graph.json exists. Use `graphify path "<A>" "<B>"` for relationships and `graphify explain "<concept>"` for focused concepts. These return a scoped subgraph, usually much smaller than GRAPH_REPORT.md or raw grep output.
 - If graphify-out/wiki/index.md exists, use it for broad navigation instead of raw source browsing.
 - Read graphify-out/GRAPH_REPORT.md only for broad architecture review or when query/path/explain do not surface enough context.

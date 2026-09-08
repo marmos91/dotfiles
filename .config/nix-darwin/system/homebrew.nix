@@ -1,6 +1,6 @@
-{ lib, ... }:
+{ lib, username, ... }:
 let
-  user = "marmos91";
+  user = username;
 
   # Homebrew 6.0 refuses to load formulae/casks from untrusted third-party
   # taps. Trust is a consumer-side allowlist in ~/.homebrew/trust.json — there
