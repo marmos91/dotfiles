@@ -1,7 +1,7 @@
 {
   "components": {
     "editor": {
-      "enabled": false,
+      "enabled": true,
       "style": "accent-rail",
       "colorSource": "theme",
       "borderColorMode": "static",
@@ -47,7 +47,7 @@
           "compactFormat": "$cwd$wrap(in $session_name)$wrap(on $git_branch) $git_status$wrap$context$wrap_sep$tokens",
           "compactMaxLines": 2,
           "separator": "pipe",
-          "contextStyle": "text",
+          "contextStyle": "text+gauge",
           "contextThresholds": {
             "warning": 70,
             "error": 90
@@ -107,7 +107,7 @@
       }
     },
     "thinkingSteps": {
-      "enabled": false,
+      "enabled": true,
       "mode": "tree"
     },
     "workingLine": {
