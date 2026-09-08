@@ -170,6 +170,41 @@ in
     };
   };
 
+  # MCP servers for pi-mcp-adapter, rendered via sops because google-docs
+  # carries OAuth client credentials (already sops secrets — same values
+  # Claude uses). tokensave/headroom are local stdio binaries; figma is
+  # Figma's official remote MCP, OAuth on first use via /mcp (stored in the
+  # OS keychain, never in this file).
+  sops.templates."pi-mcp.json" = {
+    path = "${config.home.homeDirectory}/.config/mcp/mcp.json";
+    mode = "0600";
+    content = builtins.toJSON {
+      mcpServers = {
+        google-docs = {
+          command = "npx";
+          args = [ "-y" "@a-bonus/google-docs-mcp" ];
+          env = {
+            GOOGLE_CLIENT_ID = config.sops.placeholder.google_docs_mcp_client_id;
+            GOOGLE_CLIENT_SECRET = config.sops.placeholder.google_docs_mcp_client_secret;
+          };
+        };
+        tokensave = {
+          type = "stdio";
+          command = "${config.home.homeDirectory}/.local/bin/tokensave";
+          args = [ "serve" ];
+        };
+        headroom = {
+          type = "stdio";
+          command = "${config.home.homeDirectory}/.local/bin/headroom";
+          args = [ "mcp" "serve" ];
+        };
+        figma = {
+          url = "https://mcp.figma.com/mcp";
+        };
+      };
+    };
+  };
+
   # Drop the Anthropic credential so Opus is never reachable from pi, and
   # steer the default provider/theme away from built-ins without clobbering
   # a deliberate choice made via /settings.
