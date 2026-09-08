@@ -1,7 +1,7 @@
 {
   "components": {
     "editor": {
-      "enabled": true,
+      "enabled": false,
       "style": "accent-rail",
       "colorSource": "theme",
       "borderColorMode": "static",
@@ -107,15 +107,15 @@
       }
     },
     "thinkingSteps": {
-      "enabled": true,
+      "enabled": false,
       "mode": "tree"
     },
     "workingLine": {
       "enabled": true,
       "turnSummary": true,
-      "spinner": "pulse",
+      "spinner": "claude-inspired",
       "spinnerIntervalMs": 100,
-      "animateSpinnerColor": true,
+      "animateSpinnerColor": false,
       "textIntervalMs": 60,
       "textAnimation": "kitt",
       "colorSource": "theme",
