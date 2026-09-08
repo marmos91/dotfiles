@@ -199,8 +199,12 @@ in
           command = "${config.home.homeDirectory}/.local/bin/headroom";
           args = [ "mcp" "serve" ];
         };
+        # figma: Figma's remote MCP (mcp.figma.com/mcp) is gated to their MCP
+        # Catalog allow-list — DCR returns 403 for unlisted clients. The
+        # desktop-app server (needs Figma running + Dev Mode MCP enabled in
+        # its preferences) is open. Start Figma when you need figma tools.
         figma = {
-          url = "https://mcp.figma.com/mcp";
+          url = "http://127.0.0.1:3845/mcp";
         };
         context7 = {
           url = "https://mcp.context7.com/mcp";
