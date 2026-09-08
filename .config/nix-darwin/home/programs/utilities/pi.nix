@@ -77,7 +77,8 @@ in
         "crust": "#11111b"
       },
       "colors": {
-        "accent": "blue",
+        # Matches home/catppuccin.nix (accent = "lavender" everywhere else).
+        "accent": "lavender",
         "border": "surface1",
         "borderAccent": "lavender",
         "borderMuted": "surface0",
