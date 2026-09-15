@@ -2,7 +2,7 @@
   "components": {
     "editor": {
       "enabled": true,
-      "style": "accent-rail",
+      "style": "opencode-copy-friendly",
       "colorSource": "theme",
       "borderColorMode": "static",
       "modelLabel": "id",
@@ -97,7 +97,7 @@
     },
     "userMessages": {
       "enabled": true,
-      "style": "compact",
+      "style": "framed-copy-friendly",
       "colorSource": "theme",
       "styles": {
         "framed": {},
@@ -107,7 +107,7 @@
       }
     },
     "thinkingSteps": {
-      "enabled": true,
+      "enabled": false,
       "mode": "tree"
     },
     "workingLine": {
