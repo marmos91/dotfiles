@@ -80,13 +80,9 @@ in
         export SSH_AUTH_SOCK="$HOME/.1password/agent.sock"
       fi
       ''}
-      # Performance: Only rebuild compinit once per day
-      autoload -Uz compinit
-      if [[ -n $HOME/.zcompdump(#qNmh+24) ]]; then
-        compinit
-      else
-        compinit -C
-      fi
+      # compinit is run (and cached) by oh-my-zsh; do not run it again here.
+      # A second `compinit` re-audits all of fpath and rewrites the dump on
+      # every shell, which costs ~1s of the startup time.
 
       # Better completion
       zstyle ':completion:*' matcher-list 'm:{a-z}={A-Za-z}'
