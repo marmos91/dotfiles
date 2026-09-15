@@ -15,8 +15,11 @@
 # version, OAuth refresh), so they are patched in place instead of symlinked
 # into the store — a store symlink would make pi's writeFileSync fail.
 #
-# The Catppuccin Mocha theme and the pi-zentui config are plain home.file
-# symlinks: pi only reads those files, so the store is safe.
+# The Catppuccin Mocha theme is a plain home.file symlink: pi only reads
+# theme files, so the store is safe. zentui.json looks similar but is not:
+# the pi-zentui extension rewrites it whenever /zentui saves a setting, so
+# it stays stow-managed from the dotfiles repo and is deliberately not
+# declared here — a store symlink would break /zentui saves.
 {
   config,
   pkgs,
@@ -26,21 +29,38 @@
 let
   piDir = "${config.home.homeDirectory}/.pi/agent";
   jq = "${pkgs.jq}/bin/jq";
+  # Mirrors https://mimir.cubbit.dev/.well-known/pi-models.json.
   mimirModels = [
     {
       id = "vllm/mimir";
       name = "Mimir";
       reasoning = true;
-      contextWindow = 1048576;
-      maxTokens = 64000;
+      input = [ "text" "image" ];
+      contextWindow = 917504;
+      maxTokens = 131072;
+      # Levels the gateway has no mapping for send no reasoning_effort at
+      # all, leaving the server default (thinking on, medium-high).
+      thinkingLevelMap = {
+        off = "none";
+        minimal = null;
+        low = "low";
+        medium = null;
+        high = "high";
+        xhigh = "xhigh";
+        max = "max";
+      };
+      samplingParams = {
+        temperature = 1.0;
+        top_p = 0.95;
+      };
     }
     {
       id = "cubbit/mimir-small";
       name = "Mimir Small";
-      reasoning = true;
+      reasoning = false;
       input = [ "text" "image" ];
-      contextWindow = 262144;
-      maxTokens = 32000;
+      contextWindow = 229376;
+      maxTokens = 32768;
     }
   ];
 in
@@ -146,10 +166,6 @@ in
     }
   '';
 
-  # pi-zentui TUI component styling (footer, editor, spinners, ...). pi only
-  # reads this file, so a store symlink is safe — same reasoning as themes.
-  home.file.".pi/agent/zentui.json".source = ./zentui.json;
-
   sops.templates."pi-models.json" = {
     path = "${piDir}/models.json";
     mode = "0600";
@@ -159,6 +175,7 @@ in
         baseUrl = config.sops.placeholder.mimir_base_url;
         apiKey = config.sops.placeholder.mimir_api_key;
         api = "openai-completions";
+        headers."x-bf-passthrough-extra-params" = "true";
         # vLLM behind the gateway: no `developer` role.
         compat.supportsDeveloperRole = false;
         models = mimirModels;
@@ -168,6 +185,7 @@ in
         baseUrl = "http://127.0.0.1:8788/v1";
         apiKey = config.sops.placeholder.mimir_api_key;
         api = "openai-completions";
+        headers."x-bf-passthrough-extra-params" = "true";
         compat.supportsDeveloperRole = false;
         models = mimirModels;
       };
