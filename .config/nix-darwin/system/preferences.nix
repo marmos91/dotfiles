@@ -50,6 +50,10 @@
         NSAutomaticDashSubstitutionEnabled = false;
         NSAutomaticSpellingCorrectionEnabled = false;
         "com.apple.trackpad.scaling" = 3.0;
+
+        # Never auto-hide the menu bar. This is the key macOS actually reads;
+        # com.apple.controlcenter.AutoHideMenuBarOption is not consulted.
+        _HIHideMenuBar = false;
       };
 
       menuExtraClock.Show24Hour = true;
@@ -57,9 +61,6 @@
       trackpad.Clicking = true;
 
       CustomUserPreferences = {
-        "com.apple.controlcenter" = {
-          AutoHideMenuBarOption = 0;
-        };
         # BetterTouchTool. Only the app-level settings live here — the actual
         # triggers/gestures are a Core Data store in
         # ~/Library/Application Support/BetterTouchTool and can't be expressed
@@ -71,10 +72,16 @@
           BTTSyncCloudProvider = 1;
           BTTRemoteEnabled = false;
         };
+      };
 
-        # Make a short press of the power/Touch ID button sleep the Mac
-        # instead of showing the shutdown dialog. Long-press still forces shutdown.
+      # These two belong to the SYSTEM domain. macOS reads
+      # /Library/Preferences/com.apple.loginwindow, not the per-user copy, so
+      # writing them via CustomUserPreferences was a silent no-op.
+      CustomSystemPreferences = {
         "com.apple.loginwindow" = {
+          # Make a short press of the power/Touch ID button sleep the Mac
+          # instead of showing the shutdown dialog. Long-press still forces
+          # shutdown.
           PowerButtonSleepsSystem = true;
           # Reopen apps/windows after a restart, so an accidental power-button
           # shutdown doesn't throw away the session.
