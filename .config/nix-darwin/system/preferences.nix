@@ -73,21 +73,6 @@
           BTTRemoteEnabled = false;
         };
       };
-
-      # These two belong to the SYSTEM domain. macOS reads
-      # /Library/Preferences/com.apple.loginwindow, not the per-user copy, so
-      # writing them via CustomUserPreferences was a silent no-op.
-      CustomSystemPreferences = {
-        "com.apple.loginwindow" = {
-          # Make a short press of the power/Touch ID button sleep the Mac
-          # instead of showing the shutdown dialog. Long-press still forces
-          # shutdown.
-          PowerButtonSleepsSystem = true;
-          # Reopen apps/windows after a restart, so an accidental power-button
-          # shutdown doesn't throw away the session.
-          TALLogoutSavesState = true;
-        };
-      };
     };
   };
 }
