@@ -62,6 +62,16 @@
       set -g extended-keys on
       set -g extended-keys-format csi-u
 
+      # Claude Code's documented tmux requirements (pi needs neither, but
+      # pi works fine with both): passthrough for notifications/progress,
+      # extkeys so tmux distinguishes Shift+Enter from plain Enter.
+      set -g allow-passthrough on
+      set -as terminal-features 'xterm*:extkeys'
+
+      # pi binds C-j to insert a newline, but vim-tmux-navigator (loaded above)
+      # grabs it for select-pane -D. Hand it back; pane nav stays on M-arrows.
+      bind -n C-j send-keys C-j
+
       # Enable OSC 52 clipboard support for SSH sessions
       set -g set-clipboard on
       set -ag terminal-overrides "vte*:XT:Ms=\\E]52;c;%p2%s\\7,xterm*:XT:Ms=\\E]52;c;%p2%s\\7"
