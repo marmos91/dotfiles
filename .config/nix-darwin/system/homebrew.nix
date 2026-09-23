@@ -80,6 +80,7 @@ in
       "notion"
       "obs"
       "obsidian"
+      "open-design"
       "raycast"
       "slack"
       "spotify"
