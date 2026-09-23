@@ -10,6 +10,7 @@
     ./graphify.nix
     ./headroom.nix
     ./k9s.nix
+    ./mcp.nix
     ./opencode.nix
     ./pi.nix
     ./rclone.nix

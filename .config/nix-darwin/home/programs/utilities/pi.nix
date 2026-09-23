@@ -11,15 +11,19 @@
 #                      forwards the Authorization header upstream, so the
 #                      same API key rides along; only the baseUrl differs.
 #
-# settings.json and auth.json are written by pi itself (theme, changelog
-# version, OAuth refresh), so they are patched in place instead of symlinked
-# into the store — a store symlink would make pi's writeFileSync fail.
+# settings.json and zentui.json are both rewritten at runtime, so neither can
+# be a home.file /nix/store symlink — the store is read-only. Both are
+# mkOutOfStoreSymlink into the repo instead: Nix owns the wiring, Git owns the
+# content, and the app still writes through in place.
 #
-# The Catppuccin Mocha theme is a plain home.file symlink: pi only reads
-# theme files, so the store is safe. zentui.json looks similar but is not:
-# the pi-zentui extension rewrites it whenever /zentui saves a setting, so
-# it stays stow-managed from the dotfiles repo and is deliberately not
-# declared here — a store symlink would break /zentui saves.
+#   settings.json — pi's plain writeFileSync follows the symlink.
+#   zentui.json   — pi-zentui realpathSyncs before its temp-file + rename save.
+#
+# Consequence: pi bumps lastChangelogVersion on every upgrade, so the repo copy
+# shows up dirty. That is expected; do not "fix" it back to home.file.text.
+#
+# auth.json is mutated by pi (OAuth refresh) and stays unmanaged apart from the
+# anthropic strip below. The theme is read-only, so a plain store symlink is fine.
 {
   config,
   pkgs,
@@ -28,6 +32,8 @@
 }:
 let
   piDir = "${config.home.homeDirectory}/.pi/agent";
+  localBin = "${config.home.homeDirectory}/.local/bin";
+  repoRoot = "${config.home.homeDirectory}/.dotfiles";
   jq = "${pkgs.jq}/bin/jq";
   # Mirrors https://mimir.cubbit.dev/.well-known/pi-models.json.
   mimirModels = [
@@ -65,191 +71,131 @@ let
   ];
 in
 {
-  home.file.".pi/agent/themes/catppuccin-mocha.json".text = ''
+  # Symlinks into the repo, not the store: pi and pi-zentui both write these
+  # files at runtime (see the header). Declarative content, mutable in place.
+  home.file.".pi/agent/zentui.json".source =
+    config.lib.file.mkOutOfStoreSymlink "${repoRoot}/.pi/agent/zentui.json";
+  home.file.".pi/agent/settings.json".source =
+    config.lib.file.mkOutOfStoreSymlink "${repoRoot}/.pi/agent/settings.json";
+
+  # Theme generated from the catppuccin flake's palette, the same source the
+  # starship/ghostty/tmux modules use. The two custom surfaces (tool success/
+  # error backgrounds) are darkened mixes rather than palette entries.
+  home.file.".pi/agent/themes/catppuccin-mocha.json".text = builtins.toJSON (
+    let
+      p = (builtins.fromJSON (
+        builtins.readFile "${config.catppuccin.sources.palette}/palette.json"
+      )).mocha.colors;
+    in
     {
-      "$schema": "https://raw.githubusercontent.com/earendil-works/pi/main/packages/coding-agent/src/modes/interactive/theme/theme-schema.json",
-      "name": "catppuccin-mocha",
-      "vars": {
-        "rosewater": "#f5e0dc",
-        "flamingo": "#f2cdcd",
-        "pink": "#f5c2e7",
-        "mauve": "#cba6f7",
-        "red": "#f38ba8",
-        "maroon": "#eba0ac",
-        "peach": "#fab387",
-        "yellow": "#f9e2af",
-        "green": "#a6e3a1",
-        "teal": "#94e2d5",
-        "sky": "#89dceb",
-        "sapphire": "#74c7ec",
-        "blue": "#89b4fa",
-        "lavender": "#b4befe",
-        "text": "#cdd6f4",
-        "subtext1": "#bac2de",
-        "subtext0": "#a6adc8",
-        "overlay2": "#9399b2",
-        "overlay1": "#7f849c",
-        "overlay0": "#6c7086",
-        "surface2": "#585b70",
-        "surface1": "#45475a",
-        "surface0": "#313244",
-        "base": "#1e1e2e",
-        "mantle": "#181825",
-        "crust": "#11111b"
-      },
-      "colors": {
-        "accent": "lavender",
-        "border": "surface1",
-        "borderAccent": "lavender",
-        "borderMuted": "surface0",
-        "success": "green",
-        "error": "red",
-        "warning": "yellow",
-        "muted": "overlay1",
-        "dim": "overlay0",
-        "text": "text",
-        "thinkingText": "overlay2",
-
-        "selectedBg": "surface1",
-        "scrollbarThumb": "surface1",
-        "userMessageBg": "surface0",
-        "userMessageText": "text",
-        "customMessageBg": "surface0",
-        "customMessageText": "text",
-        "customMessageLabel": "lavender",
-        "toolPendingBg": "mantle",
-        "toolSuccessBg": "#1c2a22",
-        "toolErrorBg": "#2a1c22",
-        "toolTitle": "text",
-        "toolOutput": "subtext0",
-
-        "mdHeading": "peach",
-        "mdLink": "sky",
-        "mdLinkUrl": "overlay0",
-        "mdCode": "green",
-        "mdCodeBlock": "text",
-        "mdCodeBlockBorder": "surface1",
-        "mdQuote": "subtext0",
-        "mdQuoteBorder": "surface2",
-        "mdHr": "surface1",
-        "mdListBullet": "mauve",
-
-        "toolDiffAdded": "green",
-        "toolDiffRemoved": "red",
-        "toolDiffContext": "overlay0",
-
-        "syntaxComment": "overlay0",
-        "syntaxKeyword": "mauve",
-        "syntaxFunction": "blue",
-        "syntaxVariable": "text",
-        "syntaxString": "green",
-        "syntaxNumber": "peach",
-        "syntaxType": "yellow",
-        "syntaxOperator": "sky",
-        "syntaxPunctuation": "overlay2",
-
-        "thinkingOff": "surface0",
-        "thinkingMinimal": "surface1",
-        "thinkingLow": "surface2",
-        "thinkingMedium": "blue",
-        "thinkingHigh": "mauve",
-        "thinkingXhigh": "pink",
-        "thinkingMax": "red",
-
-        "bashMode": "peach"
-      },
-      "export": {
-        "pageBg": "base",
-        "cardBg": "mantle",
-        "infoBg": "surface0"
-      }
+      "$schema" = "https://raw.githubusercontent.com/earendil-works/pi/main/packages/coding-agent/src/modes/interactive/theme/theme-schema.json";
+      name = "catppuccin-mocha";
+      vars = builtins.mapAttrs (_: v: v.hex) p;
+      colors = {
+        accent = "lavender";
+        border = "surface1";
+        borderAccent = "lavender";
+        borderMuted = "surface0";
+        success = "green";
+        error = "red";
+        warning = "yellow";
+        muted = "overlay1";
+        dim = "overlay0";
+        text = "text";
+        thinkingText = "overlay2";
+        selectedBg = "surface1";
+        scrollbarThumb = "surface1";
+        userMessageBg = "surface0";
+        userMessageText = "text";
+        customMessageBg = "surface0";
+        customMessageText = "text";
+        customMessageLabel = "lavender";
+        toolPendingBg = "mantle";
+        toolSuccessBg = "#1c2a22";
+        toolErrorBg = "#2a1c22";
+        toolTitle = "text";
+        toolOutput = "subtext0";
+        mdHeading = "peach";
+        mdLink = "sky";
+        mdLinkUrl = "overlay0";
+        mdCode = "green";
+        mdCodeBlock = "text";
+        mdCodeBlockBorder = "surface1";
+        mdQuote = "subtext0";
+        mdQuoteBorder = "surface2";
+        mdHr = "surface1";
+        mdListBullet = "mauve";
+        toolDiffAdded = "green";
+        toolDiffRemoved = "red";
+        toolDiffContext = "overlay0";
+        syntaxComment = "overlay0";
+        syntaxKeyword = "mauve";
+        syntaxFunction = "blue";
+        syntaxVariable = "text";
+        syntaxString = "green";
+        syntaxNumber = "peach";
+        syntaxType = "yellow";
+        syntaxOperator = "sky";
+        syntaxPunctuation = "overlay2";
+        thinkingOff = "surface0";
+        thinkingMinimal = "surface1";
+        thinkingLow = "surface2";
+        thinkingMedium = "blue";
+        thinkingHigh = "mauve";
+        thinkingXhigh = "pink";
+        thinkingMax = "red";
+        bashMode = "peach";
+      };
+      export = {
+        pageBg = "base";
+        cardBg = "mantle";
+        infoBg = "surface0";
+      };
     }
-  '';
+  );
 
   sops.templates."pi-models.json" = {
     path = "${piDir}/models.json";
     mode = "0600";
+    # Both providers differ only in baseUrl; everything else (api, headers,
+    # compat, model catalog) is shared.
     content = builtins.toJSON {
-      providers.cubbit = {
-        name = "Cubbit Mimir";
-        baseUrl = config.sops.placeholder.mimir_base_url;
+      providers = builtins.mapAttrs (_: p: {
+        inherit (p) name baseUrl;
         apiKey = config.sops.placeholder.mimir_api_key;
         api = "openai-completions";
         headers."x-bf-passthrough-extra-params" = "true";
         # vLLM behind the gateway: no `developer` role.
         compat.supportsDeveloperRole = false;
         models = mimirModels;
-      };
-      providers.cubbit-headroom = {
-        name = "Cubbit Mimir (Headroom)";
-        baseUrl = "http://127.0.0.1:8788/v1";
-        apiKey = config.sops.placeholder.mimir_api_key;
-        api = "openai-completions";
-        headers."x-bf-passthrough-extra-params" = "true";
-        compat.supportsDeveloperRole = false;
-        models = mimirModels;
-      };
-    };
-  };
-
-  # MCP servers for pi-mcp-adapter, rendered via sops because google-docs
-  # carries OAuth client credentials (already sops secrets — same values
-  # Claude uses). tokensave/headroom are local stdio binaries; figma is
-  # Figma's official remote MCP, OAuth on first use via /mcp (stored in the
-  # OS keychain, never in this file).
-  sops.templates."pi-mcp.json" = {
-    path = "${config.home.homeDirectory}/.config/mcp/mcp.json";
-    mode = "0600";
-    content = builtins.toJSON {
-      mcpServers = {
-        google-docs = {
-          command = "npx";
-          args = [ "-y" "@a-bonus/google-docs-mcp" ];
-          env = {
-            GOOGLE_CLIENT_ID = config.sops.placeholder.google_docs_mcp_client_id;
-            GOOGLE_CLIENT_SECRET = config.sops.placeholder.google_docs_mcp_client_secret;
-          };
+      }) {
+        cubbit = {
+          name = "Cubbit Mimir";
+          baseUrl = config.sops.placeholder.mimir_base_url;
         };
-        tokensave = {
-          type = "stdio";
-          command = "${config.home.homeDirectory}/.local/bin/tokensave";
-          args = [ "serve" ];
-        };
-        headroom = {
-          type = "stdio";
-          command = "${config.home.homeDirectory}/.local/bin/headroom";
-          args = [ "mcp" "serve" ];
-        };
-        # Figma: remote MCP is gated to Figma's MCP Catalog (DCR 403 for
-        # unlisted clients); desktop route needs the Figma app — not wanted.
-        # Add framelink figma-developer-mcp (npx, FIGMA_API_KEY) if ever needed.
-        context7 = {
-          url = "https://mcp.context7.com/mcp";
+        cubbit-headroom = {
+          name = "Cubbit Mimir (Headroom)";
+          baseUrl = "http://127.0.0.1:8788/v1";
         };
       };
     };
   };
 
-  # Drop the Anthropic credential so Opus is never reachable from pi, and
-  # steer the default provider/theme away from built-ins without clobbering
-  # a deliberate choice made via /settings.
+  # Same PATH gap as opencode.nix: pi lands in the home-manager profile
+  # (/etc/profiles/per-user/$USER/bin), which is not on the PATH of apps
+  # launched by launchd — notably Open Design's daemon, so it reports Pi as
+  # unavailable. ~/.local/bin is on that PATH.
+  # OPEN_DESIGN_AGENT_BINS: pi
   home.activation.pi = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-    $DRY_RUN_CMD mkdir -p "${piDir}"
+    $DRY_RUN_CMD mkdir -p "${piDir}" "${localBin}"
+    $DRY_RUN_CMD ln -sfn "${pkgs.pi-coding-agent}/bin/pi" "${localBin}/pi"
 
+    # Drop the Anthropic credential so Opus is never reachable from pi.
     auth="${piDir}/auth.json"
     if [ -f "$auth" ] && ${jq} -e 'has("anthropic")' "$auth" >/dev/null; then
       ${jq} 'del(.anthropic)' "$auth" > "$auth.new"
       chmod 600 "$auth.new"
       $DRY_RUN_CMD mv "$auth.new" "$auth"
     fi
-
-    settings="${piDir}/settings.json"
-    [ -f "$settings" ] || echo '{}' > "$settings"
-    ${jq} 'if (.defaultProvider // "anthropic") == "anthropic"
-           then .defaultProvider = "cubbit" | .defaultModel = "vllm/mimir"
-           else . end
-           | if (.theme // "dark") == "dark" or .theme == "light"
-             then .theme = "catppuccin-mocha" else . end' "$settings" > "$settings.new"
-    $DRY_RUN_CMD mv "$settings.new" "$settings"
   '';
 }
