@@ -100,7 +100,7 @@ vim.opt.scrolloff = 10
 
 -- Folding (requires neovim > 0.10)
 vim.opt.smoothscroll = true
-vim.opt.foldexpr = "nvim_treesitter#foldexpr()"
+vim.opt.foldexpr = "v:lua.vim.treesitter.foldexpr()"
 vim.opt.foldmethod = "expr"
 vim.opt.foldtext = ""
 vim.opt.foldlevel = 99

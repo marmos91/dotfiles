@@ -3,6 +3,10 @@ return {
         "nvim-treesitter/nvim-treesitter",
         branch = "main",
         lazy = false,
+        -- Refresh already-installed parsers when the plugin updates; install()
+        -- below skips parsers that are merely present, so a parser built against
+        -- an older grammar revision would otherwise never be recompiled.
+        build = ":TSUpdate",
         config = function()
             local parsers = {
                 "bash",

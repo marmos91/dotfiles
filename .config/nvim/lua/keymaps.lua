@@ -5,16 +5,20 @@
 vim.opt.hlsearch = true
 
 -- Diagnostic keymaps
-vim.keymap.set("n", "<leader>dn", vim.diagnostic.goto_next, { desc = "[D]iagnostic [N]ext" })
-vim.keymap.set("n", "<leader>dp", vim.diagnostic.goto_prev, { desc = "[D]iagnostic [P]rev" })
+vim.keymap.set("n", "<leader>dn", function()
+    vim.diagnostic.jump({ count = 1 })
+end, { desc = "[D]iagnostic [N]ext" })
+vim.keymap.set("n", "<leader>dp", function()
+    vim.diagnostic.jump({ count = -1 })
+end, { desc = "[D]iagnostic [P]rev" })
 vim.keymap.set("n", "<leader>df", vim.diagnostic.open_float, { desc = "[D]iagnostic [F]loat" })
 vim.keymap.set("n", "<leader>dq", vim.diagnostic.setqflist, { desc = "[D]iagnostics to [Q]flist" })
 vim.keymap.set("n", "<leader>dl", vim.diagnostic.setloclist, { desc = "[D]iagnostics to [L]oclist" })
 vim.keymap.set("n", "<leader>de", function()
-    vim.diagnostic.goto_next({ severity = vim.diagnostic.severity.ERROR })
+    vim.diagnostic.jump({ count = 1, severity = vim.diagnostic.severity.ERROR })
 end, { desc = "[D]iagnostic next [E]rror" })
 vim.keymap.set("n", "<leader>dE", function()
-    vim.diagnostic.goto_prev({ severity = vim.diagnostic.severity.ERROR })
+    vim.diagnostic.jump({ count = -1, severity = vim.diagnostic.severity.ERROR })
 end, { desc = "[D]iagnostic prev [E]rror" })
 
 -- Warn if arrow keys are used in normal mode
