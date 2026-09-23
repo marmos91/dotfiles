@@ -110,6 +110,13 @@
       bind-key -T copy-mode-vi C-v send-keys -X rectangle-toggle
       bind-key -T copy-mode-vi y send-keys -X copy-selection-and-cancel
 
+      # tmux 3.7 bug: catppuccin 2.1.3 sets message-style/message-command-style
+      # with bg=default + align=centre and no fill, so the command-prompt overlay
+      # leaves stale cells from the old window name behind it (#5328).
+      # Opaque fill= clears the whole status row. Drop once tmux > 3.7c is used.
+      set -gF message-style "fg=#{@thm_teal},bg=#{@thm_overlay_0},fill=#{@thm_overlay_0}"
+      set -gF message-command-style "fg=#{@thm_teal},bg=#{@thm_overlay_0},fill=#{@thm_overlay_0}"
+
       # Window titles
       set -g set-titles on
       set -g set-titles-string "#T"
