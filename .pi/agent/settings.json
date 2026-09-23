@@ -1,8 +1,8 @@
 {
-  "lastChangelogVersion": "0.84.1",
-  "theme": "dark",
+  "lastChangelogVersion": "0.86.1",
+  "theme": "catppuccin-mocha",
   "tuiMode": "fullscreen",
-  "defaultProvider": "cubbit",
+  "defaultProvider": "cubbit-headroom",
   "defaultModel": "vllm/mimir",
   "defaultThinkingLevel": "medium",
   "packages": [
@@ -15,7 +15,8 @@
     "npm:pi-subagents",
     "npm:pi-background-tasks",
     "npm:pi-zentui",
-    "npm:pi-observational-memory"
+    "npm:pi-observational-memory",
+    "npm:pi-mcp-adapter"
   ],
-  "hideThinkingBlock": true
+  "hideThinkingBlock": false
 }
