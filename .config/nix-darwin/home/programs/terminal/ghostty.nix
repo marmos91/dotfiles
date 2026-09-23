@@ -18,7 +18,6 @@ let
     clipboard-write = "allow";
 
     keybind = [
-      "shift+enter=text:\\n"
       "ctrl+left_bracket=text:\\x1b"
     ];
   };
