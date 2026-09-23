@@ -11,8 +11,9 @@
 #
 # The long timeouts are not optional: `output` is 131072 tokens, and a
 # full-length generation comfortably outruns opencode's stock timeout.
-{ config, ... }:
+{ config, pkgs, lib, ... }:
 let
+  localBin = "${config.home.homeDirectory}/.local/bin";
   modalities = {
     input = [ "text" "image" ];
     output = [ "text" ];
@@ -26,6 +27,16 @@ let
   };
 in
 {
+  # Same PATH gap as pi.nix: opencode lands in the home-manager profile
+  # (/etc/profiles/per-user/$USER/bin), which is not on the PATH of apps
+  # launched by launchd — notably Open Design's daemon, so it reports
+  # opencode as unavailable. ~/.local/bin is on that PATH.
+  # OPEN_DESIGN_AGENT_BINS: opencode
+  home.activation.opencode = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+    $DRY_RUN_CMD mkdir -p "${localBin}"
+    $DRY_RUN_CMD ln -sfn "${pkgs.opencode}/bin/opencode" "${localBin}/opencode"
+  '';
+
   xdg.configFile."opencode/opencode.json".text = builtins.toJSON {
     "$schema" = "https://opencode.ai/config.json";
     provider.cubbit = {
