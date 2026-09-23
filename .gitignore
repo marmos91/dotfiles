@@ -82,3 +82,6 @@ result
 
 ### Secrets materialised by sops-nix (see .config/nix-darwin/home/secrets)
 .config/ds3ctl/
+
+# pi runtime task output (cwd-relative, no config knob)
+.pi/tasks/
