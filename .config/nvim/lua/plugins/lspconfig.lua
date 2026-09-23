@@ -107,28 +107,9 @@ return {
                     if client and client.server_capabilities.inlayHintProvider then
                         map("<leader>th", function()
                             local bufnr = vim.api.nvim_get_current_buf()
-
-                            -- Try different API versions
-                            if vim.lsp.inlay_hint and type(vim.lsp.inlay_hint) == "table" then
-                                if vim.lsp.inlay_hint.enable and vim.lsp.inlay_hint.is_enabled then
-                                    -- Neovim 0.10+ API
-                                    local enabled = vim.lsp.inlay_hint.is_enabled({ bufnr = bufnr })
-                                    vim.lsp.inlay_hint.enable(not enabled, { bufnr = bufnr })
-                                    print("Inlay hints " .. (not enabled and "enabled" or "disabled"))
-                                elseif vim.lsp.inlay_hint.toggle then
-                                    -- Alternative toggle API
-                                    vim.lsp.inlay_hint.toggle({ bufnr = bufnr })
-                                end
-                            elseif type(vim.lsp.inlay_hint) == "function" then
-                                -- Function-based API
-                                vim.lsp.inlay_hint(bufnr, nil)
-                            elseif vim.lsp.buf.inlay_hint then
-                                -- Older buffer-based API
-                                vim.lsp.buf.inlay_hint(bufnr, nil)
-                            else
-                                vim.notify("Inlay hints API not found", vim.log.levels.WARN)
-                                print("vim.lsp.inlay_hint type: " .. type(vim.lsp.inlay_hint))
-                            end
+                            local enabled = vim.lsp.inlay_hint.is_enabled({ bufnr = bufnr })
+                            vim.lsp.inlay_hint.enable(not enabled, { bufnr = bufnr })
+                            vim.notify("Inlay hints " .. (enabled and "disabled" or "enabled"))
                         end, "[T]oggle Inlay [H]ints")
                     end
                 end,
@@ -198,13 +179,9 @@ return {
                     settings = {
                         json = {
                             validate = { enable = true },
+                            schemas = require("schemastore").json.schemas(),
                         },
                     },
-                    -- Lazy-load schemastore when needed
-                    on_new_config = function(new_config)
-                        new_config.settings.json.schemas = new_config.settings.json.schemas or {}
-                        vim.list_extend(new_config.settings.json.schemas, require("schemastore").json.schemas())
-                    end,
                 },
                 lua_ls = {
                     settings = {
@@ -299,18 +276,15 @@ return {
                 "tree-sitter-cli", -- Required by nvim-treesitter (main branch) to compile parsers
             }
 
-            require("mason-lspconfig").setup({
-                handlers = {
-                    function(server_name)
-                        local server = servers[server_name] or {}
-                        -- This handles overriding only values explicitly passed
-                        -- by the server configuration above. Useful when disabling
-                        -- certain features of an LSP (for example, turning off formatting for tsserver)
-                        server.capabilities = vim.tbl_deep_extend("force", {}, capabilities, server.capabilities or {})
+            -- Apply our overrides on top of the server configs shipped in
+            -- nvim-lspconfig's lsp/ directory, which vim.lsp.config resolves.
+            -- mason-lspconfig's automatic_enable then calls vim.lsp.enable().
+            for server_name, server in pairs(servers) do
+                server.capabilities = vim.tbl_deep_extend("force", {}, capabilities, server.capabilities or {})
+                vim.lsp.config(server_name, server)
+            end
 
-                        require("lspconfig")[server_name].setup(server)
-                    end,
-                },
+            require("mason-lspconfig").setup({
                 ensure_installed = lsp_servers,
                 automatic_enable = true,
             })
