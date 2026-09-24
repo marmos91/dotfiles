@@ -1,5 +1,5 @@
 {
-  "lastChangelogVersion": "0.86.1",
+  "lastChangelogVersion": "0.87.1",
   "theme": "catppuccin-mocha",
   "tuiMode": "fullscreen",
   "defaultProvider": "cubbit-headroom",
@@ -18,5 +18,10 @@
     "npm:pi-observational-memory",
     "npm:pi-mcp-adapter"
   ],
-  "hideThinkingBlock": false
+  "hideThinkingBlock": false,
+  "compaction": {
+    "enabled": true,
+    "reserveTokens": 790000,
+    "keepRecentTokens": 20000
+  }
 }
