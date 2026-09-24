@@ -11,16 +11,24 @@
 #                      forwards the Authorization header upstream, so the
 #                      same API key rides along; only the baseUrl differs.
 #
-# settings.json and zentui.json are both rewritten at runtime, so neither can
-# be a home.file /nix/store symlink — the store is read-only. Both are
-# mkOutOfStoreSymlink into the repo instead: Nix owns the wiring, Git owns the
-# content, and the app still writes through in place.
+# settings.json is NOT managed here. pi rewrites it on every launch
+# (lastChangelogVersion), so any home.file wiring — store symlink or
+# mkOutOfStoreSymlink — leaves the repo permanently dirty and makes every
+# runtime toggle look like a pending commit. pi now owns
+# ~/.pi/agent/settings.json outright; the repo copy below is a seed that the
+# activation script installs only when the live file does not exist yet.
 #
-#   settings.json — pi's plain writeFileSync follows the symlink.
-#   zentui.json   — pi-zentui realpathSyncs before its temp-file + rename save.
+# The repo copy is therefore NOT live: edit it to change the defaults, then
+# rebuild and delete the live file to re-seed (or edit the live file directly
+# and copy it back).
+#
+# zentui.json is still mkOutOfStoreSymlink into the repo: pi-zentui writes it
+# only when the user changes the theme, so it does not churn. It realpathSyncs
+# before its temp-file + rename save, hence a repo symlink rather than a store
+# one.
 #
 # Consequence: pi bumps lastChangelogVersion on every upgrade, so the repo copy
-# shows up dirty. That is expected; do not "fix" it back to home.file.text.
+# shows up dirty only after a manual copy back. That is expected.
 #
 # auth.json is mutated by pi (OAuth refresh) and stays unmanaged apart from the
 # anthropic strip below. The theme is read-only, so a plain store symlink is fine.
@@ -71,12 +79,10 @@ let
   ];
 in
 {
-  # Symlinks into the repo, not the store: pi and pi-zentui both write these
-  # files at runtime (see the header). Declarative content, mutable in place.
+  # Symlink into the repo, not the store: pi-zentui writes this file at runtime
+  # and realpathSyncs first, so it must resolve to a writable path.
   home.file.".pi/agent/zentui.json".source =
     config.lib.file.mkOutOfStoreSymlink "${repoRoot}/.pi/agent/zentui.json";
-  home.file.".pi/agent/settings.json".source =
-    config.lib.file.mkOutOfStoreSymlink "${repoRoot}/.pi/agent/settings.json";
 
   # Theme generated from the catppuccin flake's palette, the same source the
   # starship/ghostty/tmux modules use. The two custom surfaces (tool success/
@@ -189,6 +195,15 @@ in
   home.activation.pi = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
     $DRY_RUN_CMD mkdir -p "${piDir}" "${localBin}"
     $DRY_RUN_CMD ln -sfn "${pkgs.pi-coding-agent}/bin/pi" "${localBin}/pi"
+
+    # Seed settings.json once. pi owns this file at runtime and rewrites it on
+    # launch, so it must stay a plain file outside home.file (see the header).
+    # A pre-existing symlink from the old mkOutOfStoreSymlink wiring is replaced
+    # by a copy; the repo stays the source of truth for defaults.
+    if [ ! -f "${piDir}/settings.json" ] || [ -L "${piDir}/settings.json" ]; then
+      $DRY_RUN_CMD cp "${repoRoot}/.pi/agent/settings.json" "${piDir}/settings.json"
+      $DRY_RUN_CMD chmod 644 "${piDir}/settings.json"
+    fi
 
     # Drop the Anthropic credential so Opus is never reachable from pi.
     auth="${piDir}/auth.json"
