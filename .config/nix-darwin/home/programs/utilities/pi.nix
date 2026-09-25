@@ -84,6 +84,13 @@ in
   home.file.".pi/agent/zentui.json".source =
     config.lib.file.mkOutOfStoreSymlink "${repoRoot}/.pi/agent/zentui.json";
 
+  # Keybindings: shift+enter (native) and ctrl+j already insert newlines; add
+  # ctrl+enter, which tmux forwards as CSI-u \x1b[13;5u once extended keys are
+  # active. pi only writes this file to migrate legacy names, so a repo
+  # symlink stays clean.
+  home.file.".pi/agent/keybindings.json".source =
+    config.lib.file.mkOutOfStoreSymlink "${repoRoot}/.pi/agent/keybindings.json";
+
   # Theme generated from the catppuccin flake's palette, the same source the
   # starship/ghostty/tmux modules use. The two custom surfaces (tool success/
   # error backgrounds) are darkened mixes rather than palette entries.
