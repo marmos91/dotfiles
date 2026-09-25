@@ -89,6 +89,7 @@
         path = "${homeDirectory}/.config/git/allowed_signers";
         mode = "0600";
       };
+
     };
   };
 }
