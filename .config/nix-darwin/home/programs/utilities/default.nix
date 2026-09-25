@@ -11,6 +11,7 @@
     ./headroom.nix
     ./k9s.nix
     ./mcp.nix
+    ./obsidian.nix
     ./opencode.nix
     ./pi.nix
     ./rclone.nix
