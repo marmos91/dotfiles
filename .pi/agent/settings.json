@@ -21,7 +21,17 @@
   "hideThinkingBlock": false,
   "compaction": {
     "enabled": true,
-    "reserveTokens": 790000,
-    "keepRecentTokens": 20000
+    "reserveTokens": 16384,
+    "keepRecentTokens": 20000,
+    "modelOverrides": {
+      "cubbit/vllm/mimir": { "reserveTokens": 131072 },
+      "cubbit-headroom/vllm/mimir": { "reserveTokens": 131072 },
+      "cubbit/cubbit/mimir-small": { "reserveTokens": 32768 },
+      "cubbit-headroom/cubbit/mimir-small": { "reserveTokens": 32768 }
+    }
+  },
+  "observational-memory": {
+    "compactAfterTokensMode": "ratio",
+    "compactAfterTokensRatio": 0.68
   }
 }
