@@ -51,6 +51,28 @@ export function isDegenerateLengthStop(message: unknown): boolean {
 export default function (pi: ExtensionAPI) {
 	let retries = 0;
 
+	// Make the extension's presence verifiable. Without this there is no
+	// positive signal that it loaded — the only other evidence would be a
+	// collapse it happened to recover, and "nothing happened" is
+	// indistinguishable from "never loaded". session_start carries
+	// reason: "reload" so /reload is provable too.
+	pi.on("session_start", (event, ctx) => {
+		pi.appendEntry("loop-breaker", { action: "loaded", reason: event.reason, thinking: pi.getThinkingLevel() });
+		if (ctx.hasUI) {
+			ctx.ui.notify(`Loop breaker active (${event.reason})`, "info");
+		}
+	});
+
+	pi.registerCommand("loop-breaker", {
+		description: "Report loop-breaker state (retries used, current thinking level)",
+		handler: async (_args, ctx) => {
+			const level = pi.getThinkingLevel();
+			if (ctx.hasUI) {
+				ctx.ui.notify(`Loop breaker: active, retries used ${retries}/${MAX_RETRIES}, thinking ${level}`, "info");
+			}
+		},
+	});
+
 	pi.on("turn_end", (event, ctx) => {
 		if (!isDegenerateLengthStop(event.message)) {
 			// A clean turn means the collapse cleared; re-arm the retry budget.
@@ -60,8 +82,8 @@ export default function (pi: ExtensionAPI) {
 
 		if (retries >= MAX_RETRIES) {
 			// Re-asking did not help. Change the decode instead of repeating it.
-			if (ctx.getThinkingLevel() !== "off") {
-				ctx.setThinkingLevel("off");
+			if (pi.getThinkingLevel() !== "off") {
+				pi.setThinkingLevel("off");
 				retries = 0;
 				pi.appendEntry("loop-breaker", { action: "thinking-off" });
 				if (ctx.hasUI) {
