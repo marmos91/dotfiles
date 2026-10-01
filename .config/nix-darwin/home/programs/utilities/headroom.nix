@@ -10,6 +10,26 @@
 # secrets: it reads the Mimir upstream URL at runtime from the sops-rendered
 # file, and forwards the client's Authorization header upstream. pi reaches
 # it via the `cubbit-headroom` provider (pi.nix).
+#
+# Proxy flags are not defaults, each one fixes a measured failure:
+#   --no-rate-limit            headroom defaults to 60 req/min and 100k
+#                              tokens/min. A burst of 70 requests returned
+#                              9x HTTP 429; on 2026-09-10 that produced 379
+#                              `429 status code (no body)` failures in pi's
+#                              session logs, all on this provider. The gateway
+#                              has its own limits, so the local one is only
+#                              self-inflicted backpressure.
+#   --no-ccr-inject-tool       pi is a streaming client that cannot resolve
+#                              the injected headroom_retrieve MCP tool, so
+#                              the marker is dead weight in every request.
+#
+# Do NOT add --request-timeout-seconds here. It looks tempting (the default is
+# 300s and Mimir allows 131072 output tokens), but it is httpx's *read* timeout
+# -- an inter-chunk gap, not a total-request budget (proxy/server.py builds
+# httpx.Timeout(connect=..., read=request_timeout_seconds, ...)). A measured
+# reasoning-heavy stream (10473 chunks, 175s total) had a p99 inter-chunk gap of
+# 0.23s and a worst gap of 4.9s, so 300s is ~60x the observed worst stall. A
+# longer value buys nothing and only lengthens a genuine hang.
 {
   config,
   pkgs,
@@ -49,7 +69,9 @@ in
         ''
           if [ ! -x "${bin}" ] || [ ! -s "${mimirUrlFile}" ]; then sleep 15; exit 1; fi
           exec "${bin}" proxy --port ${toString proxyPort} \
-            --openai-api-url "$(cat "${mimirUrlFile}")"
+            --openai-api-url "$(cat "${mimirUrlFile}")" \
+            --no-rate-limit \
+            --no-ccr-inject-tool
         ''
       ];
       RunAtLoad = true;

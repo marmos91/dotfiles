@@ -22,6 +22,52 @@
 # rebuild and delete the live file to re-seed (or edit the live file directly
 # and copy it back).
 #
+# Two settings in that seed are load-bearing for Mimir and should not be
+# "simplified" back to the defaults:
+#
+#   compaction.modelOverrides["cubbit/vllm/mimir"].reserveTokens = 131072
+#     The base reserveTokens stays at pi's default 16384, which is correct for
+#     ordinary models, and the Mimir entries are overridden because the value
+#     has to be the model's maxTokens. The override key is exactly
+#     `${model.provider}/${model.id}` (settings-manager.js), and pi reports
+#     the model id as "vllm/mimir", so the key is the three-segment
+#     "cubbit/vllm/mimir" — not "cubbit/vllm".
+#     Leaving the default 16384 sets pi's native compaction threshold at
+#     contextWindow - 16384 = 901120 tokens. That is not past the server's
+#     ~1,048,561-input limit, but it means the one summarization request that
+#     matters is a ~900k-token prompt whose output is simultaneously capped
+#     at 0.8 * 16384 = ~13k tokens (compaction.js). Both halves are wrong:
+#     measured TTFT is already 29.8s at a 514,309-token prompt, so ~900k is
+#     far slower, and 13k cannot faithfully summarize 900k tokens. Setting it
+#     to the model's maxTokens fires compaction at 786432 and gives the
+#     summarizer a ~105k-token budget. Pi's docstring for the setting says it
+#     "reserves room for the LLM's response", and for a reasoning model that
+#     is maxTokens, not 16k.
+#     cubbit/mimir-small keeps the default shape with its own 32768 maxTokens
+#     because a 131072 reserve on a 229376 window would leave it almost no
+#     working context.
+#
+#   observational-memory.compactAfterTokensMode = "ratio"
+#     The extension defaults to "calibrated", which compacts after a fixed
+#     81,000 source-entry tokens regardless of window size — fine for the
+#     ~128K-200K models it was tuned for, but it throws away ~87% of a 1M
+#     window. Ratio mode scales with contextWindow (0.68, the upstream
+#     default ratio) and is the setting upstream documents for exactly this
+#     large-context case. This extension also owns compaction outright: all
+#     1334 compaction entries in the local session logs are fromHook, i.e.
+#     its session_before_compact handler returns the summary and pi's native
+#     summarizer never runs, so its thresholds are the ones that matter.
+#
+# Do NOT add httpIdleTimeoutMs. It reads like a total-request budget, but it is
+# a *stall* detector: it becomes undici's headersTimeout and bodyTimeout, both
+# of which refresh on every byte received (http-dispatcher.js sets them from
+# this one setting; undici/client-h1.js calls this.timeout.refresh() per chunk).
+# Mimir's worst measured inter-chunk gap on a 10473-chunk reasoning stream was
+# 4.9s against a 300s default, so the default already has ~60x headroom. The
+# one slow case that exists is time-to-first-byte -- 155s for a ~900k-token
+# prompt -- and that is inside the default too. A larger value only makes a
+# real hang take longer to surface.
+#
 # zentui.json is still mkOutOfStoreSymlink into the repo: pi-zentui writes it
 # only when the user changes the theme, so it does not churn. It realpathSyncs
 # before its temp-file + rename save, hence a repo symlink rather than a store
@@ -71,10 +117,22 @@ let
     {
       id = "cubbit/mimir-small";
       name = "Mimir Small";
-      reasoning = false;
+      # Upstream /pi-models.json says reasoning: true with a thinkingLevelMap;
+      # this said false, which silently hid thinking from the model and
+      # disabled pi's reasoning handling for it.
+      reasoning = true;
       input = [ "text" "image" ];
       contextWindow = 229376;
       maxTokens = 32768;
+      thinkingLevelMap = {
+        off = "none";
+        minimal = "low";
+        low = "low";
+        medium = "medium";
+        high = "medium";
+        xhigh = "xhigh";
+        max = "xhigh";
+      };
     }
   ];
 in
@@ -83,6 +141,23 @@ in
   # and realpathSyncs first, so it must resolve to a writable path.
   home.file.".pi/agent/zentui.json".source =
     config.lib.file.mkOutOfStoreSymlink "${repoRoot}/.pi/agent/zentui.json";
+
+  # Keybindings: shift+enter (native) and ctrl+j already insert newlines; add
+  # ctrl+enter, which tmux forwards as CSI-u \x1b[13;5u once extended keys are
+  # active. pi only writes this file to migrate legacy names, so a repo
+  # symlink stays clean.
+  home.file.".pi/agent/keybindings.json".source =
+    config.lib.file.mkOutOfStoreSymlink "${repoRoot}/.pi/agent/keybindings.json";
+
+  # Loop breaker: recovers the degenerate reasoning repetition that the
+  # DeepSeek-V4-Flash checkpoint behind Mimir hits in long tool-heavy
+  # sessions. It cannot be a config fix — mimir's vLLM accepts and ignores
+  # thinking_token_budget (probe: budget 2000 -> 3250 reasoning tokens), so
+  # only an extension can detect the empty length-stop and retry. pi loads
+  # *.ts from this directory directly via jiti, and never writes into it, so
+  # a store symlink is fine (unlike settings.json).
+  home.file.".pi/agent/extensions/loop-breaker.ts".source =
+    config.lib.file.mkOutOfStoreSymlink "${repoRoot}/.pi/agent/extensions/loop-breaker.ts";
 
   # Theme generated from the catppuccin flake's palette, the same source the
   # starship/ghostty/tmux modules use. The two custom surfaces (tool success/
