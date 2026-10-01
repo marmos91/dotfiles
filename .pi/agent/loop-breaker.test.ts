@@ -49,24 +49,32 @@ function harness(thinkingLevel = "high") {
 	const handlers: Record<string, (e: any, c: any) => any> = {};
 	const notes: string[] = [];
 	const entries: { t: string; d: any }[] = [];
+	const commands: Record<string, (a: string, c: any) => any> = {};
+	let level = thinkingLevel;
 	const pi: any = {
 		on: (ev: string, h: (e: any, c: any) => any) => {
 			handlers[ev] = h;
 		},
 		appendEntry: (t: string, d: any) => entries.push({ t, d }),
-	};
-	let level = thinkingLevel;
-	const ctx: any = {
-		hasUI: true,
-		ui: { notify: (m: string) => notes.push(m) },
+		registerCommand: (n: string, o: any) => {
+			commands[n] = o.handler;
+		},
 		getThinkingLevel: () => level,
 		setThinkingLevel: (l: string) => {
 			level = l;
 		},
 	};
+	const ctx: any = {
+		hasUI: true,
+		ui: { notify: (m: string) => notes.push(m) },
+		thinkingLevel,
+	};
 	loopBreaker(pi);
 	return {
 		fire: (m: any) => handlers.turn_end({ message: m, messageEntryId: "e1" }, ctx),
+		start: (reason = "startup") => handlers.session_start({ type: "session_start", reason }, ctx),
+		command: (n: string) => commands[n],
+		notes,
 		entries,
 		level: () => level,
 	};
@@ -117,4 +125,20 @@ test("ignores ordinary messages entirely", () => {
 	const h = harness();
 	assert.equal(h.fire(ok), undefined);
 	assert.equal(h.entries.length, 0);
+});
+
+// ------------------------------------------------------------------- wiring
+
+test("records a load marker carrying the session_start reason", () => {
+	const h = harness("high");
+	h.start("reload");
+	assert.deepEqual(h.entries.at(-1)?.d, { action: "loaded", reason: "reload", thinking: "high" });
+	assert.ok(h.notes.some((n) => n.includes("reload")), "notifies the user that it is active");
+});
+
+test("registers a status command", () => {
+	const h = harness();
+	assert.equal(typeof h.command("loop-breaker"), "function");
+	h.command("loop-breaker")("", { hasUI: true, ui: { notify: (m: string) => h.notes.push(m) } });
+	assert.ok(h.notes.some((n) => n.includes("active")), "command reports active state");
 });
