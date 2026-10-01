@@ -149,6 +149,16 @@ in
   home.file.".pi/agent/keybindings.json".source =
     config.lib.file.mkOutOfStoreSymlink "${repoRoot}/.pi/agent/keybindings.json";
 
+  # Loop breaker: recovers the degenerate reasoning repetition that the
+  # DeepSeek-V4-Flash checkpoint behind Mimir hits in long tool-heavy
+  # sessions. It cannot be a config fix — mimir's vLLM accepts and ignores
+  # thinking_token_budget (probe: budget 2000 -> 3250 reasoning tokens), so
+  # only an extension can detect the empty length-stop and retry. pi loads
+  # *.ts from this directory directly via jiti, and never writes into it, so
+  # a store symlink is fine (unlike settings.json).
+  home.file.".pi/agent/extensions/loop-breaker.ts".source =
+    config.lib.file.mkOutOfStoreSymlink "${repoRoot}/.pi/agent/extensions/loop-breaker.ts";
+
   # Theme generated from the catppuccin flake's palette, the same source the
   # starship/ghostty/tmux modules use. The two custom surfaces (tool success/
   # error backgrounds) are darkened mixes rather than palette entries.
