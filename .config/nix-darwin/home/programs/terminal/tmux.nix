@@ -69,7 +69,7 @@
       set -as terminal-features 'xterm*:extkeys'
 
       # pi binds C-j to insert a newline, but vim-tmux-navigator (loaded above)
-      # grabs it for select-pane -D. Hand it back; pane nav stays on M-arrows.
+      # grabs it for select-pane -D. Hand it back.
       bind -n C-j send-keys C-j
 
       # Enable OSC 52 clipboard support for SSH sessions
@@ -96,11 +96,11 @@
       # Pane synchronization
       bind-key g set-window-option synchronize-panes\; display-message "synchronize-panes is now #{?pane_synchronized,on,off}"
 
-      # Arrow key navigation
-      bind -n M-Left select-pane -L
-      bind -n M-Right select-pane -R
-      bind -n M-Up select-pane -U
-      bind -n M-Down select-pane -D
+      # Option+arrows are deliberately NOT bound: tmux consumes a root-table
+      # binding before the pane sees the key, and pi needs alt+up (restore
+      # queued messages) plus alt+left/right (word movement, tree nav). Pane
+      # navigation is already covered by C-Space h/j/k/l and vim-tmux-navigator
+      # (C-h/j/k/l).
 
       # Window navigation
       bind -n S-Left previous-window
