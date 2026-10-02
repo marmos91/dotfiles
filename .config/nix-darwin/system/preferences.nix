@@ -28,7 +28,16 @@
           "/System/Applications/System Settings.app"
         ];
         persistent-others = [
-          "/Users/${username}/Downloads"
+          # Downloads must use the explicit `folder` tag, not the "/path"
+          # shorthand: the string form coerces to folderType and silently takes
+          # arrangement = "name", which is what re-sorted this folder to name on
+          # every rebuild.
+          {
+            folder = {
+              path = "/Users/${username}/Downloads";
+              arrangement = "date-modified";
+            };
+          }
           "/Applications"
         ];
         mru-spaces = false;
