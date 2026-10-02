@@ -305,5 +305,26 @@ in
       chmod 600 "$auth.new"
       $DRY_RUN_CMD mv "$auth.new" "$auth"
     fi
+
+    # Warn when the live settings.json has drifted from the repo seed. Because
+    # pi owns this file at runtime, the seed is only ever applied once (above),
+    # so a later seed edit is otherwise silently ignored — which has already
+    # happened twice. Compare only the keys the seed declares: pi rewrites
+    # lastChangelogVersion on launch, so a whole-file diff would warn on every
+    # rebuild until the warning meant nothing. A drifted key does warn.
+    # Warn rather than overwrite: "pi install" legitimately adds packages, and
+    # clobbering the live file on every rebuild would discard runtime state.
+    drifted=""
+    for key in $(${jq} -r 'keys[]' "${repoRoot}/.pi/agent/settings.json"); do
+      if ! ${jq} -e --arg k "$key" --slurpfile s "${repoRoot}/.pi/agent/settings.json" \
+           '.[$k] == $s[0][$k]' "${piDir}/settings.json" >/dev/null 2>&1; then
+        drifted="$drifted $key"
+      fi
+    done
+    if [ -n "$drifted" ]; then
+      echo "pi: settings.json drifted from the repo seed:$drifted" >&2
+      echo "pi: diff ${piDir}/settings.json ${repoRoot}/.pi/agent/settings.json" >&2
+      echo "pi: the seed only applies when the live file is missing; reconcile by hand." >&2
+    fi
   '';
 }
