@@ -32,6 +32,6 @@
   },
   "observational-memory": {
     "compactAfterTokensMode": "ratio",
-    "compactAfterTokensRatio": 0.68
+    "compactAfterTokensRatio": 0.9
   }
 }
