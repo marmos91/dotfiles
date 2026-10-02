@@ -51,12 +51,30 @@
 #     The extension defaults to "calibrated", which compacts after a fixed
 #     81,000 source-entry tokens regardless of window size — fine for the
 #     ~128K-200K models it was tuned for, but it throws away ~87% of a 1M
-#     window. Ratio mode scales with contextWindow (0.68, the upstream
-#     default ratio) and is the setting upstream documents for exactly this
-#     large-context case. This extension also owns compaction outright: all
-#     1334 compaction entries in the local session logs are fromHook, i.e.
-#     its session_before_compact handler returns the summary and pi's native
-#     summarizer never runs, so its thresholds are the ones that matter.
+#     window. Ratio mode scales with contextWindow and is the setting upstream
+#     documents for exactly this large-context case. This extension also owns
+#     compaction outright: all 1334 compaction entries in the local session
+#     logs are fromHook, i.e. its session_before_compact handler returns the
+#     summary and pi's native summarizer never runs, so its thresholds are the
+#     ones that matter.
+#
+#   observational-memory.compactAfterTokensRatio = 0.9
+#     Measured, not guessed. A 5-needle NIAH sweep (exact-match scoring) held
+#     5/5 recall at every size from 48k to 1,040,000 prompt tokens, with no
+#     degenerate loop in any of 26 runs; crossing the server cap at 1,070,000
+#     returns the 400 "maximum context length is 1048576 tokens", which pi-ai's
+#     OVERFLOW_PATTERNS matches, so overflow still takes pi's normal
+#     compact-and-retry path instead of hanging.
+#     Any ratio above 0.857 stops binding: pi's own reserveTokens threshold
+#     (917504 - 131072 = 786432; 786432/917504 = 0.857) fires first. 0.9
+#     therefore collapses the two competing thresholds into one at 786432,
+#     reclaiming ~163k tokens of working context versus the previous 0.68
+#     (623903) while leaving pi's 131k output reserve intact.
+#     The ratio never protected against the repetition loop anyway: collapses
+#     were observed at 60-72k tokens, far below any compaction threshold. That
+#     failure is handled by the loop-breaker extension, not by compaction.
+#     Caveat: NIAH measures retrieval, not agentic tool-call resistance; it is
+#     evidence against gross long-context degradation, not a loop guarantee.
 #
 # Do NOT add httpIdleTimeoutMs. It reads like a total-request budget, but it is
 # a *stall* detector: it becomes undici's headersTimeout and bodyTimeout, both
