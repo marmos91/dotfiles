@@ -177,6 +177,15 @@ in
   home.file.".pi/agent/extensions/loop-breaker.ts".source =
     config.lib.file.mkOutOfStoreSymlink "${repoRoot}/.pi/agent/extensions/loop-breaker.ts";
 
+  # Ask user: registers an `ask_user` tool so the model can pause the turn and
+  # offer discrete options, which pi has no built-in equivalent of. The tool
+  # description and guidelines deliberately restrict it to decisions with a
+  # small closed set of answers; the user's preferred default is plain text at
+  # the end of a turn. It returns an explanation instead of prompting when no
+  # interactive UI is attached, so print/rpc/subagent runs cannot deadlock.
+  home.file.".pi/agent/extensions/ask-user.ts".source =
+    config.lib.file.mkOutOfStoreSymlink "${repoRoot}/.pi/agent/extensions/ask-user.ts";
+
   # Theme generated from the catppuccin flake's palette, the same source the
   # starship/ghostty/tmux modules use. The two custom surfaces (tool success/
   # error backgrounds) are darkened mixes rather than palette entries.
