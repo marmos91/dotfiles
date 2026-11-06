@@ -90,7 +90,9 @@ test("registers exactly one ask_user tool, marked sequential", () => {
 	assert.ok(h.tool.promptSnippet, "without a snippet the tool is hidden from the system prompt");
 });
 
-test("the schema stays valid JSON Schema, since typebox is not importable here", () => {
+test("the schema keeps its required shape and option bounds", () => {
+	assert.deepEqual(Object.keys(ASK_PARAMS.properties), ["question", "options", "header"]);
+	for (const p of Object.values(ASK_PARAMS.properties)) assert.ok(p.type, "every property declares a type");
 	assert.equal(ASK_PARAMS.type, "object");
 	assert.deepEqual(ASK_PARAMS.required, ["question", "options"]);
 	assert.equal(ASK_PARAMS.additionalProperties, false);
