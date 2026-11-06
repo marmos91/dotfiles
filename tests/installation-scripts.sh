@@ -285,6 +285,18 @@ t2c_hostname_flag_is_gone() {
     fi
 }
 
+# T-2d: macOS keeps /bin/zsh. A chsh to a Nix store path would outlive a full
+# uninstall and leave the account without a working login shell.
+t2d_darwin_install_keeps_login_shell() {
+    reset
+    run_script install.sh "$WORK/cwd"
+    if [[ "$RC" -eq 0 ]] && ! contains "Setting zsh as default shell"; then
+        pass "macOS install leaves the login shell alone"
+    else
+        fail "macOS install leaves the login shell alone"
+    fi
+}
+
 # T-3: unsupported optional components are skips, not fatal. Fedora is chosen
 # explicitly so a host apt-get cannot change the branch taken.
 t3_unsupported_linux_setup_skips_instead_of_aborts() {
@@ -575,6 +587,7 @@ t1_stow_lints_only_the_intended_packages
 t1b_stow_succeeds_against_a_populated_home
 t2_default_hostname_is_amaterasu
 t2c_hostname_flag_is_gone
+t2d_darwin_install_keeps_login_shell
 t3_unsupported_linux_setup_skips_instead_of_aborts
 t4_real_failure_inside_installer_still_aborts
 t5_docker_repo_url_matches_distro
