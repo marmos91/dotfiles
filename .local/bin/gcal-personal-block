@@ -16,7 +16,6 @@ calendar the account can see, which the free/busy share allows).
 """
 import argparse
 import datetime as dt
-import json
 import sys
 import time
 from pathlib import Path
@@ -72,7 +71,7 @@ def family_svc():
 def setup():
     from google_auth_oauthlib.flow import InstalledAppFlow
     flow = InstalledAppFlow.from_client_config(CLIENT_JSON, SCOPES)
-    print("Sign in as REDACTED-WORK-EMAIL when the browser opens.")
+    print(f"Sign in as {WORK_EMAIL} when the browser opens.")
     creds = flow.run_local_server(
         port=0, access_type="offline", prompt="consent",
         success_message="Authorised. You can close this tab.")
@@ -142,7 +141,10 @@ def run():
     KEY = "familyMirrorId"
     want = {}   # familyId -> desired placeholder body
     for e in src:
-        fid = e["iCalUID"] or e["id"]
+        # singleEvents=True expands recurrences into instances that all share
+        # the master's iCalUID — key by the instance id so each occurrence
+        # gets its own placeholder, and dedupe any re-expansion of the same slot
+        fid = e["id"]
         want[fid] = {
             "summary": TITLE,
             "description": DESCRIPTION,
