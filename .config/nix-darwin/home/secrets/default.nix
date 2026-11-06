@@ -12,6 +12,10 @@
   launchd.agents.sops-nix.config.EnvironmentVariables.PATH = lib.mkForce "/usr/bin:/bin:/usr/sbin:/sbin";
 
   sops = {
+    # Residual risk: macOS builds are not sandboxed (`sandbox = false`), so any
+    # build can read this key and every secret in secrets.yaml. Mitigation:
+    # build untrusted flakes only on a Linux builder/VM; keep the age key off
+    # build machines.
     age.keyFile = "${homeDirectory}/.config/sops/age/keys.txt";
     defaultSopsFile = ./secrets.yaml;
 

@@ -1,15 +1,16 @@
-{ pkgs, lib, config, homeDirectory, ... }:
+{ pkgs, lib, config, ... }:
 {
-  # Install Claude Code via official installer
-  home.activation.installClaude = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-    (
-      export PATH="${pkgs.curl}/bin:${pkgs.coreutils}/bin:/usr/bin:/bin:${homeDirectory}/.local/bin:$PATH"
-      if ! command -v claude &>/dev/null; then
-        echo "Installing Claude Code via official installer..."
-        curl -fsSL https://claude.ai/install.sh | sh
-      else
-        echo "Claude Code already installed, skipping..."
-      fi
-    )
+  # Claude Code CLI from nixpkgs — hash-verified by the flake lock + binary
+  # cache. Replaces the old `curl https://claude.ai/install.sh | sh`
+  # activation, which executed unverified remote code on every switch.
+  home.packages = [ pkgs.claude-code ];
+
+  # `env.nix` puts ~/.local/bin ahead of the home-manager profile, so a vendor
+  # install there (`claude.ai/install.sh`) would shadow the pinned binary and
+  # keep self-updating. Repoint it at the nixpkgs build so the pinned one is
+  # what actually runs (same shape as the pi link in pi.nix).
+  home.activation.claude = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+    $DRY_RUN_CMD mkdir -p "${config.home.homeDirectory}/.local/bin"
+    $DRY_RUN_CMD ln -sfn "${pkgs.claude-code}/bin/claude" "${config.home.homeDirectory}/.local/bin/claude"
   '';
 }
