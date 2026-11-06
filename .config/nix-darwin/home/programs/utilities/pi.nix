@@ -22,6 +22,12 @@
 # rebuild and delete the live file to re-seed (or edit the live file directly
 # and copy it back).
 #
+# The seed's `packages` are pinned to exact versions on purpose: pi
+# re-resolves an unpinned npm spec on every start and runs whatever the
+# registry serves, with the agent's full privileges. Bump them deliberately,
+# like flake.lock. On a provisioned machine the live file keeps its old list;
+# the drift warning below flags `packages` until it is reconciled by hand.
+#
 # Two settings in that seed are load-bearing for Mimir and should not be
 # "simplified" back to the defaults:
 #

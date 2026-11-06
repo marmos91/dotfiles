@@ -18,10 +18,17 @@
     mode = "0600";
     content = builtins.toJSON {
       mcpServers = {
+        # npx by store path for the same GUI-PATH reason as jq below; PATH is
+        # set too because the package's bin is `#!/usr/bin/env node`. The
+        # exact version stops each connect from executing whatever npm serves
+        # today, and npm_config_ignore_scripts keeps install scripts of it and
+        # its deps from running. Bump the version deliberately.
         google-docs = {
-          command = "npx";
-          args = [ "-y" "@a-bonus/google-docs-mcp" ];
+          command = "${pkgs.nodejs}/bin/npx";
+          args = [ "-y" "@a-bonus/google-docs-mcp@1.11.3" ];
           env = {
+            PATH = "${pkgs.nodejs}/bin:/usr/bin:/bin";
+            npm_config_ignore_scripts = "true";
             GOOGLE_CLIENT_ID = config.sops.placeholder.google_docs_mcp_client_id;
             GOOGLE_CLIENT_SECRET = config.sops.placeholder.google_docs_mcp_client_secret;
           };
