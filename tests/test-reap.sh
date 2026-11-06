@@ -1,5 +1,5 @@
 #!/bin/sh
-# Exercises the `reap` helper (home/packages.nix). Runs the materialised binary,
+# Exercises the `reap` helper (home/scripts/reap.nix). Runs the materialised binary,
 # so this is a post-rebuild test: `reap` is installed by `rebuild`, not by the
 # flake eval.
 #
