@@ -69,12 +69,17 @@ in
   # ~/.gnupg (in the git checkout), or fail on a dangling one. Also creates the
   # homedir 0700 on a fresh machine, since gpg rejects an unsafe homedir.
   home.activation.gnupgHome = lib.hm.dag.entryBetween [ "linkGeneration" ] [ "writeBoundary" ] ''
+    # Each step is safe to re-run after a crash at any point: the key material
+    # is always either behind the live link or in $staged, never only in an
+    # unlinked location.
     gnupg="${config.home.homeDirectory}/.gnupg"
-    if [ -L "$gnupg" ]; then
-      target=$(cd "$gnupg" 2>/dev/null && pwd -P) || target=
-      run rm "$gnupg"
-      if [ -n "$target" ]; then run mv "$target" "$gnupg"; fi
+    staged="$gnupg.migrating"
+    if [ -L "$gnupg" ] && [ -e "$gnupg" ]; then
+      target=$(cd "$gnupg" && pwd -P)
+      run mv "$target" "$staged"
     fi
+    if [ -L "$gnupg" ]; then run rm "$gnupg"; fi
+    if [ -d "$staged" ] && [ ! -e "$gnupg" ]; then run mv "$staged" "$gnupg"; fi
     run mkdir -m 700 -p "$gnupg"
     run chmod 700 "$gnupg"
   '';
