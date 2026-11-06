@@ -125,6 +125,8 @@ chmod +x uninstall.sh && ./uninstall.sh
 | `--keep-nix` | Keep Nix installed, remove dotfiles and config |
 | `--keep-stow` | Keep stow installed |
 | `--keep-1password` | Keep 1Password installed (Linux only) |
+| `--keep-docker` | Keep Docker installed (Linux only) |
+| `--purge-data` | Also delete Docker data (`/var/lib/docker`, `/var/lib/containerd`, incl. volumes) and, on the manual fallback path, the Nix store `/nix`. Off by default |
 | `-y, --yes` | Skip confirmation prompt |
 | `--help` | Show help message |
 
@@ -146,6 +148,7 @@ chmod +x uninstall.sh && ./uninstall.sh
 4. Home-manager/nix-darwin configuration
 5. Nix and all packages (unless `--keep-nix`)
 6. Nix cache files
+7. Docker data and the Nix store only with `--purge-data` (the Determinate uninstaller always removes `/nix`)
 
 **Warning**: Full uninstall is destructive and will remove all Nix-installed packages.
 

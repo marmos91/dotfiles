@@ -7,6 +7,8 @@
   networking.applicationFirewall = {
     enable = true;
     allowSigned = true;
+    # netbird/Tailscale/Docker are Developer ID signed, not Apple signed.
+    allowSignedApp = true;
   };
 
   # Touch ID for sudo does not gate an unattended, already-unlocked session.

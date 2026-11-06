@@ -240,8 +240,7 @@ if [[ "$OS" == "Linux" && "$KEEP_1PASSWORD" == false ]]; then
             sudo rm -f /etc/chromium/native-messaging-hosts/com.1password.1password.json 2>/dev/null || true
             sudo rm -f /etc/opt/chrome/native-messaging-hosts/com.1password.1password.json 2>/dev/null || true
             # Only 1Password's own policy files, then the directory only if it is
-            # empty — these roots are shared and may hold other policies. The
-            # filename 1Password writes is not fixed, so match the vendor prefix.
+            # empty — these roots are shared and may hold other policies.
             sudo rm -f /etc/chromium/policies/managed/com.1password*.json 2>/dev/null || true
             sudo rm -f /etc/opt/chrome/policies/managed/com.1password*.json 2>/dev/null || true
             sudo rmdir --ignore-fail-on-non-empty /etc/chromium/policies/managed /etc/opt/chrome/policies/managed 2>/dev/null || true

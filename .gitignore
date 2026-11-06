@@ -69,6 +69,10 @@ Temporary Items
 !.config/nix-darwin
 !.config/nvim
 
+# GnuPG homedir: no longer tracked, but a machine whose ~/.gnupg is still a
+# stow-folded symlink writes live key material here until activation migrates it.
+.gnupg/
+
 # Generated artifacts (regenerable, not source)
 graphify-out/
 .tokensave/

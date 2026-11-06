@@ -4,8 +4,9 @@
 # This used to be three stowed files. Stow folded the directory, so `stow .`
 # made ~/.gnupg a symlink into the git working tree and GnuPG wrote its key
 # material (private-keys-v1.d, trustdb.gpg, random_seed, sockets) inside the
-# checkout. .stowrc now ignores .gnupg and these files are written directly
-# into the real home directory instead.
+# checkout. .stowrc now ignores .gnupg, and the activation below turns an
+# existing folded ~/.gnupg symlink back into a real 0700 directory (moving the
+# key material out of the checkout) before home-manager links these files.
 #
 # Values are deliberately short/resident-free: the agent keeps an unlocked
 # signing key for the working day at most (600/7200), refuses an external
@@ -41,8 +42,8 @@ in
       text = ''
         no-emit-version
         default-key ABFD92D353CD439DEC3CDF32E21700784B22779D
-        use-agent
         auto-key-locate local
+        keyserver-options no-honor-keyserver-url
       '';
     };
 
@@ -60,14 +61,21 @@ in
       force = true;
       text = ''
         keyserver hkps://keys.openpgp.org
-        keyserver-options no-honor-keyserver-url
       '';
     };
   };
 
-  # home-manager creates ~/.gnupg with the default 0755, which gpg flags as an
-  # unsafe homedir on every run.
-  home.activation.gnupgHomePermissions = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-    $DRY_RUN_CMD chmod 700 "${config.home.homeDirectory}/.gnupg"
+  # Runs before linkGeneration: otherwise the links would land inside a folded
+  # ~/.gnupg (in the git checkout), or fail on a dangling one. Also creates the
+  # homedir 0700 on a fresh machine, since gpg rejects an unsafe homedir.
+  home.activation.gnupgHome = lib.hm.dag.entryBetween [ "linkGeneration" ] [ "writeBoundary" ] ''
+    gnupg="${config.home.homeDirectory}/.gnupg"
+    if [ -L "$gnupg" ]; then
+      target=$(cd "$gnupg" 2>/dev/null && pwd -P) || target=
+      run rm "$gnupg"
+      if [ -n "$target" ]; then run mv "$target" "$gnupg"; fi
+    fi
+    run mkdir -m 700 -p "$gnupg"
+    run chmod 700 "$gnupg"
   '';
 }
