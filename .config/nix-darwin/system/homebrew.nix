@@ -39,6 +39,7 @@
       "rtk"
     ];
 
+    # Some of these are pinned to the Dock in preferences.nix (persistent-apps).
     casks = [
       "1password"
       "1password-cli"
