@@ -41,7 +41,7 @@ let
   bin = "${config.home.homeDirectory}/.local/bin/headroom";
   pin = "0.30.0";
   proxyPort = 8788;
-  mimirUrlFile = "${config.home.homeDirectory}/.config/opencode/mimir-base-url";
+  mimirUrlFile = config.sops.secrets.mimir_base_url.path;
   logDir = "${config.home.homeDirectory}/.headroom/logs";
 in
 {

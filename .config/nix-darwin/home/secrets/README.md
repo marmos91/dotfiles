@@ -88,9 +88,13 @@ secrets edit <key>
 
 ### Add a new secret
 
-1. Edit `default.nix` to add the secret definition
-2. Edit `secrets.yaml` (via `sops secrets.yaml`) to add the value
-3. Run `rebuild`
+1. Declare it in `default.nix` (name and target path)
+2. Add a placeholder for it to `secrets.yaml.template`
+3. Add the value with `secrets edit <key>` (or `sops secrets.yaml`)
+4. Point the consumer at `config.sops.secrets.<key>.path` (or
+   `config.sops.placeholder.<key>` inside a `sops.templates` file), never at a
+   literal path
+5. Run `rebuild`
 
 ### View decrypted secrets
 
@@ -124,19 +128,9 @@ chmod 600 ~/.config/sops/age/keys.txt
 ### Option C: Separate key per machine (more secure)
 
 1. Generate a new age key on that machine
-2. Add the new public key to `.sops.yaml`:
-   ```yaml
-   keys:
-     - &primary age1xxx...   # Main machine
-     - &secondary age1yyy... # New machine
-
-   creation_rules:
-     - path_regex: secrets\.yaml$
-       key_groups:
-         - age:
-             - *primary
-             - *secondary
-   ```
+2. Add the new public key to `.sops.yaml` under `keys:` as `&secondary`, and add
+   `- *secondary` under `creation_rules` → `age:`, next to `*primary` (a key
+   listed under `keys:` alone encrypts nothing)
 3. Re-encrypt secrets with all keys:
    ```bash
    sops updatekeys secrets.yaml
