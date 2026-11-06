@@ -6,6 +6,7 @@ let
   # taps. Trust is a consumer-side allowlist in ~/.homebrew/trust.json — there
   # is no publisher-side toggle. Keep this list in sync with `homebrew.taps`.
   trustedTaps = [
+    "cubbit/tap"
     "nikitabobko/tap"
     "marmos91/tap"
     "netbirdio/tap"
@@ -37,8 +38,8 @@ in
 
     brews = [
       "libimobiledevice"
-      "marmos91/tap/dfs"
-      "marmos91/tap/dfsctl"
+      "cubbit/tap/dfs"
+      "cubbit/tap/dfsctl"
       "mas"
       "netbirdio/tap/netbird"
       "openfortivpn"
