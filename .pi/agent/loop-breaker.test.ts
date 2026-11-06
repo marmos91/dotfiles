@@ -5,7 +5,7 @@
  * repeated text with no visible output, and a clean one carries text or a tool
  * call. They are not a replay of recorded sessions.
  *
- *   node --test .pi/agent/loop-breaker.test.ts
+ *   npm test   (from .pi/agent; runs every *.test.ts)
  */
 
 import assert from "node:assert/strict";
