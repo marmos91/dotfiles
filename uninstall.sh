@@ -2,11 +2,11 @@
 set -e
 
 ######## COLORS ########
-RED=$(tput setaf 1)
-YELLOW=$(tput setaf 3)
-BLUE=$(tput setaf 4)
-UNDERLINE=$(tput smul)
-RESET=$(tput sgr0)
+RED=$(tput setaf 1 2>/dev/null || true)
+YELLOW=$(tput setaf 3 2>/dev/null || true)
+BLUE=$(tput setaf 4 2>/dev/null || true)
+UNDERLINE=$(tput smul 2>/dev/null || true)
+RESET=$(tput sgr0 2>/dev/null || true)
 ######## END COLORS ########
 
 function log {
@@ -107,6 +107,16 @@ echo ""
 OS="$(uname -s)"
 log "Detected OS: $OS"
 
+# nix-darwin owns /nix on macOS and nix-installer refuses to uninstall under it.
+# Keyed on /run/current-system: darwin-uninstaller removes that but deliberately
+# leaves /nix/var/nix/profiles/system behind, so the profile cannot be the test
+# (it would block Nix removal forever). SYS_ROOT is a test seam.
+NIX_DARWIN_PRESENT=false
+sys_root="${DOTFILES_SYS_ROOT:-}"
+if [[ "$OS" == "Darwin" && -e "${sys_root}/run/current-system" ]]; then
+    NIX_DARWIN_PRESENT=true
+fi
+
 USER_HOME="$HOME"
 
 # Show what will be removed based on flags
@@ -116,20 +126,22 @@ if [[ "$DOTFILES_ONLY" == false ]]; then
     if [[ "$KEEP_STOW" == false ]]; then
         warn "  - Stow"
     fi
+    warn "  - Home-manager configuration (Linux; nix-darwin is left installed on macOS)"
     if [[ "$KEEP_NIX" == false ]]; then
-        warn "  - Home-manager/nix-darwin configuration"
-        warn "  - All Nix-installed packages"
-        warn "  - Nix itself"
-        # The Determinate installer removes /nix on its own; only the manual
-        # fallback is gated, so say so here rather than promise otherwise.
-        if [[ "$PURGE_DATA" == true ]]; then
-            warn "  - The Nix store at /nix (permanent)"
+        if [[ "$NIX_DARWIN_PRESENT" == true ]]; then
+            warn "  - Nix itself (skipped: nix-darwin is still installed)"
         else
-            warn "  - The Nix store at /nix is removed by the Determinate installer;"
-            warn "    the manual fallback keeps it unless --purge-data is given"
+            warn "  - All Nix-installed packages"
+            warn "  - Nix itself"
+            # The Determinate installer removes /nix on its own; only the manual
+            # fallback is gated, so say so here rather than promise otherwise.
+            if [[ "$PURGE_DATA" == true ]]; then
+                warn "  - The Nix store at /nix (permanent)"
+            else
+                warn "  - The Nix store at /nix is removed by the Determinate installer;"
+                warn "    the manual fallback keeps it unless --purge-data is given"
+            fi
         fi
-    else
-        warn "  - Home-manager/nix-darwin configuration"
     fi
     if [[ "$OS" == "Linux" && "$KEEP_1PASSWORD" == false ]]; then
         warn "  - 1Password app and CLI"
@@ -156,11 +168,26 @@ if [[ "$SKIP_CONFIRM" == false ]]; then
     fi
 fi
 
+# -P so the physical path is used even when the repo is reached through a symlink.
+DOTFILES_DIR="$(cd -P "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
+
+# Shared with install.sh so the two cannot drift. Uninstall keeps a failed
+# cleanup fatal: leaving a live link into a repo that is about to be removed is
+# worse than aborting.
+# shellcheck source=scripts/stale-links.sh disable=SC1091
+. "$DOTFILES_DIR/scripts/stale-links.sh"
+stale_msg() { warn "$1"; }
+
 # Unstow dotfiles first (while stow is still available)
 log "Unstowing dotfiles..."
-cd "${USER_HOME}/.dotfiles"
-stow -D . 2>/dev/null || true
-log "Dotfiles unstowed"
+cd "$DOTFILES_DIR"
+unlink_stale_dotfiles_links
+if ! command -v stow &> /dev/null; then
+    warn "stow is not installed; skipping unstow"
+else
+    stow -D .
+    log "Dotfiles unstowed"
+fi
 
 # Exit early if --dotfiles-only
 if [[ "$DOTFILES_ONLY" == true ]]; then
@@ -172,7 +199,12 @@ fi
 if [[ "$KEEP_STOW" == false ]]; then
     log "Removing stow..."
     if [[ "$OS" == "Darwin" ]]; then
-        brew uninstall stow 2>/dev/null || true
+        # stow usually comes from home-manager here, so a missing brew keg is not an error
+        if brew list --formula stow > /dev/null 2>&1; then
+            brew uninstall stow
+        else
+            warn "stow is not a Homebrew formula (nix provides it); remove it with home-manager"
+        fi
     elif [[ "$OS" == "Linux" ]]; then
         if command -v apt-get &> /dev/null; then
             sudo apt-get remove -y stow
@@ -182,9 +214,12 @@ if [[ "$KEEP_STOW" == false ]]; then
             sudo pacman -R --noconfirm stow
         elif command -v zypper &> /dev/null; then
             sudo zypper remove -y stow
+        else
+            warn "No supported package manager found; remove stow manually"
         fi
+    else
+        warn "Unsupported OS: $OS; remove stow manually"
     fi
-    log "Stow removed"
 else
     log "Keeping stow (--keep-stow flag)"
 fi
@@ -311,20 +346,20 @@ if [[ "$OS" == "Linux" ]]; then
     rm -f "${USER_HOME}/.nix-profile" 2>/dev/null || true
     rm -rf "${USER_HOME}/.nix-defexpr" 2>/dev/null || true
     log "Home-manager removed"
-elif [[ "$OS" == "Darwin" ]]; then
-    log "Removing nix-darwin configuration..."
-    if command -v darwin-rebuild &> /dev/null; then
-        warn "Running darwin-rebuild to clean up..."
-        # Note: Full nix-darwin removal requires manual steps
-    fi
+elif [[ "$OS" == "Darwin" && "$NIX_DARWIN_PRESENT" == true ]]; then
+    warn "nix-darwin configuration left installed; remove it with:"
+    warn "  sudo /run/current-system/sw/bin/darwin-uninstaller"
+    warn "Then re-run this script to remove Nix."
 fi
 
 # Uninstall Nix (unless --keep-nix)
-if [[ "$KEEP_NIX" == false ]]; then
+if [[ "$KEEP_NIX" == false && "$NIX_DARWIN_PRESENT" == false ]]; then
     log "Uninstalling Nix..."
-    if [ -x /nix/nix-installer ]; then
+    # SYS_ROOT seam: the test suite must not reach the host's real installer.
+    nix_installer="${sys_root}/nix/nix-installer"
+    if [ -x "$nix_installer" ]; then
         # Determinate Systems installer
-        /nix/nix-installer uninstall --no-confirm
+        "$nix_installer" uninstall --no-confirm
         log "Nix uninstalled via Determinate installer"
     else
         warn "Determinate installer not found, attempting manual cleanup..."
@@ -359,6 +394,9 @@ if [[ "$KEEP_NIX" == false ]]; then
     log "Cleaning up remaining files..."
     rm -rf "${USER_HOME}/.cache/nix" 2>/dev/null || true
     rm -rf "${USER_HOME}/.local/share/nix" 2>/dev/null || true
+elif [[ "$KEEP_NIX" == false ]]; then
+    # nix-installer refuses to uninstall while nix-darwin is installed
+    warn "Skipping Nix removal: nix-darwin is still installed."
 else
     log "Keeping Nix (--keep-nix flag)"
 fi

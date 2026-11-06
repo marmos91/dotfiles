@@ -2,15 +2,24 @@
 set -e
 
 ######## COLORS ########
-YELLOW=$(tput setaf 3)
-BLUE=$(tput setaf 4)
-UNDERLINE=$(tput smul)
-RESET=$(tput sgr0)
+YELLOW=$(tput setaf 3 2>/dev/null || true)
+BLUE=$(tput setaf 4 2>/dev/null || true)
+UNDERLINE=$(tput smul 2>/dev/null || true)
+RESET=$(tput sgr0 2>/dev/null || true)
 ######## END COLORS ########
+
+# -P so the physical path is used even when the repo is reached through a symlink.
+DOTFILES_DIR="$(cd -P "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
+cd "$DOTFILES_DIR"
 
 function log {
 	echo "${BLUE}${UNDERLINE}$1${RESET}"
 }
+
+# Shared with uninstall.sh so the two cannot drift.
+# shellcheck source=scripts/stale-links.sh disable=SC1091
+. "$DOTFILES_DIR/scripts/stale-links.sh"
+stale_msg() { log "$1"; }
 
 function titlize {
 	echo "${YELLOW}$1${RESET}"
@@ -76,7 +85,6 @@ function show_help {
     echo "Options:"
     echo "  --shell <shell>   Set default shell (zsh or bash). Default: zsh"
     echo "  --shell-only      Only change the default shell, skip installation"
-    echo "  --hostname <name> Set hostname (macOS only). Default: amaterasu"
     echo "  --no-stow         Skip stowing dotfiles"
     echo "  --skip-nix        Skip Nix installation (use existing Nix)"
     echo "  --no-1password    Skip 1Password installation (Linux only)"
@@ -86,7 +94,6 @@ function show_help {
     echo "Examples:"
     echo "  $0                          # Full install with defaults"
     echo "  $0 --shell bash             # Install with bash as default shell"
-    echo "  $0 --hostname myhost        # Install with custom hostname (macOS)"
     echo "  $0 --shell-only             # Only set zsh as default shell"
     echo "  $0 --no-1password           # Skip 1Password installation on Linux"
 }
@@ -94,7 +101,6 @@ function show_help {
 # Parse arguments
 DEFAULT_SHELL="zsh"
 SHELL_ONLY=false
-CUSTOM_HOSTNAME=""
 NO_STOW=false
 SKIP_NIX=false
 SKIP_1PASSWORD=false
@@ -109,10 +115,6 @@ while [[ $# -gt 0 ]]; do
         --shell-only)
             SHELL_ONLY=true
             shift
-            ;;
-        --hostname)
-            CUSTOM_HOSTNAME="$2"
-            shift 2
             ;;
         --no-stow)
             NO_STOW=true
@@ -198,19 +200,15 @@ ARCH="$(uname -m)"
 log "Detected OS: $OS ($ARCH)"
 log "Default shell: $DEFAULT_SHELL"
 
-# Configuration - use flag, env var, or default
-if [[ -n "$CUSTOM_HOSTNAME" ]]; then
-    HOSTNAME="$CUSTOM_HOSTNAME"
-else
-    HOSTNAME="${HOSTNAME:-amaterasu}"
-fi
+# Configuration - the flake exposes a single hostname
+DOTFILES_HOSTNAME=amaterasu
 
 # Setting hostname (macOS only)
 if [[ "$OS" == "Darwin" ]]; then
-    log "Setting hostname and computer name to $HOSTNAME"
-    sudo scutil --set HostName "$HOSTNAME"
-    sudo scutil --set ComputerName "$HOSTNAME"
-    sudo scutil --set LocalHostName "$HOSTNAME"
+    log "Setting hostname and computer name to $DOTFILES_HOSTNAME"
+    sudo scutil --set HostName "$DOTFILES_HOSTNAME"
+    sudo scutil --set ComputerName "$DOTFILES_HOSTNAME"
+    sudo scutil --set LocalHostName "$DOTFILES_HOSTNAME"
 fi
 
 # Install stow
@@ -260,6 +258,10 @@ install_stow() {
 # Install and run stow (unless --no-stow)
 if [[ "$NO_STOW" == false ]]; then
     if install_stow; then
+        # A pre-existing ~/.claude must not abort the install, so a failed unfold is
+        # only a warning; stow still runs.
+        unlink_stale_dotfiles_links || log "Warning: some stale links could not be cleaned up"
+
         # Stow dotfiles
         log "Stowing dotfiles..."
         stow .
@@ -367,6 +369,11 @@ install_1password() {
 
     if [[ "$ARCH" == "x86_64" ]]; then
         # x86_64: Use apt repository.
+        if ! command -v apt-get &> /dev/null; then
+            log "Warning: 1Password apt installation requires apt-get"
+            return 0
+        fi
+
         #
         # The apt key and the debsig policy are the trust anchors for every
         # later `apt-get install 1password`, so both are pinned: the key by
@@ -465,7 +472,7 @@ install_1password() {
         fi
     else
         log "Warning: Unsupported architecture for 1Password: $ARCH"
-        return 1
+        return 0
     fi
 
     log "1Password installed successfully"
@@ -492,8 +499,21 @@ install_docker() {
 
     if ! command -v apt-get &> /dev/null; then
         log "Warning: Docker installation only supported on Debian/Ubuntu"
-        return 1
+        return 0
     fi
+
+    # distro id and codename drive the Docker apt repository URL;
+    # DOTFILES_OS_RELEASE is a test seam so the branch is not host-derived
+    os_release="${DOTFILES_OS_RELEASE:-/etc/os-release}"
+    # shellcheck disable=SC1090
+    if [[ -r "$os_release" ]]; then . "$os_release"; fi
+    case "$ID" in
+        ubuntu|debian) ;;
+        *)
+            log "Warning: No Docker apt repository for '${ID:-unknown}'; skipping Docker"
+            return 0
+            ;;
+    esac
 
     log "Installing Docker Engine..."
 
@@ -507,18 +527,19 @@ install_docker() {
     # pinning work and is tracked as follow-up debt. It is the same trust-anchor
     # shape as the 1Password apt key above, so `verify_gpg_fingerprint` applies.
     sudo install -m 0755 -d /etc/apt/keyrings
-    sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+    sudo curl -fsSL "https://download.docker.com/linux/${ID}/gpg" -o /etc/apt/keyrings/docker.asc
     sudo chmod a+r /etc/apt/keyrings/docker.asc
 
     # Add Docker repository
-    echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+    echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/${ID} ${VERSION_CODENAME} stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
 
     # Install Docker Engine
     sudo apt-get update -qq
     sudo apt-get install -y -qq docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 
     # Add user to docker group
-    sudo usermod -aG docker "$USER"
+    target_user="${SUDO_USER:-$USER}"
+    sudo usermod -aG docker "$target_user"
 
     # Enable and start Docker service
     sudo systemctl enable docker
@@ -534,11 +555,6 @@ install_docker
 log "Initializing Nix configuration..."
 if ! command -v nix &> /dev/null; then
     log "Warning: Nix is not available. Skipping Nix configuration."
-elif [ ! -f "${HOME}/.config/nix-darwin/flake.nix" ]; then
-    # The flake lives in the repo and only reaches ~/.config via stow, so this
-    # is the normal state when stowing was skipped. Say so, instead of letting
-    # the switch below abort with "path ... does not exist".
-    log "Skipping Nix configuration: ${HOME}/.config/nix-darwin is missing (it is a stow symlink from ~/.dotfiles). Run 'stow .' from ~/.dotfiles, then apply the configuration with the switch command in .config/nix-darwin/README.md."
 else
     USER_HOME="$HOME"
     USERNAME="$(whoami)"
@@ -561,13 +577,13 @@ else
 
     if [[ "$OS" == "Darwin" ]]; then
         # macOS: use nix-darwin
-        log "Building nix-darwin configuration for '$HOSTNAME'..."
+        log "Building nix-darwin configuration for '$DOTFILES_HOSTNAME'..."
         log "This requires administrator privileges..."
 
         if ! command -v darwin-rebuild &> /dev/null; then
-            sudo -H nix --extra-experimental-features 'nix-command flakes' run "github:LnL7/nix-darwin/${NIX_DARWIN_REV}" -- switch --flake "${USER_HOME}/.config/nix-darwin#${HOSTNAME}"
+            sudo -H nix --extra-experimental-features 'nix-command flakes' run "github:LnL7/nix-darwin/${NIX_DARWIN_REV}" -- switch --flake "${DOTFILES_DIR}/.config/nix-darwin#${DOTFILES_HOSTNAME}"
         else
-            darwin-rebuild switch --flake "${USER_HOME}/.config/nix-darwin#${HOSTNAME}"
+            darwin-rebuild switch --flake "${DOTFILES_DIR}/.config/nix-darwin#${DOTFILES_HOSTNAME}"
         fi
 
         log "nix-darwin configuration activated successfully"
@@ -584,9 +600,9 @@ else
         # Install home-manager if not available
         if ! command -v home-manager &> /dev/null; then
             log "Installing home-manager..."
-            nix run "github:nix-community/home-manager/${HOME_MANAGER_REV}" -- switch --flake "${USER_HOME}/.config/nix-darwin#${HM_CONFIG}"
+            nix run "github:nix-community/home-manager/${HOME_MANAGER_REV}" -- switch --flake "${DOTFILES_DIR}/.config/nix-darwin#${HM_CONFIG}"
         else
-            home-manager switch --flake "${USER_HOME}/.config/nix-darwin#${HM_CONFIG}"
+            home-manager switch --flake "${DOTFILES_DIR}/.config/nix-darwin#${HM_CONFIG}"
         fi
 
         log "home-manager configuration activated successfully"

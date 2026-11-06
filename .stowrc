@@ -1,13 +1,11 @@
 --target=~
---ignore=.stowrc
+# Allowlist: only .config is stowed (home-manager owns ~/.gnupg), so nothing else a checkout
+# carries (install scripts, agent state, build artifacts, untracked scratch
+# files) can leak into $HOME. Anchored, so nested paths stay stowed.
+# [.] not \: stow runs this file through shellwords, which strips backslashes,
+# turning \.config into the wildcard .config (so xconfig would match too).
+# No double-dash in these comments: stow reads it as an end-of-options marker
+# and silently drops every ignore rule below it.
+--ignore=^(?![.]config(/|$)).*
 --ignore=DS_Store
---ignore=install.sh
---ignore=uninstall.sh
---ignore=.gitignore
---ignore=assets
---ignore=.pi
---ignore=tests
---ignore=.gnupg
 --ignore=hosts[.]yml
---ignore=.claude
---ignore=.githooks
