@@ -57,7 +57,7 @@ flake.nix                    # Main entry point, defines inputs and outputs
     ├── programs/           # Shell, terminal, git, utilities, gnupg.nix
     │   ├── terminal/       # ghostty, tmux, tmuxinator, starship, atuin, carapace
     │   ├── shell/          # zsh, bash, common.nix (shared aliases/functions)
-    │   ├── git/            # git config, lazygit
+    │   ├── git/            # git config (incl. delta), lazygit
     │   ├── desktop/        # GNOME (Linux)
     │   ├── services/       # ssh
     │   └── utilities/      # bat, fzf, eza, ripgrep, mcp, pi, gcal-personal-block, etc.
