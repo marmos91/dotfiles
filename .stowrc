@@ -6,3 +6,4 @@
 --ignore=.gitignore
 --ignore=assets
 --ignore=.pi
+--ignore=tests

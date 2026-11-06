@@ -31,18 +31,21 @@ This is a modular nix-darwin configuration that manages both system-level and us
 ## Usage
 
 ```bash
-# Install dependencies (if not already done)
-curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix | sh -s -- install --no-confirm
-
 # Clone your dotfiles
 git clone https://github.com/marmos91/dotfiles.git ~/.dotfiles
 cd ~/.dotfiles
 
-# Apply stow configuration
-stow .
-
-# Build and apply nix-darwin configuration
-sudo nix --extra-experimental-features 'nix-command flakes' run nix-darwin -- switch --flake ~/.config/nix-darwin#amaterasu
+# Install Nix (and, on Linux, 1Password/Docker), stow the dotfiles, then apply
+# the configuration. install.sh pins the Determinate nix-installer GitHub
+# release and verifies its published SHA-256 before executing it, and refuses
+# to run Homebrew's unverified HEAD installer. The hashes live only in
+# install.sh.
+#
+# macOS needs Homebrew first (https://brew.sh) for stow. Without it install.sh
+# skips stowing and the configuration step, because ~/.config/nix-darwin only
+# exists after `stow .`. In that case: install Homebrew, then re-run
+# ./install.sh --skip-nix.
+./install.sh
 ```
 
 ## Daily Usage

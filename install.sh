@@ -16,6 +16,60 @@ function titlize {
 	echo "${YELLOW}$1${RESET}"
 }
 
+# Download one artifact and fail closed unless its SHA-256 matches. TLS alone is
+# not a trust anchor for anything this script later runs as root. Portable
+# across macOS (shasum) and Linux (sha256sum). Never calls sudo.
+function fetch_and_verify {
+	local url="$1" dest="$2" sha256="$3"
+
+	if ! curl -fsSLo "$dest" "$url"; then
+		echo "Error: download failed: $url" >&2
+		exit 1
+	fi
+	if ! printf '%s  %s\n' "$sha256" "$dest" | (sha256sum -c - 2>/dev/null || shasum -a 256 -c -) >/dev/null; then
+		echo "Error: checksum mismatch for $url (expected sha256 $sha256)" >&2
+		exit 1
+	fi
+}
+
+# Fail closed unless the key file holds exactly one primary key and that key
+# is this fingerprint. A bare `grep -q "^fpr:..."` would also pass a bundle that
+# merely *contains* the trusted key, and `--dearmor` installs the whole bundle
+# as a trust anchor — so an attacker who controls the download could append
+# their own key and sign packages for the pinned repo.
+function verify_gpg_fingerprint {
+	local keyfile="$1" fingerprint="$2" keys
+
+	keys="$(gpg --show-keys --with-colons --fingerprint "$keyfile" 2>/dev/null || true)"
+	if [ "$(printf '%s\n' "$keys" | grep -c '^pub:')" != 1 ] \
+		|| [ "$(printf '%s\n' "$keys" | awk -F: '/^fpr:/{print $10; exit}')" != "$fingerprint" ]; then
+		echo "Error: GPG key fingerprint mismatch in $keyfile (expected $fingerprint)" >&2
+		exit 1
+	fi
+}
+
+# One exit trap for every temp dir the script creates: separate `trap ... EXIT`
+# assignments would overwrite each other and leak downloaded key material.
+TEMP_DIRS=()
+trap 'rm -rf "${TEMP_DIRS[@]}" 2>/dev/null || true' EXIT
+
+# Pinned upstream data. Bump a version and its hash together; a changed
+# artifact then fails loudly instead of running.
+ONEPASSWORD_GPG_FINGERPRINT="3FEF9748469ADBE15DA7CA80AC2D62742012EA22"
+ONEPASSWORD_DEBSIG_POL_SHA256="c0c148807d8dc588750a9cc512c7243ed10a9cfd5519a5a6f0a038ad66a19c39"
+ONEPASSWORD_APP_VERSION="8.12.44"
+ONEPASSWORD_APP_SHA256="50146bb14bc010e8442cb69c172ef8ff2501c07829fb18254188e7173eb9cd74"
+ONEPASSWORD_CLI_VERSION="2.32.0"
+ONEPASSWORD_CLI_SHA256="6f3d571aabe7701e21ad4b0f9d30207c3dcabdb2f9c261e3651106dde0ee8946"
+
+# `nix run` without a rev resolves through the flake registry
+# (`github:LnL7/nix-darwin`, `github:nix-community/home-manager`), which tracks
+# HEAD — and on macOS it runs as root. Pin the revs flake.lock already locks, so
+# the bootstrap runs the same code the switch then builds. Bump these whenever
+# `nix flake update` moves them.
+NIX_DARWIN_REV="4cff07de74b50e64bdd68cd4e722ab5b6b35ee48"
+HOME_MANAGER_REV="d85475546a5f6696233bba981933e2227a584047"
+
 function show_help {
     echo "Usage: $0 [OPTIONS]"
     echo ""
@@ -170,29 +224,28 @@ install_stow() {
     if [[ "$OS" == "Darwin" ]]; then
         # macOS: use Homebrew
         if ! command -v brew &> /dev/null; then
-            log "Homebrew is not installed. Installing it now..."
-            /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-
-            # Add Homebrew to PATH for current session
-            if [[ -f /opt/homebrew/bin/brew ]]; then
-                export PATH="/opt/homebrew/bin:$PATH"
-            elif [[ -f /usr/local/bin/brew ]]; then
-                export PATH="/usr/local/bin:$PATH"
-            fi
+            # Homebrew's installer tracks its `HEAD` branch and publishes no
+            # checksum, so there is nothing to verify it against. Refuse rather
+            # than pipe a moving branch into bash — but do not abort the whole
+            # install, or a fresh Mac could never reach the pinned Nix step.
+            # The caller prints the one actionable message.
+            return 1
         else
             log "Homebrew is already installed with version $(brew --version | head -n 1)"
         fi
-        brew install stow
+        # The caller tests this function's status, which turns off errexit for
+        # its whole body, so every install step must propagate failure itself.
+        brew install stow || return 1
     elif [[ "$OS" == "Linux" ]]; then
         # Linux: detect package manager
         if command -v apt-get &> /dev/null; then
-            sudo apt-get update && sudo apt-get install -y stow
+            sudo apt-get update && sudo apt-get install -y stow || return 1
         elif command -v dnf &> /dev/null; then
-            sudo dnf install -y stow
+            sudo dnf install -y stow || return 1
         elif command -v pacman &> /dev/null; then
-            sudo pacman -S --noconfirm stow
+            sudo pacman -S --noconfirm stow || return 1
         elif command -v zypper &> /dev/null; then
-            sudo zypper install -y stow
+            sudo zypper install -y stow || return 1
         else
             log "Error: Could not detect package manager. Please install stow manually."
             exit 1
@@ -206,11 +259,13 @@ install_stow() {
 
 # Install and run stow (unless --no-stow)
 if [[ "$NO_STOW" == false ]]; then
-    install_stow
-
-    # Stow dotfiles
-    log "Stowing dotfiles..."
-    stow .
+    if install_stow; then
+        # Stow dotfiles
+        log "Stowing dotfiles..."
+        stow .
+    else
+        log "Skipping stow: stow could not be installed. Install it with your package manager (macOS: 'brew install stow', Homebrew from https://brew.sh), then run 'stow .' from ~/.dotfiles."
+    fi
 else
     log "Skipping stow (--no-stow flag)"
 fi
@@ -221,7 +276,39 @@ if [[ "$SKIP_NIX" == true ]]; then
 else
     log "Installing Nix with Determinate Systems installer..."
     if ! command -v nix &> /dev/null; then
-        curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix | sh -s -- install --no-confirm
+        # The install.determinate.systems/nix endpoint tracks the latest release
+        # and publishes no per-version checksum, so this pins the GitHub release
+        # binary instead: the asset with a published, verifiable hash.
+        NIX_INSTALLER_VERSION="v3.24.2"
+        case "$OS:$ARCH" in
+            Darwin:arm64)
+                NIX_INSTALLER_TARGET="aarch64-darwin"
+                NIX_INSTALLER_SHA256="0163fb800be1749880fb51cd529a88fd4dace474601a144d0db9929006eba775"
+                ;;
+            Linux:aarch64 | Linux:arm64)
+                NIX_INSTALLER_TARGET="aarch64-linux"
+                NIX_INSTALLER_SHA256="bc18d8d8ca12f95d219b5978201e15d0049b2e9d8b7c49593f26503c87172145"
+                ;;
+            Linux:x86_64)
+                NIX_INSTALLER_TARGET="x86_64-linux"
+                NIX_INSTALLER_SHA256="22ed14ee1b24d100d388f1fc245e3062bd5982433d159cffa6dec34c0eb15dab"
+                ;;
+            *)
+                # Determinate stopped publishing an Intel macOS build, so there
+                # is no pinned asset to verify for this target.
+                log "Error: no pinned nix-installer for $OS:$ARCH. Install Nix manually from https://determinate.systems, then re-run with --skip-nix."
+                exit 1
+                ;;
+        esac
+
+        NIX_INSTALLER_DIR=$(mktemp -d)
+        TEMP_DIRS+=("$NIX_INSTALLER_DIR")
+        fetch_and_verify \
+            "https://github.com/DeterminateSystems/nix-installer/releases/download/${NIX_INSTALLER_VERSION}/nix-installer-${NIX_INSTALLER_TARGET}" \
+            "${NIX_INSTALLER_DIR}/nix-installer" \
+            "$NIX_INSTALLER_SHA256"
+        chmod +x "${NIX_INSTALLER_DIR}/nix-installer"
+        "${NIX_INSTALLER_DIR}/nix-installer" install --no-confirm
 
         # Source nix for current session
         if [ -e '/nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh' ]; then
@@ -279,18 +366,39 @@ install_1password() {
     fi
 
     if [[ "$ARCH" == "x86_64" ]]; then
-        # x86_64: Use apt repository
-        # Add 1Password GPG key (--yes to overwrite if exists)
-        curl -sS https://downloads.1password.com/linux/keys/1password.asc | sudo gpg --yes --dearmor --output /usr/share/keyrings/1password-archive-keyring.gpg
+        # x86_64: Use apt repository.
+        #
+        # The apt key and the debsig policy are the trust anchors for every
+        # later `apt-get install 1password`, so both are pinned: the key by
+        # fingerprint, the policy by hash. The key is also key material, so it
+        # lives in a private temp dir that is removed on exit.
+        ONEPASSWORD_KEY_DIR=$(mktemp -d)
+        TEMP_DIRS+=("$ONEPASSWORD_KEY_DIR")
+        ONEPASSWORD_ASC="${ONEPASSWORD_KEY_DIR}/1password.asc"
+
+        if ! curl -fsSLo "$ONEPASSWORD_ASC" https://downloads.1password.com/linux/keys/1password.asc; then
+            log "Error: could not download the 1Password archive key"
+            exit 1
+        fi
+        verify_gpg_fingerprint "$ONEPASSWORD_ASC" "$ONEPASSWORD_GPG_FINGERPRINT"
+
+        # Add 1Password repository key (--yes to overwrite if exists)
+        sudo gpg --yes --dearmor --output /usr/share/keyrings/1password-archive-keyring.gpg "$ONEPASSWORD_ASC"
 
         # Add 1Password repository
         echo 'deb [arch=amd64 signed-by=/usr/share/keyrings/1password-archive-keyring.gpg] https://downloads.1password.com/linux/debian/amd64 stable main' | sudo tee /etc/apt/sources.list.d/1password.list > /dev/null
 
-        # Add debsig policy for package verification
+        # Add debsig policy for package verification, hash-checked before it is
+        # written: it names the key that signs the packages.
+        ONEPASSWORD_POL="${ONEPASSWORD_KEY_DIR}/1password.pol"
+        fetch_and_verify \
+            https://downloads.1password.com/linux/debian/debsig/1password.pol \
+            "$ONEPASSWORD_POL" \
+            "$ONEPASSWORD_DEBSIG_POL_SHA256"
         sudo mkdir -p /etc/debsig/policies/AC2D62742012EA22/
-        curl -sS https://downloads.1password.com/linux/debian/debsig/1password.pol | sudo tee /etc/debsig/policies/AC2D62742012EA22/1password.pol > /dev/null
+        sudo install -m 644 -o root -g root -- "$ONEPASSWORD_POL" /etc/debsig/policies/AC2D62742012EA22/1password.pol
         sudo mkdir -p /usr/share/debsig/keyrings/AC2D62742012EA22
-        curl -sS https://downloads.1password.com/linux/keys/1password.asc | sudo gpg --yes --dearmor --output /usr/share/debsig/keyrings/AC2D62742012EA22/debsig.gpg
+        sudo gpg --yes --dearmor --output /usr/share/debsig/keyrings/AC2D62742012EA22/debsig.gpg "$ONEPASSWORD_ASC"
 
         # Install 1Password
         sudo apt-get update && sudo apt-get install -y 1password 1password-cli
@@ -299,42 +407,55 @@ install_1password() {
         if [[ "$app_installed" == false ]]; then
             log "Installing 1Password app for ARM64 via tar.gz..."
 
-            # Create temp directory
-            TEMP_DIR=$(mktemp -d)
-            cd "$TEMP_DIR"
+            ONEPASSWORD_APP_DIR=$(mktemp -d)
+            TEMP_DIRS+=("$ONEPASSWORD_APP_DIR")
+            ONEPASSWORD_TARBALL="${ONEPASSWORD_APP_DIR}/1password.tar.gz"
 
-            # Download and extract
-            curl -sSO https://downloads.1password.com/linux/tar/stable/aarch64/1password-latest.tar.gz
-            sudo tar -xf 1password-latest.tar.gz
+            # A versioned URL, not `1password-latest.tar.gz`: the hash pin below
+            # is only meaningful for one exact build.
+            fetch_and_verify \
+                "https://downloads.1password.com/linux/tar/stable/aarch64/1password-${ONEPASSWORD_APP_VERSION}.arm64.tar.gz" \
+                "$ONEPASSWORD_TARBALL" \
+                "$ONEPASSWORD_APP_SHA256"
+
+            # Extract unprivileged: the archive is untrusted until verified, and
+            # root's tar can write anywhere on disk.
+            tar --no-same-owner --no-same-permissions -C "$ONEPASSWORD_APP_DIR" -xf "$ONEPASSWORD_TARBALL"
 
             # Install to /opt
             sudo mkdir -p /opt/1Password
-            sudo mv 1password-*/* /opt/1Password
+            sudo mv "$ONEPASSWORD_APP_DIR"/1password-*/* /opt/1Password
+            # The extract was unprivileged, so `mv` preserved the invoking user's
+            # ownership. Restore root ownership and directory modes before
+            # running the installer, or after-install.sh would be a
+            # user-writable script executed via sudo.
+            sudo chown -R root:root /opt/1Password
+            # The extract also inherited the caller's umask, so a hardened umask
+            # (027/077) leaves root-owned 0700 binaries the user cannot run.
+            # u=rwX keeps execute bits and adds read for group/other.
+            sudo chmod -R u=rwX,go=rX /opt/1Password
 
             # Run post-install script
             sudo /opt/1Password/after-install.sh
-
-            # Cleanup
-            cd -
-            rm -rf "$TEMP_DIR"
         fi
 
         # Install 1Password CLI separately for ARM64
         if [[ "$cli_installed" == false ]]; then
             log "Installing 1Password CLI for ARM64..."
-            TEMP_DIR_CLI=$(mktemp -d)
-            cd "$TEMP_DIR_CLI"
-            curl -sSO https://cache.agilebits.com/dist/1P/op2/pkg/v2.32.0/op_linux_arm64_v2.32.0.zip
-            unzip -q op_linux_arm64_v2.32.0.zip
-            sudo mv op /usr/local/bin/
+            ONEPASSWORD_CLI_DIR=$(mktemp -d)
+            TEMP_DIRS+=("$ONEPASSWORD_CLI_DIR")
+
+            fetch_and_verify \
+                "https://cache.agilebits.com/dist/1P/op2/pkg/v${ONEPASSWORD_CLI_VERSION}/op_linux_arm64_v${ONEPASSWORD_CLI_VERSION}.zip" \
+                "${ONEPASSWORD_CLI_DIR}/op.zip" \
+                "$ONEPASSWORD_CLI_SHA256"
+            unzip -q "${ONEPASSWORD_CLI_DIR}/op.zip" -d "$ONEPASSWORD_CLI_DIR"
+            sudo mv "${ONEPASSWORD_CLI_DIR}/op" /usr/local/bin/
 
             # Create onepassword-cli group and set permissions for CLI integration
             sudo groupadd -f onepassword-cli
             sudo chown root:onepassword-cli /usr/local/bin/op
             sudo chmod g+s /usr/local/bin/op
-
-            cd -
-            rm -rf "$TEMP_DIR_CLI"
         fi
 
         # Patch desktop file for Wayland support and disable GPU (ARM64 compatibility)
@@ -381,6 +502,10 @@ install_docker() {
     sudo apt-get install -y -qq ca-certificates curl
 
     # Add Docker's official GPG key
+    #
+    # Not fingerprint-pinned: this is out of scope for the 1Password/Nix/Homebrew
+    # pinning work and is tracked as follow-up debt. It is the same trust-anchor
+    # shape as the 1Password apt key above, so `verify_gpg_fingerprint` applies.
     sudo install -m 0755 -d /etc/apt/keyrings
     sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
     sudo chmod a+r /etc/apt/keyrings/docker.asc
@@ -407,7 +532,14 @@ install_docker
 
 # Initialize Nix configuration
 log "Initializing Nix configuration..."
-if command -v nix &> /dev/null; then
+if ! command -v nix &> /dev/null; then
+    log "Warning: Nix is not available. Skipping Nix configuration."
+elif [ ! -f "${HOME}/.config/nix-darwin/flake.nix" ]; then
+    # The flake lives in the repo and only reaches ~/.config via stow, so this
+    # is the normal state when stowing was skipped. Say so, instead of letting
+    # the switch below abort with "path ... does not exist".
+    log "Skipping Nix configuration: ${HOME}/.config/nix-darwin is missing (it is a stow symlink from ~/.dotfiles). Run 'stow .' from ~/.dotfiles, then apply the configuration with the switch command in .config/nix-darwin/README.md."
+else
     USER_HOME="$HOME"
     USERNAME="$(whoami)"
 
@@ -417,7 +549,7 @@ if command -v nix &> /dev/null; then
         log "This requires administrator privileges..."
 
         if ! command -v darwin-rebuild &> /dev/null; then
-            sudo -H nix --extra-experimental-features 'nix-command flakes' run nix-darwin -- switch --flake "${USER_HOME}/.config/nix-darwin#${HOSTNAME}"
+            sudo -H nix --extra-experimental-features 'nix-command flakes' run "github:LnL7/nix-darwin/${NIX_DARWIN_REV}" -- switch --flake "${USER_HOME}/.config/nix-darwin#${HOSTNAME}"
         else
             darwin-rebuild switch --flake "${USER_HOME}/.config/nix-darwin#${HOSTNAME}"
         fi
@@ -436,7 +568,7 @@ if command -v nix &> /dev/null; then
         # Install home-manager if not available
         if ! command -v home-manager &> /dev/null; then
             log "Installing home-manager..."
-            nix run home-manager -- switch --flake "${USER_HOME}/.config/nix-darwin#${HM_CONFIG}"
+            nix run "github:nix-community/home-manager/${HOME_MANAGER_REV}" -- switch --flake "${USER_HOME}/.config/nix-darwin#${HM_CONFIG}"
         else
             home-manager switch --flake "${USER_HOME}/.config/nix-darwin#${HM_CONFIG}"
         fi
@@ -448,6 +580,4 @@ if command -v nix &> /dev/null; then
     fi
 
     log "Note: You may need to restart your shell for all changes to take effect"
-else
-    log "Warning: Nix is not available. Skipping Nix configuration."
 fi

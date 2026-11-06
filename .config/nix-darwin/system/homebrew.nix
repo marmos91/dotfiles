@@ -15,12 +15,19 @@ let
 in
 {
   # `brew bundle` runs as part of system activation, BEFORE home-manager, so the
-  # trust file must be seeded here (as root, into the user's home) or the bundle
-  # step fails. mkBefore guarantees this runs before `brew bundle`.
+  # trust file must be seeded here or the bundle step fails. mkBefore
+  # guarantees this runs before `brew bundle`.
+  #
+  # Activation runs as root, but ~/.homebrew is user-controlled: a root write
+  # can be steered through a symlink (`ln -s /etc ~/.homebrew`, or trust.json
+  # pointing at a directory) and any check-then-write is racy. So drop to the
+  # user, the same way nix-darwin runs `brew bundle`: the write can only land
+  # where the user could already write, and needs no chown.
   system.activationScripts.homebrew.text = lib.mkBefore ''
-    mkdir -p /Users/${user}/.homebrew
-    printf '%s' '${trustJson}' > /Users/${user}/.homebrew/trust.json
-    chown ${user}:staff /Users/${user}/.homebrew /Users/${user}/.homebrew/trust.json
+    sudo --user=${user} --set-home /bin/sh -c \
+      'umask 022 && mkdir -p "$HOME/.homebrew" && printf %s "$1" > "$HOME/.homebrew/trust.json"' \
+      sh '${trustJson}' \
+      || { echo "error: could not seed ~/.homebrew/trust.json as ${user}" >&2; exit 1; }
   '';
 
   homebrew = {
