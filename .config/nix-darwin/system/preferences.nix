@@ -17,6 +17,7 @@
       dock = {
         autohide = true;
         orientation = "left";
+        # Third-party entries are casks in homebrew.nix; keep the two in sync.
         persistent-apps = [
           "/Applications/Zen.app"
           "/System/Applications/Mail.app"
