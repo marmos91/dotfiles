@@ -7,5 +7,6 @@
     ./utilities
     ./services
     ./desktop
+    ./gnupg.nix
   ];
 }

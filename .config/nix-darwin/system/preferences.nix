@@ -73,11 +73,14 @@
         # BetterTouchTool. Only the app-level settings live here — the actual
         # triggers/gestures are a Core Data store in
         # ~/Library/Application Support/BetterTouchTool and can't be expressed
-        # declaratively; BTT's own cloud sync restores them.
+        # declaratively. Accepted residual risk: that store is not reviewed by
+        # this repo, so it is kept local (Dropbox sync off) and BTT upgrades
+        # are applied deliberately rather than auto-installed into a process
+        # holding Accessibility rights.
         "com.hegenberg.BetterTouchTool" = {
           launchOnStartup = true;
-          SUAutomaticallyUpdate = true;
-          BTTDropboxSyncActive = true;
+          SUAutomaticallyUpdate = false;
+          BTTDropboxSyncActive = false;
           BTTSyncCloudProvider = 1;
           BTTRemoteEnabled = false;
         };
