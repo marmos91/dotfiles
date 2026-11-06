@@ -4,22 +4,31 @@ This is a modular nix-darwin configuration that manages both system-level and us
 
 ```
 ~/.config/nix-darwin/
-├── flake.nix                # Main flake configuration
+├── flake.nix                # Inputs; darwin (amaterasu) and Linux home-manager outputs
 ├── system/                  # System-level configuration (nix-darwin)
 │   ├── default.nix          # System imports
-│   ├── darwin.nix           # Core Darwin config & Nix settings
-│   ├── homebrew.nix         # Homebrew packages & casks
-│   ├── preferences.nix      # macOS system preferences
-│   └── security.nix         # Security settings
+│   ├── darwin.nix           # User home, Determinate Nix settings, system packages
+│   ├── homebrew.nix         # Homebrew taps, brews & casks
+│   ├── preferences.nix      # macOS system preferences, Dock
+│   └── security.nix         # Touch ID sudo, firewall, screensaver lock
 └── home/                    # User-level configuration (home-manager)
-    ├── default.nix          # Home-manager entry point (also enables fontconfig)
-    ├── env.nix              # Environment variables
-    ├── packages.nix         # User packages, custom scripts, nerd-fonts
-    ├── catppuccin.nix, claude.nix, agent-skills.nix
-    ├── programs/            # terminal/, shell/ (zsh), git/, utilities/,
-    │                        # desktop/ (GNOME), services/ (ssh), gnupg.nix
-    ├── development/         # Language toolchains (bash, go, nix, node, python, rust)
-    └── secrets/             # sops-nix, see secrets/README.md
+    ├── default.nix          # Home-manager entry point
+    ├── env.nix              # Session variables and PATH
+    ├── packages.nix         # User packages
+    ├── scripts/             # One writeShellScriptBin per file (secrets, reap, ...)
+    ├── catppuccin.nix       # Theme
+    ├── claude.nix           # Claude Code (nixpkgs)
+    ├── agent-skills.nix     # Agent skill packs (pstack, marmos91/skills)
+    ├── secrets/             # sops-nix secrets (see secrets/README.md)
+    ├── development/         # Toolchains: go, python, rust, node, nix, shell scripts
+    └── programs/
+        ├── shell/           # zsh, bash, and the aliases/functions they share
+        ├── terminal/        # ghostty, tmux, tmuxinator, starship, atuin, carapace
+        ├── git/             # git, lazygit
+        ├── gnupg.nix        # ~/.gnupg
+        ├── services/        # ssh
+        ├── desktop/         # GNOME (Linux)
+        └── utilities/       # CLI tools, AI agents (pi, opencode, headroom, mcp), obsidian
 ```
 
 ## Usage

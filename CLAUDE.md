@@ -48,14 +48,15 @@ flake.nix                    # Main entry point, defines inputs and outputs
 │   ├── darwin.nix          # Core Nix settings, system packages
 │   ├── homebrew.nix        # Homebrew casks and packages
 │   ├── preferences.nix     # macOS system preferences
-│   └── security.nix        # Security settings
+│   └── security.nix        # Touch ID sudo, firewall, screensaver lock
 └── home/                    # User-level (home-manager), entry point home/default.nix
     ├── env.nix             # Environment variables
-    ├── packages.nix        # User packages, custom scripts, nerd-fonts
+    ├── packages.nix        # User packages, nerd-fonts
     ├── catppuccin.nix, claude.nix, agent-skills.nix
+    ├── scripts/            # Custom scripts, one writeShellScriptBin per file
     ├── programs/           # Shell, terminal, git, utilities, gnupg.nix
     │   ├── terminal/       # ghostty, tmux, tmuxinator, starship, atuin, carapace
-    │   ├── shell/          # zsh
+    │   ├── shell/          # zsh, bash, common.nix (shared aliases/functions)
     │   ├── git/            # git config (incl. delta), lazygit
     │   ├── desktop/        # GNOME (Linux)
     │   ├── services/       # ssh
@@ -137,11 +138,11 @@ Create a new file in `.config/nvim/lua/plugins/`, Lazy.nvim auto-discovers it.
 
 ### Adding shell aliases
 
-Aliases live in two `shellAliases` tables that are not shared:
-`.config/nix-darwin/home/programs/shell/zsh.nix` and
-`.config/nix-darwin/home/development/bash.nix`. Add a portable alias to both.
-zsh also has `cd`, `claude`, `gcal-setup`, `neofetch` and `nix-shell`, which bash
-lacks. The `rebuild` function is defined twice the same way, in each file's init block.
+Portable aliases and functions (`rebuild`, `claude`, `mkcd`, ...) live once in
+`.config/nix-darwin/home/programs/shell/common.nix`, which both
+`programs/shell/zsh.nix` and `programs/shell/bash.nix` import. Put zsh-only
+aliases in `zsh.nix` (today: `cd`, `gcal-setup`, `neofetch`, `nix-shell`; the
+`tx*` tmuxinator aliases are zsh-only too).
 
 ## Commit Guidelines
 
