@@ -128,7 +128,7 @@ Restart your terminal or log out/in for all changes to take effect.
 
 If you previously stowed an older revision of these dotfiles, `~/.config` (or
 one of its subdirectories) may already be a stow fold — a single symlink into
-the repo. `.stowrc` now sets `--no-folding` and ignores `hosts.yml`, but stow
+the repo. `.stowrc` now stows only `.config` and ignores `hosts.yml`, but stow
 never splits an existing fold, so gh would keep writing its OAuth token into
 the repo. Check the parent directory, not `~/.config/gh`: through a fold that
 path resolves into the repo and always looks like a real directory.
