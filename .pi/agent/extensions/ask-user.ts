@@ -23,6 +23,24 @@ import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-a
 const MAX_OPTIONS = 6;
 
 /**
+ * Strip terminal control sequences from model-supplied text before it reaches
+ * the terminal. These strings come from the model (and therefore from whatever
+ * the model read), so an option label could otherwise emit an OSC 52 clipboard
+ * write or move the cursor under the user's own terminal.
+ *
+ * ESC sequences go first: stripping C0 first would remove the ESC byte and
+ * leave the CSI/OSC body behind as literal text.
+ */
+export function sanitize(s: string): string {
+	return s
+		.replace(/\x1b\[[0-?]*[ -/]*[@-~]/g, "") // CSI
+		.replace(/\x1b\][^\x07\x1b]*(?:\x07|\x1b\\)?/g, "") // OSC
+		.replace(/\x1b[@-_]/g, "") // remaining two-byte escapes
+		.replace(/[\x00-\x1f\x7f-\x9f]/g, "") // leftover C0/C1 controls
+		.trim();
+}
+
+/**
  * Trim, drop blanks and duplicates, and cap the list.
  * Returns [] when fewer than two usable options remain, since a one-option
  * question is not a question.
@@ -33,7 +51,7 @@ export function normalizeOptions(raw: unknown): string[] {
 	const out: string[] = [];
 	for (const item of raw) {
 		if (typeof item !== "string") continue;
-		const trimmed = item.trim();
+		const trimmed = sanitize(item);
 		if (!trimmed || seen.has(trimmed)) continue;
 		seen.add(trimmed);
 		out.push(trimmed);
@@ -43,9 +61,9 @@ export function normalizeOptions(raw: unknown): string[] {
 }
 
 /**
- * What to return when no interactive UI is attached (print, rpc, json, or a
- * subagent). Returning a result instead of awaiting a dialog is what keeps
- * headless runs from deadlocking on a prompt nobody can see.
+ * What to return when no interactive UI is attached (print and JSON modes, and
+ * subagents that run in them). Returning a result instead of awaiting a dialog
+ * is what keeps headless runs from deadlocking on a prompt nobody can see.
  */
 export function nonUiResult(question: string, options: string[]): string {
 	return [
@@ -97,7 +115,7 @@ export default function (pi: ExtensionAPI) {
 		// One dialog at a time: two concurrent prompts would fight over the terminal.
 		executionMode: "sequential",
 		async execute(_toolCallId, params, signal, _onUpdate, ctx: ExtensionContext) {
-			const question = String(params.question ?? "").trim();
+			const question = sanitize(String(params.question ?? ""));
 			const options = normalizeOptions(params.options);
 
 			if (!question) {
@@ -129,8 +147,19 @@ export default function (pi: ExtensionAPI) {
 				};
 			}
 
-			const title = params.header ? `${params.header}\n${question}` : question;
+			const header = params.header ? sanitize(String(params.header)) : "";
+			const title = header ? `${header}\n${question}` : question;
 			const choice = await ctx.ui.select(title, options, { signal });
+
+			// select() resolves undefined both on a real dismissal and when the
+			// turn was aborted, so the signal decides which one this was.
+			if (signal?.aborted) {
+				return {
+					content: [{ type: "text", text: "The turn was cancelled before the user answered." }],
+					details: { prompted: true, aborted: true },
+					isError: true,
+				};
+			}
 
 			if (choice === undefined) {
 				return {

@@ -1,0 +1,226 @@
+#!/usr/bin/env python3
+"""Mirror Family events onto the work calendar as "Personal commitment" blocks.
+
+Not real-time. Run periodically (cron/launchd). Each run:
+  1. scan the Family calendar for events starting in the next N days
+  2. upsert matching placeholder events on the work calendar,
+     keyed by the Family event's UID -> extendedProperties.private (so
+     moves/deletes replay cleanly instead of leaving stale blocks)
+
+Only the work account's calendar is written; Family is read-only here.
+Reads use calendar.readonly on the work token (same scope can read any
+calendar the account can see, which the free/busy share allows).
+
+  python3 gcal_personal_block.py --setup   # first run: OAuth the work account
+  python3 gcal_personal_block.py --run     # normal run
+"""
+import argparse
+import datetime as dt
+import json
+import sys
+import time
+from pathlib import Path
+
+from google.oauth2.credentials import Credentials
+from googleapiclient.discovery import build
+from googleapiclient.errors import HttpError
+
+CONF = Path.home() / ".config/gcal-personal-block"
+# sops-nix renders these (home/secrets/default.nix); identifiers and the
+# OAuth client stay out of the public repo.
+FAMILY_CAL = (CONF / "family-cal").read_text().strip()
+WORK_TOKEN = Path.home() / ".config/google-docs-mcp/calendar-work-token.json"
+CLIENT_JSON = {
+    "installed": {
+        "client_id": (CONF / "client-id").read_text().strip(),
+        "client_secret": (CONF / "client-secret").read_text().strip(),
+        "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+        "token_uri": "https://oauth2.googleapis.com/token",
+        "redirect_uris": ["http://localhost"],
+    }
+}
+SCOPES = ["https://www.googleapis.com/auth/calendar.events",
+          "https://www.googleapis.com/auth/calendar.readonly"]
+WORK_EMAIL = (CONF / "work-email").read_text().strip()
+TITLE = "🏠 Personal Commitment"
+# Google event palette id: 4 = flamingo (salmon) — the shade reclaim used.
+COLOR_ID = "4"
+DESCRIPTION = (
+    "Marco has a personal commitment and is busy at this time.\n"
+    "Please find another time to avoid scheduling conflicts.\n\n"
+    "--\nPowered by Mimir (https://mimir.example.invalid)"
+)
+LOOKAHEAD_DAYS = 60
+WIPE_BEHIND_DAYS = 30   # placeholders whose Family event vanished get removed
+
+
+def work_svc():
+    if not WORK_TOKEN.exists():
+        raise SystemExit(f"no work token at {WORK_TOKEN} — run --setup first")
+    creds = Credentials.from_authorized_user_file(str(WORK_TOKEN), SCOPES)
+    return build("calendar", "v3", credentials=creds, cache_discovery=False)
+
+
+# shortcut: the work token reads the shared Family calendar too (the share
+# grants reader access), so the second OAuth token — which kept getting
+# revoked — is gone. If Family events ever stop being visible to the work
+# account, re-add a dedicated source token here.
+def family_svc():
+    return work_svc()
+
+
+def setup():
+    from google_auth_oauthlib.flow import InstalledAppFlow
+    flow = InstalledAppFlow.from_client_config(CLIENT_JSON, SCOPES)
+    print("Sign in as REDACTED-WORK-EMAIL when the browser opens.")
+    creds = flow.run_local_server(
+        port=0, access_type="offline", prompt="consent",
+        success_message="Authorised. You can close this tab.")
+
+    # Guard: refuse to save a token granted to the wrong account.
+    probe = build("calendar", "v3", credentials=creds, cache_discovery=False)
+    primary = [c for c in probe.calendarList().list().execute().get("items", [])
+               if c.get("primary")]
+    who = primary[0]["id"] if primary else ""
+    if who != WORK_EMAIL:
+        raise SystemExit(
+            f"WRONG ACCOUNT: you signed in as {who!r}, expected {WORK_EMAIL!r}.\n"
+            "Use an incognito window or pick the Cubbit account explicitly.\n"
+            "Nothing was saved.")
+
+    if not creds.refresh_token:
+        raise SystemExit("no refresh token — nothing saved")
+    WORK_TOKEN.write_text(creds.to_json())
+    WORK_TOKEN.chmod(0o600)
+    print("saved", WORK_TOKEN)
+
+
+def list_events(s, cal, tmin, tmax=None, private_key=None):
+    out, tok = [], None
+    while True:
+        kw = dict(calendarId=cal, timeMin=tmin, maxResults=2500, singleEvents=True,
+                  orderBy="startTime")
+        if tmax:
+            kw["timeMax"] = tmax
+        if tok:
+            kw["pageToken"] = tok
+        r = s.events().list(**kw).execute()
+        evs = r.get("items", [])
+        # server-side empty-value ext-property filters return nothing, so
+        # filter client-side on the tag's presence
+        if private_key:
+            evs = [e for e in evs if private_key in
+                   e.get("extendedProperties", {}).get("private", {})]
+        out.extend(evs)
+        tok = r.get("nextPageToken")
+        if not tok:
+            break
+    return out
+
+
+def run():
+    fam, work = family_svc(), work_svc()
+    work_cal = None
+    cals = work.calendarList().list().execute().get("items", [])
+    primary = [c for c in cals if c.get("primary")]
+    if not primary:
+        raise SystemExit("no primary calendar on work account")
+    work_cal = primary[0]["id"]
+    print("work primary calendar:", work_cal)
+
+    now = dt.datetime.now(dt.timezone.utc)
+    tmin = now.isoformat()
+    tmax = (now + dt.timedelta(days=LOOKAHEAD_DAYS)).isoformat()
+    past = (now - dt.timedelta(days=WIPE_BEHIND_DAYS)).isoformat()
+
+    # 1. family events ahead
+    src = list_events(fam, FAMILY_CAL, tmin, tmax)
+    src = [e for e in src if e.get("status") != "cancelled" and e.get("summary")]
+    print(f"family events in window: {len(src)}")
+
+    # shortcut: Google silently drops private ext-property keys >41 chars
+    KEY = "familyMirrorId"
+    want = {}   # familyId -> desired placeholder body
+    for e in src:
+        fid = e["iCalUID"] or e["id"]
+        want[fid] = {
+            "summary": TITLE,
+            "description": DESCRIPTION,
+            "start": e["start"],
+            "end": e["end"],
+            "transparency": "opaque",
+            "colorId": COLOR_ID,
+            # empty overrides = zero notifications: the real Family event
+            # notifies, never this placeholder copy
+            "reminders": {"useDefault": False, "overrides": []},
+            "extendedProperties": {"private": {KEY: fid}},
+        }
+
+    # 2. existing placeholders on the work calendar
+    have = {}
+    for e in list_events(work, work_cal, past, None, private_key=KEY):
+        fid = e.get("extendedProperties", {}).get("private", {}).get(KEY)
+        if fid:
+            have[fid] = e
+
+    created = updated = removed = 0
+    # remove placeholders whose source event is gone
+    for fid, e in have.items():
+        if fid not in want:
+            try:
+                work.events().delete(calendarId=work_cal, eventId=e["id"],
+                                     sendUpdates="none").execute()
+                removed += 1
+            except HttpError as ex:
+                if ex.resp.status != 410:
+                    raise
+            time.sleep(0.05)
+
+    NO_REMIND = {"useDefault": False, "overrides": []}
+
+    # upsert — note: the API returns {'useDefault': False} (no overrides key)
+    # for empty overrides, so compare only useDefault when detecting drift.
+    for fid, body in want.items():
+        cur = have.get(fid)
+        rem_defaults = (cur.get("reminders") or {}).get("useDefault", True) if cur else None
+        try:
+            if cur is None:
+                work.events().insert(calendarId=work_cal, body=body,
+                                     sendUpdates="none").execute()
+                created += 1
+            elif (cur.get("start") != body["start"] or cur.get("end") != body["end"]
+                  or cur.get("description") != DESCRIPTION
+                  or cur.get("colorId") != COLOR_ID
+                  or rem_defaults):
+                work.events().patch(calendarId=work_cal, eventId=cur["id"],
+                                     body={"start": body["start"], "end": body["end"],
+                                           "description": DESCRIPTION,
+                                           "colorId": COLOR_ID,
+                                           "reminders": NO_REMIND},
+                                     sendUpdates="none").execute()
+                updated += 1
+        except HttpError as ex:
+            if ex.resp.status in (403, 429):
+                time.sleep(2)
+                continue
+            raise
+        time.sleep(0.05)
+
+    print(f"created {created}, updated {updated}, removed {removed}")
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--setup", action="store_true")
+    ap.add_argument("--run", action="store_true")
+    a = ap.parse_args()
+    if a.setup:
+        setup()
+    elif a.run:
+        run()
+    else:
+        ap.print_help()
+
+
+if __name__ == "__main__":
+    sys.exit(main())
