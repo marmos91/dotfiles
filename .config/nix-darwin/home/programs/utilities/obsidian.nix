@@ -46,7 +46,7 @@
   ...
 }:
 let
-  vault = "${config.home.homeDirectory}/Projects/dittofs/docs";
+  vault = config.dotfiles.obsidian.vault;
   obsidianDir = "${vault}/.obsidian";
 
   # Fetch one release asset and pin it by hash. `fetchurl`, not `fetchzip`:
@@ -170,52 +170,61 @@ let
   };
 in
 {
-  # The vault directory itself, then each plugin/theme file. home.file entries
-  # are read-only store symlinks; Obsidian only reads these paths (it writes
-  # data.json alongside them, which is why each plugin gets a directory rather
-  # than a single symlinked file).
-  home.file = {
-    "${catppuccinTheme.dir}/theme.css".source = catppuccinTheme.css;
-    "${catppuccinTheme.dir}/manifest.json".source = catppuccinTheme.manifest;
-  }
-  // builtins.listToAttrs (
-    lib.concatMap (p: [
-      {
-        name = "${p.dir}/main.js";
-        value.source = p.main;
-      }
-      {
-        name = "${p.dir}/manifest.json";
-        value.source = p.manifest;
-      }
-    ] ++ lib.optional (p.styles != null) {
-      name = "${p.dir}/styles.css";
-      value.source = p.styles;
-    }) plugins
-  );
+  # mcp.nix reads the vault too (for the REST API bearer token).
+  options.dotfiles.obsidian.vault = lib.mkOption {
+    type = lib.types.str;
+    default = "${config.home.homeDirectory}/Projects/dittofs/docs";
+    description = "Obsidian vault this module wires the theme and plugins into.";
+  };
 
-  # Force the Local REST API plugin's plain-HTTP listener on (127.0.0.1:27123).
-  # It must stay true: the MCP client hardcodes that URL (mcp.nix), so plain
-  # HTTP on loopback is a precondition of the bridge, not a preference. The
-  # HTTPS port uses a self-signed certificate each client would have to trust
-  # separately. If the API is ever hardened, this and the mcp.nix URL change
-  # together.
-  #
-  # Merged, never overwritten: the plugin owns this file, and the apiKey inside
-  # it is what the MCP client reads back at connect time, so it has to survive.
-  # Only enableInsecureServer is ours. Runs before the plugin loads because
-  # Obsidian reads data.json at startup; if the app is already running, the
-  # setting applies on next start.
-  home.activation.obsidian = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-    data="${obsidianDir}/plugins/obsidian-local-rest-api/data.json"
-    $DRY_RUN_CMD mkdir -p "$(dirname "$data")"
+  config = {
+    # The vault directory itself, then each plugin/theme file. home.file entries
+    # are read-only store symlinks; Obsidian only reads these paths (it writes
+    # data.json alongside them, which is why each plugin gets a directory rather
+    # than a single symlinked file).
+    home.file = {
+      "${catppuccinTheme.dir}/theme.css".source = catppuccinTheme.css;
+      "${catppuccinTheme.dir}/manifest.json".source = catppuccinTheme.manifest;
+    }
+    // builtins.listToAttrs (
+      lib.concatMap (p: [
+        {
+          name = "${p.dir}/main.js";
+          value.source = p.main;
+        }
+        {
+          name = "${p.dir}/manifest.json";
+          value.source = p.manifest;
+        }
+      ] ++ lib.optional (p.styles != null) {
+        name = "${p.dir}/styles.css";
+        value.source = p.styles;
+      }) plugins
+    );
 
-    if [ -f "$data" ]; then
-      $DRY_RUN_CMD ${pkgs.jq}/bin/jq '.enableInsecureServer = true' "$data" > "$data.new"
-    else
-      $DRY_RUN_CMD ${pkgs.jq}/bin/jq -n '{enableInsecureServer: true}' > "$data.new"
-    fi
-    $DRY_RUN_CMD chmod 600 "$data.new"
-    $DRY_RUN_CMD mv "$data.new" "$data"
-  '';
+    # Force the Local REST API plugin's plain-HTTP listener on (127.0.0.1:27123).
+    # It must stay true: the MCP client hardcodes that URL (mcp.nix), so plain
+    # HTTP on loopback is a precondition of the bridge, not a preference. The
+    # HTTPS port uses a self-signed certificate each client would have to trust
+    # separately. If the API is ever hardened, this and the mcp.nix URL change
+    # together.
+    #
+    # Merged, never overwritten: the plugin owns this file, and the apiKey inside
+    # it is what the MCP client reads back at connect time, so it has to survive.
+    # Only enableInsecureServer is ours. Runs before the plugin loads because
+    # Obsidian reads data.json at startup; if the app is already running, the
+    # setting applies on next start.
+    home.activation.obsidian = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+      data="${obsidianDir}/plugins/obsidian-local-rest-api/data.json"
+      $DRY_RUN_CMD mkdir -p "$(dirname "$data")"
+
+      if [ -f "$data" ]; then
+        $DRY_RUN_CMD ${pkgs.jq}/bin/jq '.enableInsecureServer = true' "$data" > "$data.new"
+      else
+        $DRY_RUN_CMD ${pkgs.jq}/bin/jq -n '{enableInsecureServer: true}' > "$data.new"
+      fi
+      $DRY_RUN_CMD chmod 600 "$data.new"
+      $DRY_RUN_CMD mv "$data.new" "$data"
+    '';
+  };
 }

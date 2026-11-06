@@ -75,7 +75,7 @@
           type = "http";
           url = "http://127.0.0.1:27123/mcp/";
           auth = "bearer";
-          bearerToken = "!${pkgs.jq}/bin/jq -r '.apiKey' ${config.home.homeDirectory}/Projects/dittofs/docs/.obsidian/plugins/obsidian-local-rest-api/data.json";
+          bearerToken = "!${pkgs.jq}/bin/jq -er '.apiKey' ${config.dotfiles.obsidian.vault}/.obsidian/plugins/obsidian-local-rest-api/data.json";
         };
       };
     };
