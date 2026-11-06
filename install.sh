@@ -1,29 +1,16 @@
 #!/usr/bin/env bash
 set -e
 
-######## COLORS ########
-YELLOW=$(tput setaf 3 2>/dev/null || true)
-BLUE=$(tput setaf 4 2>/dev/null || true)
-UNDERLINE=$(tput smul 2>/dev/null || true)
-RESET=$(tput sgr0 2>/dev/null || true)
-######## END COLORS ########
-
 # -P so the physical path is used even when the repo is reached through a symlink.
 DOTFILES_DIR="$(cd -P "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
 cd "$DOTFILES_DIR"
 
-function log {
-	echo "${BLUE}${UNDERLINE}$1${RESET}"
-}
-
 # Shared with uninstall.sh so the two cannot drift.
+# shellcheck source=scripts/common.sh disable=SC1091
+. "$DOTFILES_DIR/scripts/common.sh"
 # shellcheck source=scripts/stale-links.sh disable=SC1091
 . "$DOTFILES_DIR/scripts/stale-links.sh"
 stale_msg() { log "$1"; }
-
-function titlize {
-	echo "${YELLOW}$1${RESET}"
-}
 
 # Download one artifact and fail closed unless its SHA-256 matches. TLS alone is
 # not a trust anchor for anything this script later runs as root. Portable
@@ -185,7 +172,7 @@ if [[ "$SHELL_ONLY" == true ]]; then
     exit 0
 fi
 
-titlize "
+warn "
     .___      __    __  ___.__.__
   __| _/_____/  |__/ ____\__|  |   ____   ______
  / __ |/  _ \   __\   __\|  |  |  \_  __ \/  ___/
@@ -200,8 +187,10 @@ ARCH="$(uname -m)"
 log "Detected OS: $OS ($ARCH)"
 log "Default shell: $DEFAULT_SHELL"
 
-# Configuration - the flake exposes a single hostname
+# Flake identity: mirrors `hostname` and `username` in .config/nix-darwin/flake.nix.
+# The flake defines outputs for these names only, so they are not host-derived.
 DOTFILES_HOSTNAME=amaterasu
+DOTFILES_USERNAME=marmos91
 
 # Setting hostname (macOS only)
 if [[ "$OS" == "Darwin" ]]; then
@@ -352,6 +341,8 @@ install_1password() {
 
     local app_installed=false
     local cli_installed=false
+    # Temp dirs are still removed by the EXIT trap via TEMP_DIRS.
+    local ONEPASSWORD_KEY_DIR ONEPASSWORD_ASC ONEPASSWORD_POL ONEPASSWORD_APP_DIR ONEPASSWORD_TARBALL ONEPASSWORD_CLI_DIR
 
     if command -v 1password &> /dev/null || [[ -f /opt/1Password/1password ]]; then
         log "1Password app is already installed"
@@ -504,7 +495,7 @@ install_docker() {
 
     # distro id and codename drive the Docker apt repository URL;
     # DOTFILES_OS_RELEASE is a test seam so the branch is not host-derived
-    os_release="${DOTFILES_OS_RELEASE:-/etc/os-release}"
+    local os_release="${DOTFILES_OS_RELEASE:-/etc/os-release}" target_user
     # shellcheck disable=SC1090
     if [[ -r "$os_release" ]]; then . "$os_release"; fi
     case "$ID" in
@@ -557,7 +548,6 @@ if ! command -v nix &> /dev/null; then
     log "Warning: Nix is not available. Skipping Nix configuration."
 else
     USER_HOME="$HOME"
-    USERNAME="$(whoami)"
 
     # The nix-darwin/home-manager config refuses to activate without the age
     # key (home/secrets/default.nix), so a fresh machine would fail at the last
@@ -591,9 +581,9 @@ else
         # Linux: use standalone home-manager
         # Determine the correct configuration based on architecture
         if [[ "$ARCH" == "aarch64" || "$ARCH" == "arm64" ]]; then
-            HM_CONFIG="${USERNAME}-aarch64"
+            HM_CONFIG="${DOTFILES_USERNAME}-aarch64"
         else
-            HM_CONFIG="${USERNAME}"
+            HM_CONFIG="${DOTFILES_USERNAME}"
         fi
         log "Building home-manager configuration for '$HM_CONFIG'..."
 
