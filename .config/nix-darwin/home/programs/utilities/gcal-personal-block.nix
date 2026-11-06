@@ -1,10 +1,11 @@
 # gcal-personal-block: mirror Family calendar events onto the work calendar
 # as generic "Personal Commitment" blocks (replaces reclaim.ai's core feature).
 #
-# The script reads ~/.config/google-docs-mcp/{calendar,calendar-work}-token.json
-# (OAuth via the Mimir Cloud project). Family is read-only; only the work
-# primary calendar is written. Tokens are NOT in this repo — they live in
-# ~/.config un-managed, like the google-docs-mcp token.json.
+# The script reads sops-rendered identifiers from ~/.config/gcal-personal-block/
+# (client-id, client-secret, family-cal, work-email; see home/secrets/) plus
+# the work OAuth token at ~/.config/google-docs-mcp/calendar-work-token.json.
+# Family is read-only; only the work primary calendar is written. Tokens and
+# identifiers are NOT in this repo.
 #
 # Runs hourly via launchd. Idempotent: each run upserts/removes placeholders
 # keyed by the Family event UID (extendedProperties.private), so moved or

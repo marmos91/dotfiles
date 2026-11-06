@@ -56,6 +56,29 @@
         mode = "0600";
       };
 
+      # gcal-personal-block: OAuth client (Mimir Cloud GCP project) and the
+      # calendar identifiers it syncs. Read by the script at runtime, and by
+      # `gcal-setup` for the consent screen.
+      gcal_client_id = {
+        path = "${homeDirectory}/.config/gcal-personal-block/client-id";
+        mode = "0600";
+      };
+
+      gcal_client_secret = {
+        path = "${homeDirectory}/.config/gcal-personal-block/client-secret";
+        mode = "0600";
+      };
+
+      gcal_family_cal = {
+        path = "${homeDirectory}/.config/gcal-personal-block/family-cal";
+        mode = "0600";
+      };
+
+      gcal_work_email = {
+        path = "${homeDirectory}/.config/gcal-personal-block/work-email";
+        mode = "0600";
+      };
+
       # Internal Cubbit endpoints. Not credentials, but they name company
       # infrastructure, so they stay out of the public repo. opencode resolves
       # `{file:...}` in any config value and trims the trailing newline.

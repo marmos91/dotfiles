@@ -25,12 +25,23 @@ from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 
-FAMILY_CAL = "REDACTED-FAMILY-CAL"
+CONF = Path.home() / ".config/gcal-personal-block"
+# sops-nix renders these (home/secrets/default.nix); identifiers and the
+# OAuth client stay out of the public repo.
+FAMILY_CAL = (CONF / "family-cal").read_text().strip()
 WORK_TOKEN = Path.home() / ".config/google-docs-mcp/calendar-work-token.json"
-CLIENT_JSON = Path.home() / "Downloads/REDACTED-CLIENT-JSON"
+CLIENT_JSON = {
+    "installed": {
+        "client_id": (CONF / "client-id").read_text().strip(),
+        "client_secret": (CONF / "client-secret").read_text().strip(),
+        "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+        "token_uri": "https://oauth2.googleapis.com/token",
+        "redirect_uris": ["http://localhost"],
+    }
+}
 SCOPES = ["https://www.googleapis.com/auth/calendar.events",
           "https://www.googleapis.com/auth/calendar.readonly"]
-WORK_EMAIL = "REDACTED-WORK-EMAIL"
+WORK_EMAIL = (CONF / "work-email").read_text().strip()
 TITLE = "🏠 Personal Commitment"
 # Google event palette id: 4 = flamingo (salmon) — the shade reclaim used.
 COLOR_ID = "4"
@@ -60,7 +71,7 @@ def family_svc():
 
 def setup():
     from google_auth_oauthlib.flow import InstalledAppFlow
-    flow = InstalledAppFlow.from_client_config(json.loads(CLIENT_JSON.read_text()), SCOPES)
+    flow = InstalledAppFlow.from_client_config(CLIENT_JSON, SCOPES)
     print("Sign in as REDACTED-WORK-EMAIL when the browser opens.")
     creds = flow.run_local_server(
         port=0, access_type="offline", prompt="consent",
