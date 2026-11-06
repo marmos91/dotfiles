@@ -36,10 +36,10 @@ chmod +x install.sh && ./install.sh
 |------|-------------|
 | `--shell <shell>` | Set default shell (`zsh` or `bash`). Default: `zsh` |
 | `--shell-only` | Only change the default shell, skip full installation |
-| `--hostname <name>` | Set hostname (macOS only). Default: `amaterasu` |
 | `--no-stow` | Skip stowing dotfiles |
 | `--skip-nix` | Skip Nix installation (use existing Nix) |
 | `--no-1password` | Skip 1Password installation (Linux only) |
+| `--no-docker` | Skip Docker installation (Linux only) |
 | `--help` | Show help message |
 
 **Examples:**
@@ -47,10 +47,10 @@ chmod +x install.sh && ./install.sh
 ```bash
 ./install.sh                          # Full install with defaults
 ./install.sh --shell bash             # Install with bash as default shell
-./install.sh --hostname myhost        # Install with custom hostname (macOS)
 ./install.sh --shell-only             # Only set zsh as default (skip install)
 ./install.sh --no-stow --skip-nix     # Only apply Nix configuration
 ./install.sh --no-1password           # Skip 1Password installation on Linux
+./install.sh --no-docker              # Skip Docker installation on Linux
 ```
 
 ### What it does
@@ -58,7 +58,13 @@ chmod +x install.sh && ./install.sh
 1. Install [Stow](https://www.gnu.org/software/stow/) (via Homebrew on macOS, apt/dnf/pacman on Linux)
 2. Install [Nix](https://nixos.org/) using the [Determinate Systems installer](https://determinate.systems/nix-installer/)
 3. Install [1Password](https://1password.com/) via official apt repository (Linux only, for SSH agent)
-4. Symlink dotfiles to your home directory via Stow
+4. Symlink dotfiles to your home directory via Stow — only `.config` (home-manager owns `~/.gnupg`);
+   everything else is left alone. On a machine provisioned by an older version,
+   links it created into the repo are cleaned up first: a folded `~/.claude` or
+   `~/.local` is copied out into a real directory (it holds your own state), links
+   inside them are replaced by copies, and the `~/CLAUDE.md`, `~/.pi` and
+   `~/.gitignore.global` links are removed. The repo's `.claude/settings.json` is
+   the project settings for this checkout, so it is not linked into `~/.claude`
 5. Create the sops age key if it is missing — the Nix step refuses to activate
    without it. The script stops and prints the command rather than creating a
    key it cannot back up; see
@@ -169,10 +175,11 @@ chmod +x uninstall.sh && ./uninstall.sh
 1. Dotfile symlinks (unstow)
 2. Stow (unless `--keep-stow`)
 3. 1Password app and CLI (Linux, unless `--keep-1password`)
-4. Home-manager/nix-darwin configuration
-5. Nix and all packages (unless `--keep-nix`)
-6. Nix cache files
-7. Docker data and the Nix store only with `--purge-data` (the Determinate uninstaller always removes `/nix`)
+4. Docker Engine (Linux, unless `--keep-docker`)
+5. Home-manager configuration (Linux) — on macOS the nix-darwin configuration is left installed; the script prints `sudo darwin-uninstaller`, which must run before Nix can be removed
+6. Nix and all packages (unless `--keep-nix`)
+7. Nix cache files
+8. Docker data and the Nix store only with `--purge-data` (the Determinate uninstaller always removes `/nix`)
 
 **Warning**: Full uninstall is destructive and will remove all Nix-installed packages.
 
@@ -241,3 +248,13 @@ Key files to customize:
 ## License
 
 [MIT LICENSE](./LICENSE)
+
+## Tests
+
+`tests/installation-scripts.sh` is an assert-based check of `install.sh`,
+`uninstall.sh` and `.stowrc`. It runs each script against a throwaway `$HOME`
+and shims, so it never touches the host:
+
+```bash
+bash tests/installation-scripts.sh
+```
