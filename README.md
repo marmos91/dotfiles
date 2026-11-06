@@ -118,7 +118,9 @@ git commit --allow-empty -m "Test signed commit"
 git log --show-signature -1
 ```
 
-**Note**: On macOS, install 1Password from the [Mac App Store](https://apps.apple.com/app/1password-7-password-manager/id1333542190) or [official download](https://1password.com/downloads/mac/).
+**Note**: On macOS, `rebuild` installs the `1password` and `1password-cli` Homebrew
+casks (`system/homebrew.nix`). Do not install 1Password separately from the Mac App
+Store or a download: Homebrew does not manage that copy and it clashes with the cask.
 
 ### Post-install
 
@@ -199,8 +201,11 @@ rebuild
 ```
 
 This automatically detects your platform and runs the appropriate command:
-- **macOS**: `darwin-rebuild switch --flake ~/.config/nix-darwin`
-- **Linux**: `home-manager switch --flake ~/.config/nix-darwin`
+- **macOS**: `sudo darwin-rebuild switch --flake ~/.config/nix-darwin#amaterasu`
+- **Linux (x86_64)**: `home-manager switch --flake ~/.config/nix-darwin#marmos91`
+- **Linux (aarch64)**: `home-manager switch --flake ~/.config/nix-darwin#marmos91-aarch64`
+
+Run these directly if `rebuild` is not defined yet, e.g. in a shell started before the first activation.
 
 ## Structure
 
@@ -245,7 +250,7 @@ Key files to customize:
 | Purpose | File |
 |---------|------|
 | Theme (flavor/accent) | `home/catppuccin.nix` |
-| Shell aliases | `home/programs/shell/zsh.nix` |
+| Shell aliases | `home/programs/shell/zsh.nix` and `home/development/bash.nix` (keep both in sync) |
 | Git config | `home/programs/git/config.nix` |
 | Neovim plugins | `.config/nvim/lua/plugins/` |
 | Terminal settings | `home/programs/terminal/` |
