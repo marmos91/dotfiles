@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+# Dotfiles pre-commit guard. Wired via core.hooksPath set by
+# programs/git/config.nix. Blocks: (1) any staged blob containing
+# `oauth_token:`; (2) a staged secrets.yaml with no `ENC[` block anywhere in
+# it (plaintext bootstrap at the tracked path).
+#
+# (2) matches `ENC[` anywhere rather than requiring a well-formed first line:
+# a leading blank line would otherwise reject a correctly encrypted file. Its
+# limit is that a plaintext file which merely mentions `ENC[` passes — the
+# guard catches the bootstrap mistake, not a determined author.
+#
+# bash, not POSIX sh: the NUL-safe loop over `-z` output needs
+# read -r -d '' + process substitution; a pipeline subshell in POSIX sh
+# would drop rc on the way out.
+#
+# The .githooks/* skip below is required: this file's own oauth_token example
+# matches the token pattern, so without the skip the guard rejects its own
+# commit.
+# --diff-filter=d skips deleted blobs (git show would fail on them).
+rc=0
+while IFS= read -r -d '' f; do
+  case "$f" in .githooks/*) continue ;; esac
+  blob=$(git show ":$f" 2>/dev/null) || continue
+  # Match the token value shape, not the key spelling: a gh token always starts
+  # with a known prefix, so JSON (`"oauth_token":"ghu_…"`), compact YAML and
+  # `key = value` TOML are all caught, while prose that only names the field
+  # stays committable.
+  case "$blob" in
+    *oauth_token*gh[oups]_* | *oauth_token*github_pat_*)
+      echo "pre-commit: '$f' contains 'oauth_token:' — gh tokens must never be committed" >&2
+      echo "pre-commit: hosts.yml is untracked by design (see .gitignore)" >&2
+      rc=1 ;;
+  esac
+  case "$f" in
+    secrets.yaml|*/secrets.yaml)
+      # Match anywhere, not just the first line: a leading blank line would
+      # otherwise reject a correctly encrypted file.
+      case "$blob" in
+        *"ENC["*) ;;
+        *)
+          echo "pre-commit: '$f' carries no ENC[ data block" >&2
+          echo "pre-commit: secrets.yaml may only ever be created by an encrypting command" >&2
+          rc=1 ;;
+      esac ;;
+  esac
+done < <(git diff --cached --name-only -z --diff-filter=d)
+exit "$rc"

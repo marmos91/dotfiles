@@ -543,6 +543,22 @@ else
     USER_HOME="$HOME"
     USERNAME="$(whoami)"
 
+    # The nix-darwin/home-manager config refuses to activate without the age
+    # key (home/secrets/default.nix), so a fresh machine would fail at the last
+    # step with a half-applied switch. This script cannot create the key — it
+    # only exists once, and it is the one thing that cannot be regenerated — so
+    # stop here with the instruction instead. `age-keygen` itself only arrives
+    # with the first switch, hence `nix shell` (nix is present: this block is
+    # guarded by `command -v nix`).
+    if [[ ! -r "$HOME/.config/sops/age/keys.txt" ]]; then
+        log "Missing sops age key: $HOME/.config/sops/age/keys.txt"
+        log "Create it first (see .config/nix-darwin/home/secrets/README.md, section 1):"
+        log "  mkdir -p ~/.config/sops/age"
+        log "  nix shell nixpkgs#age -c age-keygen -o ~/.config/sops/age/keys.txt"
+        log "Store a copy in 1Password, then re-run this script (or run 'rebuild')."
+        exit 1
+    fi
+
     if [[ "$OS" == "Darwin" ]]; then
         # macOS: use nix-darwin
         log "Building nix-darwin configuration for '$HOSTNAME'..."

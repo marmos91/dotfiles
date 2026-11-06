@@ -112,4 +112,18 @@ in
 
     };
   };
+
+  # Repo-local pre-commit guard (.githooks/pre-commit): blocks staged
+  # `oauth_token:` blobs and plaintext secrets.yaml. `-C` keeps it scoped to
+  # the dotfiles clone — a global core.hooksPath would run this hook in every
+  # repository the user owns. Skipped when the clone is absent (a Linux target
+  # installed without ~/.dotfiles).
+  # Absolute store path: activation resets PATH to a fixed tool set (and with
+  # emptyActivationPath the inherited PATH is not appended), so a bare `git`
+  # exits 127 under `set -e` and aborts the whole rebuild.
+  home.activation.gitHooksPath = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+    if [ -d "${config.home.homeDirectory}/.dotfiles/.git" ]; then
+      $DRY_RUN_CMD ${pkgs.git}/bin/git -C "${config.home.homeDirectory}/.dotfiles" config core.hooksPath "${config.home.homeDirectory}/.dotfiles/.githooks"
+    fi
+  '';
 }

@@ -65,6 +65,9 @@ Temporary Items
 !.config/aerospace
 !.config/ds3ctl
 !.config/gh
+# gh writes a live oauth_token into hosts.yml when no OS keyring is available;
+# the re-include above only keeps config.yml tracked.
+.config/gh/hosts.yml
 !.config/nix
 !.config/nix-darwin
 !.config/nvim
@@ -84,3 +87,10 @@ result
 
 # pi runtime task output (cwd-relative, no config knob)
 .pi/tasks/
+
+### Claude Code runtime state (managed by home-manager, not stow)
+# Transcripts, history, todos and shell snapshots land in ~/.claude; only the
+# hook script and the settings seed belong in the repo.
+.claude/*
+!.claude/settings.json
+!.claude/hooks/

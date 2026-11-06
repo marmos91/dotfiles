@@ -119,4 +119,29 @@
 
     };
   };
+
+  # Fail the rebuild when the age key is missing or loose. Without this, a
+  # machine whose key was never created rebuilds "successfully" with zero
+  # secrets materialised — the launchd/systemd unit for sops-nix dies quietly
+  # and the error only reaches ~/Library/Logs/SopsNix/stderr. Both documented
+  # entry points create the key first (install.sh checks for it before the
+  # switch; secrets/README.md §1 is the command), so a hard failure here is the
+  # documented order. Ordered before sops-nix so nothing is decrypted with a
+  # bad key.
+  home.activation.sopsAgeKey = lib.hm.dag.entryBefore [ "sops-nix" ] ''
+    key="${homeDirectory}/.config/sops/age/keys.txt"
+    if [ ! -r "$key" ]; then
+      echo "sops: age key $key is missing or unreadable — secrets were NOT decrypted." >&2
+      echo "sops: create it per home/secrets/README.md §1 (age-keygen -o), then rerun rebuild." >&2
+      exit 1
+    fi
+    # Activation puts GNU coreutils first on PATH on every platform. -L so a
+    # symlinked keys.txt reports the mode of the file it points at.
+    mode=$(stat -L -c '%a' "$key")
+    if [ "$(( 8#$mode & 077 ))" -ne 0 ]; then
+      echo "sops: $key is group/world-readable (mode $mode); expected 0600 or tighter." >&2
+      echo "sops: re-run the key step with umask 077 (see README), then: chmod 600 $key" >&2
+      exit 1
+    fi
+  '';
 }
