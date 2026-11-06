@@ -40,19 +40,11 @@ missing or group/world-readable.
 
 ### 2. Create the .sops.yaml configuration
 
-`.sops.yaml` is committed. Put your age public key (`age-keygen -y
-~/.config/sops/age/keys.txt`) in it:
-
-```yaml
-keys:
-  - &primary age1your_public_key_here
-
-creation_rules:
-  - path_regex: secrets\.yaml$
-    key_groups:
-      - age:
-          - *primary
-```
+`.sops.yaml` is committed and already lists this repo's recipient as
+`&primary`; leave it alone on a machine that uses the same key. Only on a fork
+with a new key, replace the `&primary` value with the output of
+`age-keygen -y ~/.config/sops/age/keys.txt`. To add a machine, see Option C
+below.
 
 ### 3. Create and encrypt your secrets
 
@@ -153,8 +145,9 @@ chmod 600 ~/.config/sops/age/keys.txt
 **Backup recipient is a deliberate gap.** `.sops.yaml` ships a single
 recipient: the repo cannot manufacture a second age key, so there is currently
 no backup recipient that survives losing the primary key. To close it, run
-`age-keygen`, add the public key as `&secondary` in `.sops.yaml`, and run
-`sops updatekeys secrets.yaml`.
+`age-keygen` and add its public key as in Option C (under both `keys:` and
+`creation_rules`), then run `sops updatekeys secrets.yaml`. Adding it under
+`keys:` alone changes nothing: `sops updatekeys` reports the file as up to date.
 
 ## File Structure
 
@@ -176,7 +169,7 @@ secrets/
   mount, `%r/secrets.d/<generation>/`: on macOS that is the per-user temp
   dir under `/var/folders/` (`getconf DARWIN_USER_TEMP_DIR`), on Linux
   `/run/user/$(id -u)/secrets.d/`. `~/.config/sops-nix/secrets` links to the
-  current generation, and every `$HOME` target in the table below (plus the
+  current generation, and every `path` declared in `default.nix` (plus the
   rendered templates `~/.config/mcp/mcp.json` and `~/.pi/agent/models.json`)
   is a symlink into it. Backing up or syncing the symlinks copies no
   secret; the plaintext is wherever the temp dir is (on disk on macOS,
@@ -192,24 +185,6 @@ secrets/
 
 ## Configured Secrets
 
-This table mirrors `default.nix`; when they disagree, `default.nix` wins.
-
-| Secret | Target Path | Description |
-|--------|-------------|-------------|
-| `kubeconfig` | `~/.kube/config` | Kubernetes configuration |
-| `aws_credentials` | `~/.aws/credentials` | AWS access keys |
-| `aws_config` | `~/.aws/config` | AWS CLI configuration |
-| `rclone_config` | `~/.config/rclone/rclone.conf` | Rclone remote configuration |
-| `ssh_hosts_config` | `~/.ssh/config.d/hosts` | SSH hosts with mnemonic names |
-| `mimir_api_key` | `~/.config/opencode/mimir-key` | Mimir gateway API key |
-| `mimir_base_url` | `~/.config/opencode/mimir-base-url` | Internal Mimir endpoint |
-| `google_docs_mcp_client_id` | `~/.config/google-docs-mcp/client-id` | Google OAuth client id |
-| `google_docs_mcp_client_secret` | `~/.config/google-docs-mcp/client-secret` | Google OAuth client secret |
-| `ds3ctl_config` | `~/.config/ds3ctl/config.yaml` | ds3ctl configuration |
-| `git_identity` | `~/.config/git/identity` | Personal git identity |
-| `git_identity_work` | `~/.config/git/identity-work` | Work git identity |
-| `git_allowed_signers` | `~/.config/git/allowed_signers` | SSH signing trust list |
-| `gcal_client_id` | `~/.config/gcal-personal-block/client-id` | GCP OAuth client id (gcal-personal-block) |
-| `gcal_client_secret` | `~/.config/gcal-personal-block/client-secret` | GCP OAuth client secret (gcal-personal-block) |
-| `gcal_family_cal` | `~/.config/gcal-personal-block/family-cal` | Source Family calendar id |
-| `gcal_work_email` | `~/.config/gcal-personal-block/work-email` | Work account to receive mirror blocks |
+`sops.secrets` in [`default.nix`](./default.nix) is the inventory: each entry
+names the key in `secrets.yaml` and the `$HOME` path it is linked to.
+`secrets.yaml.template` carries the same keys.

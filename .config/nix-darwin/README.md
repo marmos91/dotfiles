@@ -6,26 +6,20 @@ This is a modular nix-darwin configuration that manages both system-level and us
 ~/.config/nix-darwin/
 ├── flake.nix                # Main flake configuration
 ├── system/                  # System-level configuration (nix-darwin)
-│   ├── default.nix         # System imports
-│   ├── darwin.nix          # Core Darwin config & Nix settings
-│   ├── homebrew.nix        # Homebrew packages & casks
-│   ├── preferences.nix     # macOS system preferences
-│   ├── fonts.nix          # Font configuration
-│   └── security.nix       # Security settings
-├── home/                   # User-level configuration (home-manager)
-│   ├── default.nix        # Home-manager entry point
-│   ├── programs/          # User programs
-│   │   ├── terminal/      # Terminal applications
-│   │   ├── shell/         # Shell configuration
-│   │   ├── git/          # Git configuration
-│   │   └── utilities/     # CLI utilities
-│   ├── development/       # Development tools & environments
-│   │   ├── languages/     # Language-specific configs
-│   │   ├── tools/        # Development tools
-│   │   └── environments/ # Dev environments (direnv, etc.)
-│   ├── packages/         # Package collections
-│   └── services/         # System services
-└── lib/                  # Custom library functions
+│   ├── default.nix          # System imports
+│   ├── darwin.nix           # Core Darwin config & Nix settings
+│   ├── homebrew.nix         # Homebrew packages & casks
+│   ├── preferences.nix      # macOS system preferences
+│   └── security.nix         # Security settings
+└── home/                    # User-level configuration (home-manager)
+    ├── default.nix          # Home-manager entry point (also enables fontconfig)
+    ├── env.nix              # Environment variables
+    ├── packages.nix         # User packages, custom scripts, nerd-fonts
+    ├── catppuccin.nix, claude.nix, agent-skills.nix
+    ├── programs/            # terminal/, shell/ (zsh), git/, utilities/,
+    │                        # desktop/ (GNOME), services/ (ssh), gnupg.nix
+    ├── development/         # Language toolchains (bash, go, nix, node, python, rust)
+    └── secrets/             # sops-nix, see secrets/README.md
 ```
 
 ## Usage
@@ -52,7 +46,7 @@ cd ~/.dotfiles
 
 ```bash
 # Rebuild system after changes
-rebuild  # (alias for darwin-rebuild switch --flake ~/.config/nix-darwin#amaterasu)
+rebuild  # (alias for sudo darwin-rebuild switch --flake ~/.config/nix-darwin#amaterasu)
 
 # Update flake inputs
 nix flake update ~/.config/nix-darwin
