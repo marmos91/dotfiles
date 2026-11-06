@@ -6,7 +6,7 @@ Cross-platform dotfiles for **macOS** and **Linux** (Ubuntu/GNOME), powered by N
 
 ## Highlights
 
-- **Cross-platform**: Works on macOS (Apple Silicon & Intel) and Linux (x86_64 & aarch64)
+- **Cross-platform**: Works on macOS (Apple Silicon only: the flake builds `aarch64-darwin`) and Linux (x86_64 & aarch64)
 - **Declarative configuration**: Managed with [Nix Darwin](https://github.com/LnL7/nix-darwin) (macOS) and [Home Manager](https://github.com/nix-community/home-manager) (Linux)
 - **Consistent theming**: [Catppuccin Mocha](https://github.com/catppuccin/catppuccin) across all tools via [catppuccin/nix](https://github.com/catppuccin/nix)
 - **Terminal emulators**: [Ghostty](https://github.com/ghostty-org/ghostty)
@@ -34,7 +34,7 @@ chmod +x install.sh && ./install.sh
 
 | Flag | Description |
 |------|-------------|
-| `--shell <shell>` | Set default shell (`zsh` or `bash`). Default: `zsh` |
+| `--shell <shell>` | Set default shell (`zsh` or `bash`), Linux only. Default: `zsh`. Ignored on macOS, where `system/darwin.nix` sets zsh |
 | `--shell-only` | Only change the default shell, skip full installation |
 | `--no-stow` | Skip stowing dotfiles |
 | `--skip-nix` | Skip Nix installation (use existing Nix) |
@@ -46,7 +46,7 @@ chmod +x install.sh && ./install.sh
 
 ```bash
 ./install.sh                          # Full install with defaults
-./install.sh --shell bash             # Install with bash as default shell
+./install.sh --shell bash             # Install with bash as default shell (Linux)
 ./install.sh --shell-only             # Only set zsh as default (skip install)
 ./install.sh --no-stow --skip-nix     # Only apply Nix configuration
 ./install.sh --no-1password           # Skip 1Password installation on Linux
@@ -55,25 +55,29 @@ chmod +x install.sh && ./install.sh
 
 ### What it does
 
-1. Install [Stow](https://www.gnu.org/software/stow/) (via Homebrew on macOS, apt/dnf/pacman on Linux)
-2. Install [Nix](https://nixos.org/) using the [Determinate Systems installer](https://determinate.systems/nix-installer/)
-3. Install [1Password](https://1password.com/) via official apt repository (Linux only, for SSH agent)
-4. Symlink dotfiles to your home directory via Stow — only `.config` (home-manager owns `~/.gnupg`);
+1. Install [Stow](https://www.gnu.org/software/stow/) (via Homebrew on macOS, apt/dnf/pacman/zypper on Linux)
+2. Symlink dotfiles to your home directory via Stow — only `.config` (home-manager owns `~/.gnupg`);
    everything else is left alone. On a machine provisioned by an older version,
    links it created into the repo are cleaned up first: a folded `~/.claude` or
    `~/.local` is copied out into a real directory (it holds your own state), links
    inside them are replaced by copies, and the `~/CLAUDE.md`, `~/.pi` and
    `~/.gitignore.global` links are removed. The repo's `.claude/settings.json` is
    the project settings for this checkout, so it is not linked into `~/.claude`
-5. Create the sops age key if it is missing — the Nix step refuses to activate
+3. Install [Nix](https://nixos.org/) using the [Determinate Systems installer](https://determinate.systems/nix-installer/)
+4. Install [1Password](https://1password.com/) via official apt repository (Linux only, for SSH agent)
+5. Install Docker Engine (Linux only, Debian/Ubuntu, unless `--no-docker`): adds
+   Docker's apt repository and key with `sudo`, installs `docker-ce` and its
+   plugins, enables the root `docker` service, and adds you to the `docker`
+   group, which is root-equivalent. Log out and back in for the group to apply
+6. Create the sops age key if it is missing — the Nix step refuses to activate
    without it. The script stops and prints the command rather than creating a
    key it cannot back up; see
    [`.config/nix-darwin/home/secrets/README.md`](./.config/nix-darwin/home/secrets/README.md)
    §1
-6. Apply the appropriate Nix configuration:
+7. Apply the appropriate Nix configuration:
    - **macOS**: nix-darwin + home-manager
    - **Linux**: standalone home-manager
-7. Set the default shell (Linux only)
+8. Set the default shell (Linux only)
 
 ### SSH keys and commit signing
 
@@ -182,6 +186,9 @@ chmod +x uninstall.sh && ./uninstall.sh
 8. Docker data and the Nix store only with `--purge-data` (the Determinate uninstaller always removes `/nix`)
 
 **Warning**: Full uninstall is destructive and will remove all Nix-installed packages.
+On Linux it also removes Docker Engine and the `docker` group unless `--keep-docker`;
+images, containers and volumes under `/var/lib/docker` and `/var/lib/containerd` are
+deleted only with `--purge-data`, and that cannot be undone.
 
 ## Usage
 
