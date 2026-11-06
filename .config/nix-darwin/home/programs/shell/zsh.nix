@@ -1,6 +1,6 @@
 { config, pkgs, lib, hostname, username, ... }:
 let
-  isDarwin = pkgs.stdenv.hostPlatform.isDarwin;
+  shellFunctions = import ./functions.nix { inherit pkgs hostname username; };
 
   # Feeds the `secrets` completion lists; the script itself lives in
   # home/packages.nix.
@@ -98,9 +98,6 @@ in
       # Directory navigation
       setopt AUTO_CD AUTO_PUSHD PUSHD_IGNORE_DUPS PUSHD_SILENT
 
-      # Development helpers
-      mkcd() { mkdir -p "$1" && cd "$1"; }
-
       # History settings
       setopt HIST_VERIFY HIST_REDUCE_BLANKS HIST_IGNORE_ALL_DUPS
 
@@ -112,12 +109,8 @@ in
       # reaches the pane there.
       bindkey '^[,' autosuggest-accept
 
-      # Development helpers
-      mkcd() { mkdir -p "$1" && cd "$1"; }
-
-      # Nix helpers
-      nix-shell-p() { nix-shell -p "$@"; }
-      nix-run() { nix run nixpkgs#"$1" -- "''${@:2}"; }
+      # mkcd, nix-shell-p, nix-run, flake-update, rebuild
+      source ${shellFunctions}
 
       # Terminal title
       case $TERM in
@@ -131,26 +124,7 @@ in
           ;;
       esac
 
-      # Lazy load kubectl (biggest offender)
-      kubectl() {
-        unfunction kubectl
-        source <(command kubectl completion zsh)
-        kubectl "$@"
-      }
-
-      # Lazy load helm
-      helm() {
-        unfunction helm
-        source <(command helm completion zsh)
-        helm "$@"
-      }
-
-      # Lazy load docker completion
-      docker() {
-        unfunction docker
-        source <(command docker completion zsh 2>/dev/null || true)
-        command docker "$@"
-      }
+      # kubectl/helm/docker completions come from carapace (terminal/carapace.nix).
 
       # `secrets` itself is a script in home/packages.nix — one copy for both
       # shells instead of two that drift.
@@ -173,30 +147,6 @@ in
         esac
       }
       compdef _secrets secrets
-
-      flake-update() {
-        echo "Updating flake inputs..."
-        nix flake update --flake ~/.config/nix-darwin
-        echo ""
-        echo "Done! Run 'rebuild' to apply updates."
-      }
-
-      rebuild() {
-        ${if isDarwin then ''
-        if [[ $EUID -eq 0 ]]; then
-          darwin-rebuild switch --flake ~/.config/nix-darwin#${hostname} "$@"
-        else
-          sudo darwin-rebuild switch --flake ~/.config/nix-darwin#${hostname} "$@"
-        fi
-        '' else ''
-        local arch=$(uname -m)
-        if [[ "$arch" == "aarch64" || "$arch" == "arm64" ]]; then
-          home-manager switch --flake ~/.config/nix-darwin#${username}-aarch64 "$@"
-        else
-          home-manager switch --flake ~/.config/nix-darwin#${username} "$@"
-        fi
-        ''}
-      }
 
       # List available SSH hosts from config and config.d
       ssh-hosts() {
