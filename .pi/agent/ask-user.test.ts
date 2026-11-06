@@ -28,6 +28,12 @@ test("normalizeOptions rejects anything that is not two distinct strings", () =>
 	assert.deepEqual(normalizeOptions(["a", "a"]), [], "duplicates collapse to one option");
 });
 
+test("normalizeOptions strips ESC sequences and control characters", () => {
+	assert.deepEqual(normalizeOptions(["\x1b[31mRed\x1b[0m", "\x1b]52;c;aGk=\x07Blue"]), ["Red", "Blue"]);
+	assert.deepEqual(normalizeOptions(["a\x00b", "c"]), ["ab", "c"]);
+	assert.deepEqual(normalizeOptions(["\x1b[31m\x1b[0m", "b"]), [], "a fully stripped option is a blank option");
+});
+
 test("nonUiResult names the question and every option, and points at plain text", () => {
 	const s = nonUiResult("Ship it?", ["Yes", "No"]);
 	assert.ok(s.includes("Ship it?"));
@@ -38,8 +44,13 @@ test("nonUiResult names the question and every option, and points at plain text"
 
 // ------------------------------------------------------------ wiring
 
-function harness({ hasUI = true, choice }: { hasUI?: boolean; choice?: string | undefined } = {}) {
-	const notes: string[] = [];
+function harness(
+	{
+		hasUI = true,
+		choice,
+		signal,
+	}: { hasUI?: boolean; choice?: string | undefined; signal?: AbortSignal } = {},
+) {
 	const registered: any[] = [];
 	const selects: { title: string; options: string[] }[] = [];
 
@@ -49,7 +60,6 @@ function harness({ hasUI = true, choice }: { hasUI?: boolean; choice?: string | 
 	const ctx: any = {
 		hasUI,
 		ui: {
-			notify: (m: string) => notes.push(m),
 			select: async (title: string, options: string[]) => {
 				selects.push({ title, options });
 				return choice;
@@ -61,14 +71,15 @@ function harness({ hasUI = true, choice }: { hasUI?: boolean; choice?: string | 
 	const tool = registered[0];
 	return {
 		tool,
-		notes,
+		registered,
 		selects,
-		run: (params: any) => tool.execute("call-1", params, undefined, undefined, ctx),
+		run: (params: any) => tool.execute("call-1", params, signal, undefined, ctx),
 	};
 }
 
 test("registers exactly one ask_user tool, marked sequential", () => {
 	const h = harness();
+	assert.equal(h.registered.length, 1, "a second registration would shadow the first");
 	assert.equal(h.tool.name, "ask_user");
 	assert.equal(h.tool.executionMode, "sequential", "two dialogs must not race for the terminal");
 	assert.ok(h.tool.promptSnippet, "without a snippet the tool is hidden from the system prompt");
@@ -80,6 +91,10 @@ test("the schema stays valid JSON Schema, since typebox is not importable here",
 	assert.equal(ASK_PARAMS.additionalProperties, false);
 	assert.equal(ASK_PARAMS.properties.options.minItems, 2);
 	assert.equal(ASK_PARAMS.properties.options.maxItems, 6);
+	for (const [name, prop] of Object.entries(ASK_PARAMS.properties)) {
+		assert.equal(typeof prop, "object", `${name} must be an object schema`);
+		assert.ok("type" in prop, `${name} must declare a type`);
+	}
 });
 
 test("a valid question prompts and returns the chosen option", async () => {
@@ -104,6 +119,15 @@ test("a dismissed dialog reports the dismissal instead of inventing an answer", 
 	assert.equal(r.details.dismissed, true);
 	assert.equal(r.details.choice, undefined);
 	assert.ok(r.content[0].text.toLowerCase().includes("dismissed"));
+});
+
+test("an aborted signal is an error, not a dismissal", async () => {
+	const h = harness({ choice: undefined, signal: AbortSignal.abort() });
+	const r = await h.run({ question: "Which?", options: ["a", "b"] });
+	assert.equal(r.isError, true, "an abort must be visible to the caller");
+	assert.equal(r.details.aborted, true);
+	assert.equal(r.details.dismissed, undefined);
+	assert.ok(!r.content[0].text.toLowerCase().includes("dismissed"), "the user never saw the question");
 });
 
 test("headless mode never opens a dialog and tells the model to ask in plain text", async () => {

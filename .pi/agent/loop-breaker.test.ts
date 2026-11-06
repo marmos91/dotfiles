@@ -1,8 +1,9 @@
 /**
  * Runnable checks for the loop-breaker extension.
  *
- * The detector is also validated against every recorded session log:
- * 811 files, 31 length-stops, 31 flagged, 0 misses, 0 false positives.
+ * The fixtures are synthetic: a collapsed message is a `thinking` block of
+ * repeated text with no visible output, and a clean one carries text or a tool
+ * call. They are not a replay of recorded sessions.
  *
  *   node --test .pi/agent/loop-breaker.test.ts
  */
@@ -35,6 +36,8 @@ test("ignores a length stop that produced an answer", () => {
 test("ignores ordinary completions", () => {
 	assert.equal(isDegenerateLengthStop(msg("stop", [thinking])), false);
 	assert.equal(isDegenerateLengthStop(msg("toolUse", [thinking, toolCall])), false);
+	// A length stop mid-tool-call already ran; its result is persisted.
+	assert.equal(isDegenerateLengthStop(msg("length", [thinking, toolCall])), false);
 });
 
 test("ignores non-assistant and malformed messages", () => {
@@ -71,7 +74,8 @@ function harness(thinkingLevel = "high") {
 	};
 	loopBreaker(pi);
 	return {
-		fire: (m: any) => handlers.turn_end({ message: m, messageEntryId: "e1" }, ctx),
+		fire: (m: any, proposed: any[] = []) =>
+			handlers.turn_end({ message: m, messageEntryId: "e1", entries: proposed }, ctx),
 		start: (reason = "startup") => handlers.session_start({ type: "session_start", reason }, ctx),
 		command: (n: string) => commands[n],
 		notes,
@@ -109,8 +113,35 @@ test("after repeated collapses it turns thinking off instead of re-asking", () =
 	const r = h.fire(loop); // third collapse escalates
 	assert.equal(h.level(), "off");
 	assert.equal(r.continue, true, "still continues so the thinking-off retry actually runs");
-	assert.equal(r.entries, undefined, "escalation does not re-drop entries");
+	assert.equal(r.entries.length, 2, "the degenerate message must not be replayed on the escalation retry");
+	assert.ok(r.entries.some((e: any) => e.type === "context_edit" && e.targetId === "e1"));
+	assert.ok(r.entries.some((e: any) => e.type === "custom_message" && e.customType === "loop-breaker"));
 	assert.equal(h.entries.at(-1)?.d.action, "thinking-off");
+});
+
+test("a clean turn restores the thinking level after escalation", () => {
+	const h = harness("high");
+	h.fire(loop);
+	h.fire(loop);
+	h.fire(loop); // escalate
+	assert.equal(h.level(), "off");
+
+	h.fire(ok);
+	assert.equal(h.level(), "high", "the level the user chose must come back");
+	assert.deepEqual(h.entries.at(-1)?.d, { action: "thinking-restore", level: "high" });
+	assert.ok(h.notes.some((n) => n.includes("restored")));
+});
+
+test("keeps entries proposed by earlier turn_end handlers", () => {
+	const earlier = { type: "custom_message", customType: "other-extension", content: "keep me" };
+	const h = harness();
+	const r = h.fire(loop, [earlier]);
+	assert.deepEqual(r.entries[0], earlier, "a previously-registered handler's entry must survive");
+
+	h.fire(loop);
+	const escalated = h.fire(loop, [earlier]);
+	assert.deepEqual(escalated.entries[0], earlier, "the escalation retry must not drop it either");
+	assert.equal(escalated.entries.length, 3);
 });
 
 test("stops retrying once thinking is already off", () => {
