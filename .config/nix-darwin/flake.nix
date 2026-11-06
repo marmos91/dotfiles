@@ -17,6 +17,13 @@
       url = "github:Mic92/sops-nix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    # Skill pack for AI coding agents (poteto-mode, tdd, blast-radius, ...).
+    # Plain source tree — linked into ~/.agents/skills by home/pstack.nix.
+    # `nix flake update` bumps it; `rebuild` applies the new revision.
+    pstack = {
+      url = "github:backnotprop/pstack";
+      flake = false;
+    };
   };
 
   outputs =
@@ -28,6 +35,7 @@
       determinate,
       catppuccin,
       sops-nix,
+      pstack,
       ...
     }:
     let
@@ -76,7 +84,7 @@
                 useGlobalPkgs = true;
                 useUserPackages = true;
                 backupFileExtension = "backup";
-                extraSpecialArgs = { inherit username hostname; homeDirectory = "/Users/${username}"; };
+                extraSpecialArgs = { inherit username hostname; homeDirectory = "/Users/${username}"; pstackSrc = pstack; };
                 users.${username} = {
                   imports = [
                     ./home
@@ -94,7 +102,7 @@
       homeConfigurations = {
         ${username} = home-manager.lib.homeManagerConfiguration {
           pkgs = mkPkgs "x86_64-linux";
-          extraSpecialArgs = { inherit username hostname; homeDirectory = "/home/${username}"; };
+          extraSpecialArgs = { inherit username hostname; homeDirectory = "/home/${username}"; pstackSrc = pstack; };
           modules = [
             ./home
             catppuccin.homeModules.catppuccin
@@ -105,7 +113,7 @@
         # ARM Linux variant (e.g., Raspberry Pi, ARM servers)
         "${username}-aarch64" = home-manager.lib.homeManagerConfiguration {
           pkgs = mkPkgs "aarch64-linux";
-          extraSpecialArgs = { inherit username hostname; homeDirectory = "/home/${username}"; };
+          extraSpecialArgs = { inherit username hostname; homeDirectory = "/home/${username}"; pstackSrc = pstack; };
           modules = [
             ./home
             catppuccin.homeModules.catppuccin
