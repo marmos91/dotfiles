@@ -1,9 +1,10 @@
 { pkgs, username, ... }:
 {
-  users.users.${username} = {
-    home = "/Users/${username}";
-    shell = pkgs.zsh;
-  };
+  # Not users.knownUsers, so nix-darwin never manages the account itself; but
+  # home-manager's darwin module reads `home` for home.homeDirectory. `shell`
+  # is left out: it only applies to managed users (zsh is the macOS default
+  # and programs.zsh.enable already installs it).
+  users.users.${username}.home = "/Users/${username}";
 
   # Nix configuration.
   #

@@ -50,15 +50,14 @@
     ];
 
     extraConfig = ''
-      # Shell configuration
-      set -g default-shell "${pkgs.zsh}/bin/zsh"
+      # programs.tmux.shell sets default-shell. default-command keeps panes
+      # non-login shells; without it tmux starts default-shell as a login shell.
       set -g default-command "${pkgs.zsh}/bin/zsh"
 
       # Better terminal integration
       set -g focus-events on
       set-option -sg escape-time 10
       set-option -sa terminal-features ',xterm-256color:RGB'
-      set -g status-position bottom
       set -g extended-keys on
       set -g extended-keys-format csi-u
 
@@ -73,7 +72,6 @@
       bind -n C-j send-keys C-j
 
       # Enable OSC 52 clipboard support for SSH sessions
-      set -g set-clipboard on
       set -ag terminal-overrides "vte*:XT:Ms=\\E]52;c;%p2%s\\7,xterm*:XT:Ms=\\E]52;c;%p2%s\\7"
       set -s set-clipboard on
 
