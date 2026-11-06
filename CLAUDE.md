@@ -48,15 +48,16 @@ flake.nix                    # Main entry point, defines inputs and outputs
 │   ├── darwin.nix          # Core Nix settings, system packages
 │   ├── homebrew.nix        # Homebrew casks and packages
 │   ├── preferences.nix     # macOS system preferences
-│   └── security.nix        # Security settings
+│   └── security.nix        # Touch ID sudo, firewall, screensaver lock
 └── home/                    # User-level (home-manager), entry point home/default.nix
     ├── env.nix             # Environment variables
-    ├── packages.nix        # User packages, custom scripts, nerd-fonts
+    ├── packages.nix        # User packages, nerd-fonts
     ├── catppuccin.nix, claude.nix, agent-skills.nix
+    ├── scripts/            # Custom scripts, one writeShellScriptBin per file
     ├── programs/           # Shell, terminal, git, utilities, gnupg.nix
     │   ├── terminal/       # ghostty, tmux, tmuxinator, starship, atuin, carapace
-    │   ├── shell/          # zsh
-    │   ├── git/            # git config (incl. delta), lazygit
+    │   ├── shell/          # zsh, bash, common.nix (shared aliases/functions)
+    │   ├── git/            # git config, lazygit
     │   ├── desktop/        # GNOME (Linux)
     │   ├── services/       # ssh
     │   └── utilities/      # bat, fzf, eza, ripgrep, mcp, pi, gcal-personal-block, etc.
