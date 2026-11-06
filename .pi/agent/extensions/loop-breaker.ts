@@ -42,9 +42,9 @@ export function isDegenerateLengthStop(message: unknown): boolean {
 	if (m.stopReason !== "length") return false;
 
 	const blocks = Array.isArray(m.content) ? m.content : [];
-	// A truncated tool call already ran, and its tool_result is persisted.
-	// Dropping the assistant message that produced it would orphan that
-	// result, so a length stop with a tool call is recoverable, never degenerate.
+	// A length stop's tool calls are failed, not executed, but their error
+	// tool-results are still persisted; dropping the message would orphan them.
+	// So a length stop with a tool call is recoverable, never degenerate.
 	if (blocks.some((b) => b.type === "toolCall")) return false;
 
 	const visible = blocks.some((b) => b.type === "text" && b.text.trim().length > 0);
@@ -76,6 +76,10 @@ export default function (pi: ExtensionAPI) {
 	// told apart from one this extension turned off, so restore is skipped for
 	// it; upgrade by recording the pre-off level in session history.
 	let restoreLevel: string | null = null;
+	// The level this extension last set programmatically. setThinkingLevel emits
+	// thinking_level_select asynchronously, so the event carrying this value is
+	// ours and every other one is the user overriding the collapse.
+	let selfSet: string | null = null;
 
 	// Make the extension's presence verifiable. Without this there is no
 	// positive signal that it loaded — the only other evidence would be a
@@ -99,6 +103,16 @@ export default function (pi: ExtensionAPI) {
 		},
 	});
 
+	pi.on("thinking_level_select", (event) => {
+		if (event.level === selfSet) {
+			selfSet = null;
+			return;
+		}
+		// The user picked a level mid-collapse. Their choice wins: drop the
+		// pending restore rather than clobber it on the next clean turn.
+		restoreLevel = null;
+	});
+
 	pi.on("turn_end", (event, ctx) => {
 		if (!isDegenerateLengthStop(event.message)) {
 			// A clean turn means the collapse cleared; re-arm the retry budget
@@ -107,6 +121,7 @@ export default function (pi: ExtensionAPI) {
 			if (restoreLevel) {
 				const level = restoreLevel;
 				restoreLevel = null;
+				selfSet = level;
 				pi.setThinkingLevel(level);
 				pi.appendEntry("loop-breaker", { action: "thinking-restore", level });
 				if (ctx.hasUI) {
@@ -120,6 +135,7 @@ export default function (pi: ExtensionAPI) {
 			// Re-asking did not help. Change the decode instead of repeating it.
 			if (pi.getThinkingLevel() !== "off") {
 				restoreLevel = pi.getThinkingLevel();
+				selfSet = "off";
 				pi.setThinkingLevel("off");
 				retries = 0;
 				pi.appendEntry("loop-breaker", { action: "thinking-off" });

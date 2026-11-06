@@ -1,14 +1,26 @@
+-- Logo captured from ascii.nvim's `art.text.neovim.sharp` and inlined: a
+-- whole art-collection plugin is not worth one static header.
+local logo = {
+    "                                                                       ",
+    "                                                                     ",
+    "       ████ ██████           █████      ██                     ",
+    "      ███████████             █████                             ",
+    "      █████████ ███████████████████ ███   ███████████   ",
+    "     █████████  ███    █████████████ █████ ██████████████   ",
+    "    █████████ ██████████ █████████ █████ █████ ████ █████   ",
+    "  ███████████ ███    ███ █████████ █████ █████ ████ █████  ",
+    " ██████  █████████████████████ ████ █████ █████ ████ ██████ ",
+    "                                                                       ",
+}
+
 return {
     {
         "nvimdev/dashboard-nvim",
         dependencies = {
-            "MaximilianLloyd/ascii.nvim",
             "MunifTanjim/nui.nvim",
         },
         event = "VimEnter",
         opts = function()
-            local logo = require("ascii").art.text.neovim.sharp
-
             for _ = 0, 8 do
                 table.insert(logo, 1, [[                                                                       ]])
             end
@@ -29,7 +41,6 @@ return {
                     week_header = {
                         enable = false,
                     },
-                    packages = { enable = true },
                     shortcut = {
                         { desc = "󰊳 Update", group = "@property", action = "Lazy update", key = "u" },
                         {
