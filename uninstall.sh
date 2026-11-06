@@ -1,25 +1,12 @@
 #!/usr/bin/env bash
 set -e
 
-######## COLORS ########
-RED=$(tput setaf 1 2>/dev/null || true)
-YELLOW=$(tput setaf 3 2>/dev/null || true)
-BLUE=$(tput setaf 4 2>/dev/null || true)
-UNDERLINE=$(tput smul 2>/dev/null || true)
-RESET=$(tput sgr0 2>/dev/null || true)
-######## END COLORS ########
+# -P so the physical path is used even when the repo is reached through a symlink.
+DOTFILES_DIR="$(cd -P "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
 
-function log {
-    echo "${BLUE}${UNDERLINE}$1${RESET}"
-}
-
-function warn {
-    echo "${YELLOW}$1${RESET}"
-}
-
-function error {
-    echo "${RED}$1${RESET}"
-}
+# Shared with install.sh so the two cannot drift.
+# shellcheck source=scripts/common.sh disable=SC1091
+. "$DOTFILES_DIR/scripts/common.sh"
 
 function show_help {
     echo "Usage: $0 [OPTIONS]"
@@ -167,9 +154,6 @@ if [[ "$SKIP_CONFIRM" == false ]]; then
         exit 0
     fi
 fi
-
-# -P so the physical path is used even when the repo is reached through a symlink.
-DOTFILES_DIR="$(cd -P "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
 
 # Shared with install.sh so the two cannot drift. Uninstall keeps a failed
 # cleanup fatal: leaving a live link into a repo that is about to be removed is

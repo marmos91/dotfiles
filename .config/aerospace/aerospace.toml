@@ -1,3 +1,5 @@
+# Stowed from ~/.dotfiles/.config/aerospace/aerospace.toml: edit the repo copy.
+
 # Start AeroSpace at login
 start-at-login = true
 
