@@ -1,6 +1,6 @@
 #!/bin/sh
 # Exercises the shipped `secrets edit` helper (a writeShellScriptBin in
-# home/packages.nix, shared by zsh and bash) against a throwaway sops store. The
+# home/scripts/, shared by zsh and bash) against a throwaway sops store. The
 # helper is built from the flake and invoked directly, so this tests what ships.
 #
 # Regression targets: `sops -e` on a /tmp path matched no creation rule and the

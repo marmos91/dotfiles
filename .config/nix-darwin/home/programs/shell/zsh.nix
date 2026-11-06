@@ -1,9 +1,9 @@
 { config, pkgs, lib, hostname, username, ... }:
 let
-  shellFunctions = import ./functions.nix { inherit pkgs hostname username; };
+  common = import ./common.nix { inherit pkgs hostname username; };
 
   # Feeds the `secrets` completion lists; the script itself lives in
-  # home/packages.nix.
+  # home/scripts/secrets.nix.
   secretNames = lib.concatStringsSep " " (lib.naturalSort (builtins.attrNames config.sops.secrets));
 in
 {
@@ -36,46 +36,15 @@ in
       ];
     };
 
-    shellAliases = {
-      # Development
-      bazel = "bazelisk";
-      g = "hub";
-      gg = "lazygit";
-
+    shellAliases = common.aliases // {
       # AI agents (route Claude Code through Headroom context compression)
-      # The GitHub MCP plugin reads GITHUB_PERSONAL_ACCESS_TOKEN; scope it to
-      # claude instead of exporting it to every process.
-      claude = "GITHUB_PERSONAL_ACCESS_TOKEN=$(gh auth token 2>/dev/null) headroom wrap claude --memory --code-graph";
-
-      # tmux
-      ta = "tmux attach";
-      ts = "tmux new -s";
-      tl = "tmux list-sessions";
 
       # gcal sync setup (needs the nix python that carries google-api-client)
       gcal-setup = "${pkgs.python313.withPackages (ps: [ ps.google-api-python-client ps.google-auth-oauthlib ])}/bin/python3 ~/.dotfiles/.local/bin/gcal-personal-block --setup";
 
-      # System
-      top = "btop";
-      cat = "bat";
-      python = "python3";
-      pip = "pip3";
       cd = "z";
       neofetch = "fastfetch";
-
-      # Neovim
-      vim = "nvim";
-      vi = "nvim";
-      v = "nvim";
-
-      # Nix shortcuts
-      nix-gc = "nix-collect-garbage -d && nix-store --optimize";
-      nix-search = "nix search nixpkgs";
       nix-shell = "nix-shell --command zsh";
-
-      # Directory shortcuts
-      dotfiles = "cd ~/.dotfiles";
-      config = "cd ~/.config";
     };
 
     initContent = ''
@@ -109,9 +78,7 @@ in
       # reaches the pane there.
       bindkey '^[,' autosuggest-accept
 
-      # mkcd, nix-shell-p, nix-run, flake-update, rebuild
-      source ${shellFunctions}
-
+      ${common.functions}
       # Terminal title
       case $TERM in
         xterm*|rxvt*|Eterm|aterm|kterm|gnome*|alacritty|kitty*|ghostty*)
@@ -126,8 +93,6 @@ in
 
       # kubectl/helm/docker completions come from carapace (terminal/carapace.nix).
 
-      # `secrets` itself is a script in home/packages.nix — one copy for both
-      # shells instead of two that drift.
       _secrets() {
         local -a commands secrets
         commands=(
