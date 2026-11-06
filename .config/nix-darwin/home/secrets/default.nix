@@ -8,7 +8,7 @@ let
 in
 {
   # Install sops for managing secrets (age lives in home/packages.nix).
-  # ssh-to-age stays: secrets/README.md documents it as the recommended way to
+  # ssh-to-age stays: secrets/README.md documents it (Option B) as a way to
   # derive the age key from the 1Password-managed SSH key on a new machine.
   home.packages = with pkgs; [
     sops
