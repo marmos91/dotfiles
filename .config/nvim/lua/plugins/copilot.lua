@@ -13,7 +13,6 @@ return {
                 markdown = true,
                 help = true,
                 yaml = true,
-                ["."] = true,
             },
         },
         config = function(_, opts)
