@@ -8,10 +8,6 @@
       "modelLabel": "id",
       "viewportIndicators": true,
       "styles": {
-        "opencode": {
-          "metadataFormat": "$model  $provider(  $thinking)",
-          "completionMenu": "palette"
-        },
         "opencode-copy-friendly": {
           "metadataFormat": "$model  $provider(  $thinking)",
           "completionMenu": "palette"
@@ -78,15 +74,6 @@
           "gitBranch": {
             "maxLength": "full"
           },
-          "gitCommit": {
-            "hashLength": 7,
-            "onlyDetached": true,
-            "showTag": true
-          },
-          "gitMetrics": {
-            "onlyNonzero": true,
-            "ignoreSubmodules": false
-          },
           "extensionStatuses": {
             "defaultPlacement": "right",
             "placements": {},
@@ -100,10 +87,7 @@
       "style": "framed-copy-friendly",
       "colorSource": "theme",
       "styles": {
-        "framed": {},
-        "framed-copy-friendly": {},
-        "compact": {},
-        "labeled": {}
+        "framed-copy-friendly": {}
       }
     },
     "thinkingSteps": {
