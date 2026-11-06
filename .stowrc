@@ -8,3 +8,6 @@
 --ignore=.pi
 --ignore=tests
 --ignore=.gnupg
+--ignore=hosts[.]yml
+--ignore=.claude
+--ignore=.githooks

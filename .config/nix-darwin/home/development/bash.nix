@@ -6,6 +6,44 @@ in
   home.packages = with pkgs; [
     shfmt
     ast-grep
+
+    # `secrets edit <key>` lives in one script rather than in each shell's
+    # function: bash has no function-scoped trap — a RETURN trap stays
+    # installed and re-fires on every later call of any function. `sops set`
+    # does the decrypt → patch → re-encrypt, so no plaintext copy of the whole
+    # file is written; it rewrites its target in place, so it works on a copy
+    # that is renamed over secrets.yaml only on success.
+    (writeShellScriptBin "secrets-edit" ''
+      set -euo pipefail
+
+      secrets_dir="''${XDG_CONFIG_HOME:-$HOME/.config}/nix-darwin/home/secrets"
+      f="$secrets_dir/secrets.yaml"
+      key="''${1:-}"
+
+      # No key: edit the whole file, as before.
+      if [ -z "$key" ]; then
+        exec sops "$f"
+      fi
+
+      tmp=$(mktemp)
+      # Same dir so the mv is a rename; .yaml suffix because sops picks the
+      # format from the extension.
+      new="$secrets_dir/.secrets-edit.yaml"
+      trap 'rm -f "$tmp" "$new"' EXIT
+      # `sops set` creates a missing key instead of failing, so read the current
+      # value first: that is what rejects a typo.
+      if ! sops -d --extract "[\"$key\"]" "$f" > "$tmp" 2>/dev/null; then
+        echo "Secret '$key' not found" >&2
+        exit 1
+      fi
+      "''${EDITOR:-nvim}" "$tmp"
+      # JSON-encode the file contents so multi-line values stay strings and the
+      # editor's trailing newline is dropped.
+      cp "$f" "$new"
+      ${pkgs.jq}/bin/jq -Rs 'rtrimstr("\n")' "$tmp" | sops set --value-stdin "$new" "[\"$key\"]"
+      mv "$new" "$f"
+      echo "Secret '$key' updated"
+    '')
   ];
 
   programs.bash = {
@@ -60,30 +98,9 @@ in
         local secrets_dir="$XDG_CONFIG_HOME/nix-darwin/home/secrets"
         case "$1" in
           edit)
-            if [[ -n "$2" ]]; then
-              if ! command -v yq &> /dev/null; then
-                echo "Note: yq is required for editing specific secrets"
-                echo "Opening full secrets file instead..."
-                sops "$secrets_dir/secrets.yaml"
-                return
-              fi
-              local temp_file=$(mktemp)
-              trap "rm -f '$temp_file'" RETURN
-              if ! sops -d --extract "[\"$2\"]" "$secrets_dir/secrets.yaml" > "$temp_file" 2>/dev/null; then
-                echo "Secret '$2' not found"
-                return 1
-              fi
-              ''${EDITOR:-nvim} "$temp_file"
-              # Decrypt, update, re-encrypt
-              local dec_file=$(mktemp)
-              sops -d "$secrets_dir/secrets.yaml" > "$dec_file"
-              yq -i ".[\"$2\"] = load_str(\"$temp_file\")" "$dec_file"
-              sops -e -i "$dec_file"
-              mv "$dec_file" "$secrets_dir/secrets.yaml"
-              echo "Secret '$2' updated"
-            else
-              sops "$secrets_dir/secrets.yaml"
-            fi
+            # The body lives in the `secrets-edit` script (home.packages) so
+            # bash and zsh share one implementation.
+            secrets-edit "''${2:-}"
             ;;
           view)
             if [[ -n "$2" ]]; then

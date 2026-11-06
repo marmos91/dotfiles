@@ -59,10 +59,15 @@ chmod +x install.sh && ./install.sh
 2. Install [Nix](https://nixos.org/) using the [Determinate Systems installer](https://determinate.systems/nix-installer/)
 3. Install [1Password](https://1password.com/) via official apt repository (Linux only, for SSH agent)
 4. Symlink dotfiles to your home directory via Stow
-5. Apply the appropriate Nix configuration:
+5. Create the sops age key if it is missing — the Nix step refuses to activate
+   without it. The script stops and prints the command rather than creating a
+   key it cannot back up; see
+   [`.config/nix-darwin/home/secrets/README.md`](./.config/nix-darwin/home/secrets/README.md)
+   §1
+6. Apply the appropriate Nix configuration:
    - **macOS**: nix-darwin + home-manager
    - **Linux**: standalone home-manager
-6. Set the default shell (Linux only)
+7. Set the default shell (Linux only)
 
 ### SSH keys and commit signing
 
@@ -108,6 +113,25 @@ git log --show-signature -1
 ### Post-install
 
 Restart your terminal or log out/in for all changes to take effect.
+
+If you previously stowed an older revision of these dotfiles, `~/.config` (or
+one of its subdirectories) may already be a stow fold — a single symlink into
+the repo. `.stowrc` now sets `--no-folding` and ignores `hosts.yml`, but stow
+never splits an existing fold, so gh would keep writing its OAuth token into
+the repo. Check the parent directory, not `~/.config/gh`: through a fold that
+path resolves into the repo and always looks like a real directory.
+
+```bash
+ls -ld ~/.config         # a symlink means it is still folded
+rm ~/.config             # delete the LINK, not a path inside it
+mkdir ~/.config && stow .
+```
+
+If `~/.config` is a real directory, check the ones below it the same way
+(`ls -ld ~/.config/gh`) and remove that link instead. Delete the link itself:
+removing a file through a fold deletes the repo copy and gh keeps writing
+through it. gh re-creates `hosts.yml` as a real file on the next
+`gh auth login`.
 
 ## Uninstallation
 
