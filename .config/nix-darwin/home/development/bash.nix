@@ -1,6 +1,6 @@
 { config, pkgs, lib, hostname, username, ... }:
 let
-  isDarwin = pkgs.stdenv.hostPlatform.isDarwin;
+  shellFunctions = import ../programs/shell/functions.nix { inherit pkgs hostname username; };
 
   # Feeds the `secrets` completion lists; the script itself lives in
   # home/packages.nix.
@@ -103,12 +103,8 @@ in
     };
 
     initExtra = ''
-      # Development helpers
-      mkcd() { mkdir -p "$1" && cd "$1"; }
-
-      # Nix helpers
-      nix-shell-p() { nix-shell -p "$@"; }
-      nix-run() { nix run nixpkgs#"$1" -- "''${@:2}"; }
+      # mkcd, nix-shell-p, nix-run, flake-update, rebuild
+      source ${shellFunctions}
 
       # `secrets` itself is a script in home/packages.nix — one copy for both
       # shells instead of two that drift.
@@ -127,30 +123,6 @@ in
         esac
       }
       complete -F _secrets_completions secrets
-
-      flake-update() {
-        echo "Updating flake inputs..."
-        nix flake update --flake ~/.config/nix-darwin
-        echo ""
-        echo "Done! Run 'rebuild' to apply updates."
-      }
-
-      rebuild() {
-        ${if isDarwin then ''
-        if [[ $EUID -eq 0 ]]; then
-          darwin-rebuild switch --flake ~/.config/nix-darwin#${hostname} "$@"
-        else
-          sudo darwin-rebuild switch --flake ~/.config/nix-darwin#${hostname} "$@"
-        fi
-        '' else ''
-        local arch=$(uname -m)
-        if [[ "$arch" == "aarch64" || "$arch" == "arm64" ]]; then
-          home-manager switch --flake ~/.config/nix-darwin#${username}-aarch64 "$@"
-        else
-          home-manager switch --flake ~/.config/nix-darwin#${username} "$@"
-        fi
-        ''}
-      }
     '';
   };
 }
