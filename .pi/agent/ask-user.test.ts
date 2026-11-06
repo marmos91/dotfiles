@@ -153,3 +153,15 @@ test("fewer than two usable options is an error, not a prompt", async () => {
 	assert.equal(r.details.error, "insufficient_options");
 	assert.equal(h.selects.length, 0, "a one-option question must not reach the user");
 });
+
+test("escape sequences never reach the dialog, the result, or the headless text", async () => {
+	const evil = { header: "H\x1b]0;spoof\x07", question: "Deploy\x1b[2J?", options: ["Ok\x1b]52;c;aGk=\x07", "No\x1b[2J"] };
+	const h = harness({ choice: "Ok" });
+	const r = await h.run(evil);
+	assert.deepEqual(h.selects[0], { title: "H\nDeploy?", options: ["Ok", "No"] });
+	assert.equal(r.content[0].text, "User selected: Ok");
+
+	const headless = await harness({ hasUI: false }).run(evil);
+	assert.doesNotMatch(headless.content[0].text, /[\x1b\x07]/);
+	assert.ok(headless.content[0].text.includes("Deploy?"));
+});
