@@ -9,7 +9,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import askUser, { ASK_PARAMS, nonUiResult, normalizeOptions } from "./extensions/ask-user.ts";
+import askUser, { ASK_PARAMS, nonUiResult, normalizeOptions, sanitize } from "./extensions/ask-user.ts";
 
 // ------------------------------------------------------------ pure helpers
 
@@ -32,6 +32,11 @@ test("normalizeOptions strips ESC sequences and control characters", () => {
 	assert.deepEqual(normalizeOptions(["\x1b[31mRed\x1b[0m", "\x1b]52;c;aGk=\x07Blue"]), ["Red", "Blue"]);
 	assert.deepEqual(normalizeOptions(["a\x00b", "c"]), ["ab", "c"]);
 	assert.deepEqual(normalizeOptions(["\x1b[31m\x1b[0m", "b"]), [], "a fully stripped option is a blank option");
+});
+
+test("sanitize keeps word breaks where model text has newlines or tabs", () => {
+	assert.equal(sanitize("Line one\nLine two"), "Line one Line two");
+	assert.equal(sanitize("Option A\t(alpha)"), "Option A (alpha)");
 });
 
 test("nonUiResult names the question and every option, and points at plain text", () => {
@@ -85,16 +90,14 @@ test("registers exactly one ask_user tool, marked sequential", () => {
 	assert.ok(h.tool.promptSnippet, "without a snippet the tool is hidden from the system prompt");
 });
 
-test("the schema stays valid JSON Schema, since typebox is not importable here", () => {
+test("the schema keeps its required shape and option bounds", () => {
+	assert.deepEqual(Object.keys(ASK_PARAMS.properties), ["question", "options", "header"]);
+	for (const p of Object.values(ASK_PARAMS.properties)) assert.ok(p.type, "every property declares a type");
 	assert.equal(ASK_PARAMS.type, "object");
 	assert.deepEqual(ASK_PARAMS.required, ["question", "options"]);
 	assert.equal(ASK_PARAMS.additionalProperties, false);
 	assert.equal(ASK_PARAMS.properties.options.minItems, 2);
 	assert.equal(ASK_PARAMS.properties.options.maxItems, 6);
-	for (const [name, prop] of Object.entries(ASK_PARAMS.properties)) {
-		assert.equal(typeof prop, "object", `${name} must be an object schema`);
-		assert.ok("type" in prop, `${name} must declare a type`);
-	}
 });
 
 test("a valid question prompts and returns the chosen option", async () => {

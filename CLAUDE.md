@@ -86,7 +86,7 @@ init.lua                     # Entry point
 
 **LSP servers configured:** bashls, gopls, pylsp, vtsls, lua_ls, marksman, taplo, terraformls, yamlls, jsonls, html, cssls, dockerls, starlark_rust, helm_ls (Rust uses rustaceanvim)
 
-**Formatters:** stylua, black, gofumpt, shfmt, prettierd, taplo, buildifier
+**Formatters:** stylua, black, gofumpt, shfmt, nixfmt, rustfmt, taplo, buildifier, markdownlint
 
 ### Stow Structure
 

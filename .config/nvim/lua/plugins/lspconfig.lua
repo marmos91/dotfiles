@@ -220,10 +220,6 @@ return {
                             },
                         },
                     },
-                    capabilities = {
-                        documentFormattingProvider = false,
-                        documentRangeFormattingProvider = false,
-                    },
                 },
                 yamlls = {
                     filetypes = { "yaml", "yaml.docker-compose", "yaml.gitlab" },
@@ -259,20 +255,12 @@ return {
             -- LSP servers to install via mason-lspconfig
             local lsp_servers = vim.tbl_keys(servers or {})
 
-            -- Additional tools (formatters/linters) to install via mason-tool-installer
+            -- Additional tools (formatters/linters) to install via mason-tool-installer.
+            -- Everything else conform/lint/gopls reference is provided by Nix
+            -- (nixfmt, rustfmt, black, shfmt, buildifier, markdownlint, taplo, gofumpt)
+            -- or by the LSP servers below.
             local tools = {
-                "stylua", -- Lua formatter
-                "markdownlint", -- Markdown linter
-                "markdown-toc", -- Markdown TOC generator
-                "eslint_d", -- Fast ESLint daemon (used by conform/none-ls)
-                "black", -- Python formatter
-                "gofumpt", -- Go formatter
-                "goimports", -- Go imports organizer
-                "shfmt", -- Shell formatter
-                "buildifier", -- Bazel formatter
-                "prettierd", -- Fast Prettier (for web dev)
-                "ruff", -- Fast Python linter
-                "taplo", -- TOML formatter
+                "stylua", -- Lua formatter, referenced by conform
                 "tree-sitter-cli", -- Required by nvim-treesitter (main branch) to compile parsers
             }
 
