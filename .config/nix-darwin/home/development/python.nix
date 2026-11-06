@@ -6,5 +6,7 @@
     python313Packages.black # Formatter
     python313Packages.flake8 # Linter
     python313Packages.mypy # Type checker
+    python313Packages.google-api-python-client # Google Calendar sync script
+    python313Packages.google-auth-oauthlib # OAuth flow for the same
   ];
 }
