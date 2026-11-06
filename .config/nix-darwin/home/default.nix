@@ -8,7 +8,7 @@
     ./packages.nix
     ./catppuccin.nix
     ./claude.nix
-    ./pstack.nix
+    ./agent-skills.nix
   ];
 
   # Enable desktop integration on non-NixOS Linux (Ubuntu, etc.)
