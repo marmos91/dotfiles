@@ -55,9 +55,25 @@ return {
             })
 
             -- Enable treesitter-based highlighting
+            local warned = false
             vim.api.nvim_create_autocmd("FileType", {
-                callback = function()
-                    pcall(vim.treesitter.start)
+                callback = function(args)
+                    local ok = pcall(vim.treesitter.start, args.buf)
+                    -- Only warn for parsers this config installs. UI buffers
+                    -- (dashboard, qf, lazy) legitimately have none, and
+                    -- get_lang returns an unknown filetype unchanged.
+                    if
+                        not ok
+                        and not warned
+                        and vim.tbl_contains(parsers, vim.treesitter.language.get_lang(args.match))
+                    then
+                        warned = true
+                        vim.notify(
+                            "Treesitter highlighting unavailable — parsers are not installed yet. "
+                                .. "Run :TSInstall or check :checkhealth nvim-treesitter.",
+                            vim.log.levels.WARN
+                        )
+                    end
                 end,
             })
         end,

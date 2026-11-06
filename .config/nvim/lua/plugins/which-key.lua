@@ -10,7 +10,7 @@ return {
                 { "<leader>b", group = "[B]uffer" },
                 { "<leader>c", group = "[C]ode" },
                 { "<leader>d", group = "[D]ebugger/Diagnostic" },
-                { "<leader>db", group = "[B]reakpoints" },
+                { "<leader>db", group = "[D]ebug [B]reakpoints" },
                 { "<leader>g", group = "[G]it" },
                 { "<leader>m", group = "[M]arkdown" },
                 { "<leader>n", group = "[N]otifications" },

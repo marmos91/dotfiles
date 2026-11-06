@@ -36,7 +36,10 @@ export function sanitize(s: string): string {
 		.replace(/\x1b\[[0-?]*[ -/]*[@-~]/g, "") // CSI
 		.replace(/\x1b\][^\x07\x1b]*(?:\x07|\x1b\\)?/g, "") // OSC
 		.replace(/\x1b[@-_]/g, "") // remaining two-byte escapes
-		.replace(/[\x00-\x1f\x7f-\x9f]/g, "") // leftover C0/C1 controls
+		// Leftover C0/C1 controls. Newline and tab are legitimate in model text
+		// (a question can span lines), so they survive as a space.
+		.replace(/[\t\n\r]+/g, " ")
+		.replace(/[\x00-\x1f\x7f-\x9f]/g, "")
 		.trim();
 }
 
