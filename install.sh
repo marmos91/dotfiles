@@ -141,6 +141,13 @@ fi
 set_default_shell() {
     local shell_name="$1"
     local user_home="$2"
+    # macOS keeps its own /bin/zsh as the login shell. A Nix store path there
+    # would outlive a full uninstall (which removes /nix) and leave the account
+    # with a login shell that no longer exists.
+    if [[ "$(uname -s)" == "Darwin" ]]; then
+        log "macOS: login shell left as is (/bin/zsh); --shell applies on Linux only"
+        return 0
+    fi
     local shell_path="${user_home}/.nix-profile/bin/${shell_name}"
 
     if [[ -x "$shell_path" ]]; then
@@ -208,7 +215,7 @@ install_stow() {
     fi
 
     log "Installing stow..."
-    if [[ "$OS" == "Darwin" ]]; then
+    if [[ "$(uname -s)" == "Darwin" ]]; then
         # macOS: use Homebrew
         if ! command -v brew &> /dev/null; then
             # Homebrew's installer tracks its `HEAD` branch and publishes no
@@ -565,7 +572,7 @@ else
         exit 1
     fi
 
-    if [[ "$OS" == "Darwin" ]]; then
+    if [[ "$(uname -s)" == "Darwin" ]]; then
         # macOS: use nix-darwin
         log "Building nix-darwin configuration for '$DOTFILES_HOSTNAME'..."
         log "This requires administrator privileges..."
