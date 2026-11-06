@@ -12,8 +12,8 @@ in
 {
   # Identities and allowed_signers are sops secrets (`git_identity`,
   # `git_identity_work`, `git_allowed_signers` in home/secrets), so the email
-  # addresses stay out of this public repo. sops decrypts them to
-  # ~/.config/git/ at activation; git reads them at runtime via `includes`.
+  # addresses stay out of this public repo. sops decrypts them at activation
+  # to the paths declared there; git reads them at runtime via `includes`.
   #
   # The default identity is the GitHub noreply address, so no real address is
   # published in commit metadata. Work repos under ~/Projects/cubbit still get
@@ -43,10 +43,10 @@ in
     # override the address under ~/Projects/cubbit. Same signing key, so
     # nothing else has to change per-repo.
     includes = [
-      { path = "~/.config/git/identity"; }
+      { path = config.sops.secrets.git_identity.path; }
       {
         condition = "gitdir:~/Projects/cubbit/";
-        path = "~/.config/git/identity-work";
+        path = config.sops.secrets.git_identity_work.path;
       }
     ];
 
@@ -99,7 +99,7 @@ in
       # is a path to the on-disk key, so no agent is involved. Hand-written
       # rather than `signing.allowedSigners`, which writes the file itself: the
       # content is a sops secret, so only the path can be set here.
-      "gpg \"ssh\"".allowedSignersFile = "~/.config/git/allowed_signers";
+      "gpg \"ssh\"".allowedSignersFile = config.sops.secrets.git_allowed_signers.path;
 
       # Include local config
       include.path = "~/.config/git/config.local";
