@@ -7,3 +7,4 @@
 --ignore=assets
 --ignore=.pi
 --ignore=tests
+--ignore=.gnupg
