@@ -19,15 +19,22 @@ repo=$(cd "$(dirname "$0")/../.config/nix-darwin" && pwd)
 tmp=$(mktemp -d)
 trap 'rm -rf "$tmp"' EXIT
 
-# Build the helper exactly as home-manager will install it.
-nix build --no-link --print-out-paths --out-link "$tmp/helper" \
-  --impure --expr '
-    let
-      cfg = (builtins.getFlake "'"$repo"'").darwinConfigurations.amaterasu.config.home-manager.users.marmos91;
-    in builtins.head (builtins.filter (p: (p.name or "") == "secrets") cfg.home.packages)' \
-  >/dev/null 2>&1 || fail "could not build the secrets helper"
-helper="$(readlink -f "$tmp/helper")/bin/secrets"
+# Build the helpers exactly as home-manager will install them. `secrets edit`
+# delegates to `secrets-edit`, so both go on PATH.
+build_helper() {
+  nix build --no-link --print-out-paths --out-link "$tmp/$1" \
+    --impure --expr '
+      let
+        cfg = (builtins.getFlake "'"$repo"'").darwinConfigurations.amaterasu.config.home-manager.users.marmos91;
+      in builtins.head (builtins.filter (p: (p.name or "") == "'"$1"'") cfg.home.packages)' \
+    >/dev/null 2>&1 || fail "could not build the $1 helper"
+  readlink -f "$tmp/$1"
+}
+helper="$(build_helper secrets)/bin/secrets"
+PATH="$(build_helper secrets-edit)/bin:$PATH"
+export PATH
 [ -x "$helper" ] || fail "helper not at $helper"
+command -v secrets-edit >/dev/null || fail "secrets-edit not built"
 
 # Editor stub: replaces the scratch file's contents with a known value.
 cat > "$tmp/editor" <<'EOF'

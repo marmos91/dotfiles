@@ -40,11 +40,23 @@ in
         echo "Secret '$key' not found" >&2
         exit 1
       fi
-      "''${EDITOR:-nvim}" "$tmp"
+      # An editor that crashes or is killed after truncating the scratch file
+      # must not be read back as the new value.
+      if ! "''${EDITOR:-nvim}" "$tmp"; then
+        echo "editor failed: $f left unchanged" >&2
+        exit 1
+      fi
+      if [ ! -s "$tmp" ]; then
+        echo "empty value: $f left unchanged" >&2
+        exit 1
+      fi
       # JSON-encode the file contents so multi-line values stay strings and the
       # editor's trailing newline is dropped.
       cp "$f" "$new"
-      ${pkgs.jq}/bin/jq -Rs 'rtrimstr("\n")' "$tmp" | sops set --value-stdin "$new" "[\"$key\"]"
+      if ! ${pkgs.jq}/bin/jq -Rs 'rtrimstr("\n")' "$tmp" | sops set --value-stdin "$new" "[\"$key\"]"; then
+        echo "failed to update '$key': $f left unchanged" >&2
+        exit 1
+      fi
       mv "$new" "$f"
       echo "Secret '$key' updated"
     '')
