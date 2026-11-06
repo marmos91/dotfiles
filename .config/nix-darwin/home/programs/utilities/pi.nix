@@ -15,7 +15,7 @@
 # (lastChangelogVersion), so any home.file wiring — store symlink or
 # mkOutOfStoreSymlink — leaves the repo permanently dirty and makes every
 # runtime toggle look like a pending commit. pi now owns
-# ~/.pi/agent/settings.json outright; the repo copy below is a seed that the
+# ~/.pi/agent/settings.json outright; the repo copy in .pi/agent/seed/ is a seed that the
 # activation script installs only when the live file does not exist yet.
 #
 # The repo copy is therefore NOT live: edit it to change the defaults, then
@@ -309,7 +309,7 @@ in
     # A pre-existing symlink from the old mkOutOfStoreSymlink wiring is replaced
     # by a copy; the repo stays the source of truth for defaults.
     if [ ! -f "${piDir}/settings.json" ] || [ -L "${piDir}/settings.json" ]; then
-      $DRY_RUN_CMD cp "${repoRoot}/.pi/agent/settings.json" "${piDir}/settings.json"
+      $DRY_RUN_CMD cp "${repoRoot}/.pi/agent/seed/settings.json" "${piDir}/settings.json"
       $DRY_RUN_CMD chmod 644 "${piDir}/settings.json"
     fi
 
@@ -332,15 +332,15 @@ in
     # Warn rather than overwrite: "pi install" legitimately adds packages, and
     # clobbering the live file on every rebuild would discard runtime state.
     drifted=""
-    for key in $(${jq} -r 'keys[]' "${repoRoot}/.pi/agent/settings.json"); do
-      if ! ${jq} -e --arg k "$key" --slurpfile s "${repoRoot}/.pi/agent/settings.json" \
+    for key in $(${jq} -r 'keys[]' "${repoRoot}/.pi/agent/seed/settings.json"); do
+      if ! ${jq} -e --arg k "$key" --slurpfile s "${repoRoot}/.pi/agent/seed/settings.json" \
            '.[$k] == $s[0][$k]' "${piDir}/settings.json" >/dev/null 2>&1; then
         drifted="$drifted $key"
       fi
     done
     if [ -n "$drifted" ]; then
       echo "pi: settings.json drifted from the repo seed:$drifted" >&2
-      echo "pi: diff ${piDir}/settings.json ${repoRoot}/.pi/agent/settings.json" >&2
+      echo "pi: diff ${piDir}/settings.json ${repoRoot}/.pi/agent/seed/settings.json" >&2
       echo "pi: the seed only applies when the live file is missing; reconcile by hand." >&2
     fi
   '';
