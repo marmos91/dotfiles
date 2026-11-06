@@ -14,7 +14,7 @@ let
     window-padding-balance = true;
     window-padding-x = 2;
     confirm-close-surface = false;
-    clipboard-read = "allow";
+    clipboard-read = "deny";
     clipboard-write = "allow";
 
     keybind = [
