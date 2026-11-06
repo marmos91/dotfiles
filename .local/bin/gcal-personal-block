@@ -26,16 +26,14 @@ from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 
 FAMILY_CAL = "REDACTED-FAMILY-CAL"
-SOURCE_TOKEN = Path.home() / ".config/google-docs-mcp/calendar-token.json"
 WORK_TOKEN = Path.home() / ".config/google-docs-mcp/calendar-work-token.json"
 CLIENT_JSON = Path.home() / "Downloads/REDACTED-CLIENT-JSON"
 SCOPES = ["https://www.googleapis.com/auth/calendar.events",
           "https://www.googleapis.com/auth/calendar.readonly"]
 WORK_EMAIL = "REDACTED-WORK-EMAIL"
 TITLE = "🏠 Personal Commitment"
-# Google event palette id: 3 = lavender, 4 = flamingo, 6 = tangerine — pick from
-# the colors().get() listing if you want another.
-COLOR_ID = "3"
+# Google event palette id: 4 = flamingo (salmon) — the shade reclaim used.
+COLOR_ID = "4"
 DESCRIPTION = (
     "Marco has a personal commitment and is busy at this time.\n"
     "Please find another time to avoid scheduling conflicts.\n\n"
@@ -52,10 +50,12 @@ def work_svc():
     return build("calendar", "v3", credentials=creds, cache_discovery=False)
 
 
+# shortcut: the work token reads the shared Family calendar too (the share
+# grants reader access), so the second OAuth token — which kept getting
+# revoked — is gone. If Family events ever stop being visible to the work
+# account, re-add a dedicated source token here.
 def family_svc():
-    creds = Credentials.from_authorized_user_file(str(SOURCE_TOKEN),
-        ["https://www.googleapis.com/auth/calendar.events"])
-    return build("calendar", "v3", credentials=creds, cache_discovery=False)
+    return work_svc()
 
 
 def setup():
@@ -139,6 +139,9 @@ def run():
             "end": e["end"],
             "transparency": "opaque",
             "colorId": COLOR_ID,
+            # empty overrides = zero notifications: the real Family event
+            # notifies, never this placeholder copy
+            "reminders": {"useDefault": False, "overrides": []},
             "extendedProperties": {"private": {KEY: fid}},
         }
 
@@ -162,9 +165,13 @@ def run():
                     raise
             time.sleep(0.05)
 
-    # upsert
+    NO_REMIND = {"useDefault": False, "overrides": []}
+
+    # upsert — note: the API returns {'useDefault': False} (no overrides key)
+    # for empty overrides, so compare only useDefault when detecting drift.
     for fid, body in want.items():
         cur = have.get(fid)
+        rem_defaults = (cur.get("reminders") or {}).get("useDefault", True) if cur else None
         try:
             if cur is None:
                 work.events().insert(calendarId=work_cal, body=body,
@@ -172,11 +179,13 @@ def run():
                 created += 1
             elif (cur.get("start") != body["start"] or cur.get("end") != body["end"]
                   or cur.get("description") != DESCRIPTION
-                  or cur.get("colorId") != COLOR_ID):
+                  or cur.get("colorId") != COLOR_ID
+                  or rem_defaults):
                 work.events().patch(calendarId=work_cal, eventId=cur["id"],
                                      body={"start": body["start"], "end": body["end"],
                                            "description": DESCRIPTION,
-                                           "colorId": COLOR_ID},
+                                           "colorId": COLOR_ID,
+                                           "reminders": NO_REMIND},
                                      sendUpdates="none").execute()
                 updated += 1
         except HttpError as ex:

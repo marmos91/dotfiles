@@ -47,6 +47,9 @@ in
       ts = "tmux new -s";
       tl = "tmux list-sessions";
 
+      # gcal sync setup (needs the nix python that carries google-api-client)
+      gcal-setup = "${pkgs.python313.withPackages (ps: [ ps.google-api-python-client ps.google-auth-oauthlib ])}/bin/python3 ~/.dotfiles/.local/bin/gcal-personal-block --setup";
+
       # System
       top = "btop";
       cat = "bat";
@@ -95,6 +98,9 @@ in
 
       # Directory navigation
       setopt AUTO_CD AUTO_PUSHD PUSHD_IGNORE_DUPS PUSHD_SILENT
+
+      # Development helpers
+      mkcd() { mkdir -p "$1" && cd "$1"; }
 
       # History settings
       setopt HIST_VERIFY HIST_REDUCE_BLANKS HIST_IGNORE_ALL_DUPS
