@@ -195,10 +195,11 @@ in
   );
 
   # Force the Local REST API plugin's plain-HTTP listener on (127.0.0.1:27123).
-  # The MCP client above hardcodes that URL — the default HTTPS port uses a
-  # self-signed certificate each client would have to trust separately — so this
-  # is a precondition of the bridge, not a preference, and it is re-asserted on
-  # every rebuild.
+  # It must stay true: the MCP client hardcodes that URL (mcp.nix), so plain
+  # HTTP on loopback is a precondition of the bridge, not a preference. The
+  # HTTPS port uses a self-signed certificate each client would have to trust
+  # separately. If the API is ever hardened, this and the mcp.nix URL change
+  # together.
   #
   # Merged, never overwritten: the plugin owns this file, and the apiKey inside
   # it is what the MCP client reads back at connect time, so it has to survive.

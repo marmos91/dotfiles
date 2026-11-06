@@ -162,30 +162,9 @@ in
         local secrets_dir="$XDG_CONFIG_HOME/nix-darwin/home/secrets"
         case "$1" in
           edit)
-            if [[ -n "$2" ]]; then
-              if ! command -v yq &> /dev/null; then
-                echo "Note: yq is required for editing specific secrets"
-                echo "Opening full secrets file instead..."
-                sops "$secrets_dir/secrets.yaml"
-                return
-              fi
-              local temp_file=$(mktemp)
-              trap "rm -f '$temp_file'" RETURN
-              if ! sops -d --extract "[\"$2\"]" "$secrets_dir/secrets.yaml" > "$temp_file" 2>/dev/null; then
-                echo "Secret '$2' not found"
-                return 1
-              fi
-              ''${EDITOR:-nvim} "$temp_file"
-              # Decrypt, update, re-encrypt
-              local dec_file=$(mktemp)
-              sops -d "$secrets_dir/secrets.yaml" > "$dec_file"
-              yq -i ".[\"$2\"] = load_str(\"$temp_file\")" "$dec_file"
-              sops -e -i "$dec_file"
-              mv "$dec_file" "$secrets_dir/secrets.yaml"
-              echo "Secret '$2' updated"
-            else
-              sops "$secrets_dir/secrets.yaml"
-            fi
+            # The body lives in the `secrets-edit` script (development/bash.nix,
+            # home.packages) so bash and zsh share one implementation.
+            secrets-edit "''${2:-}"
             ;;
           view)
             if [[ -n "$2" ]]; then
