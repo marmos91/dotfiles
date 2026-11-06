@@ -65,6 +65,12 @@
         inherit username hostname inputs;
         homeDirectory = "/Users/${username}";
       };
+      # The home-manager module list, shared by the darwin and Linux outputs.
+      homeModules = [
+        ./home
+        catppuccin.homeModules.catppuccin
+        sops-nix.homeManagerModules.sops
+      ];
       makeHomeConfig =
         system:
         home-manager.lib.homeManagerConfiguration {
@@ -72,11 +78,7 @@
           extraSpecialArgs = hmArgs // {
             homeDirectory = "/home/${username}";
           };
-          modules = [
-            ./home
-            catppuccin.homeModules.catppuccin
-            sops-nix.homeManagerModules.sops
-          ];
+          modules = homeModules;
         };
     in
     {
@@ -107,13 +109,7 @@
                 useUserPackages = true;
                 backupFileExtension = "backup";
                 extraSpecialArgs = hmArgs;
-                users.${username} = {
-                  imports = [
-                    ./home
-                    catppuccin.homeModules.catppuccin
-                    sops-nix.homeManagerModules.sops
-                  ];
-                };
+                users.${username}.imports = homeModules;
               };
             }
           ];
