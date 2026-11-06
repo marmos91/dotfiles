@@ -5,6 +5,12 @@ let
     path = "${homeDirectory}/${p}";
     mode = "0600";
   };
+
+  # Top-level keys of the template, so the eval below can hold it to the same
+  # key set as `sops.secrets`.
+  templateKeys = lib.concatMap (l: let m = builtins.match "([a-z0-9_]+):.*" l; in if m == null then [ ] else m) (
+    lib.splitString "\n" (builtins.readFile ./secrets.yaml.template)
+  );
 in
 {
   # Install sops for managing secrets (age lives in home/packages.nix).
@@ -37,7 +43,7 @@ in
       aws_config = mk ".aws/config";
       rclone_config = mk ".config/rclone/rclone.conf";
       ssh_hosts_config = mk ".ssh/config.d/hosts";
-      mimir_api_key = mk ".config/opencode/mimir-key";
+      mimir_api_key = mk ".config/mimir/api-key";
       google_docs_mcp_client_id = mk ".config/google-docs-mcp/client-id";
       google_docs_mcp_client_secret = mk ".config/google-docs-mcp/client-secret";
 
@@ -49,9 +55,13 @@ in
       gcal_family_cal = mk ".config/gcal-personal-block/family-cal";
       gcal_work_email = mk ".config/gcal-personal-block/work-email";
       # Internal Cubbit endpoints. Not credentials, but they name company
-      # infrastructure, so they stay out of the public repo. opencode resolves
+      # infrastructure, so they stay out of the public repo. Shared by opencode,
+      # pi and headroom, so the path names none of them. opencode resolves
       # `{file:...}` in any config value and trims the trailing newline.
-      mimir_base_url = mk ".config/opencode/mimir-base-url";
+      mimir_base_url = mk ".config/mimir/base-url";
+      # Both used to live under ~/.config/opencode/. On a machine that had
+      # them, remove the old links if they are still there:
+      #   rm ~/.config/opencode/mimir-key ~/.config/opencode/mimir-base-url
 
       # Dropped `ds3ctl_config`: the tool it named is gone (cubbit/dittofs now
       # ships `dfsctl`, which reads ~/.config/dfsctl/config.json and takes the
@@ -71,6 +81,13 @@ in
       git_allowed_signers = mk ".config/git/allowed_signers";
     };
   };
+
+  assertions = [
+    {
+      assertion = lib.naturalSort templateKeys == lib.naturalSort (builtins.attrNames config.sops.secrets);
+      message = "home/secrets: secrets.yaml.template keys differ from sops.secrets in default.nix.";
+    }
+  ];
 
   # Fail the rebuild when the age key is missing or loose. Without this, a
   # machine whose key was never created rebuilds "successfully" with zero
