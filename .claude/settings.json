@@ -10,6 +10,7 @@
       "Read(~/.config/google-docs-mcp/**)",
       "Read(~/.config/gcal-personal-block/**)",
       "Read(~/.config/opencode/mimir-key)",
+      "Read(~/.config/mimir/**)",
       "Read(~/.config/ds3ctl/config.yaml)",
       "Read(~/.config/mcp/mcp.json)",
       "Read(~/.pi/agent/models.json)",
