@@ -32,10 +32,8 @@ in
 
       # Development
       DOTFILES_DIR = "$HOME/.dotfiles";
-      OBSIDIAN_VAULTS_DIR = "$HOME/vaults";
       GPG_TTY = "$(tty)";
       GITHUB_USERNAME = "marmos91";
-      BACKUP_VOLUME = "/Volumes/BackupMarco";
 
       # Language-specific
       GOPATH = "$HOME/go";

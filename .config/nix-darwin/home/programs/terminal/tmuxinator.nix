@@ -5,8 +5,6 @@
   ...
 }:
 {
-  xdg.configFile."tmuxinator/.keep".text = "";
-
   xdg.configFile."tmuxinator/dotfiles.yaml".text = ''
     name: dotfiles
     root: ~/.dotfiles
@@ -16,10 +14,6 @@
           layout: main-vertical
           panes:
             - nvim .
-       
-      - rebuild:
-          panes:
-            - # rebuild command ready
   '';
 
   programs.zsh.shellAliases = {

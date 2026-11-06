@@ -63,12 +63,10 @@ Temporary Items
 
 .config/*
 !.config/aerospace
-!.config/ds3ctl
 !.config/gh
 # gh writes a live oauth_token into hosts.yml when no OS keyring is available;
 # the re-include above only keeps config.yml tracked.
 .config/gh/hosts.yml
-!.config/nix
 !.config/nix-darwin
 !.config/nvim
 
@@ -81,9 +79,6 @@ graphify-out/
 .tokensave/
 # nix-darwin build symlink
 result
-
-### Secrets materialised by sops-nix (see .config/nix-darwin/home/secrets)
-.config/ds3ctl/
 
 # pi runtime task output (cwd-relative, no config knob)
 .pi/tasks/

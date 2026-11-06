@@ -16,7 +16,4 @@
       pager = "less -FR";
     };
   };
-
-  # Ensure the syntaxes directory exists to suppress warnings
-  xdg.configFile."bat/syntaxes/.keep".text = "";
 }
