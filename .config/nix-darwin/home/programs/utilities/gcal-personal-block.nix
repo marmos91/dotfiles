@@ -20,6 +20,14 @@ let
   ]);
   script = "${config.home.homeDirectory}/.dotfiles/.local/bin/gcal-personal-block";
   logDir = "${config.home.homeDirectory}/.local/state/gcal-personal-block/logs";
+  # a dead token or any other failure must be visible: the err log is where
+  # failures go to be ignored, so surface a macOS notification on non-zero exit
+  notifyFail = pkgs.writeShellScriptBin "gcal-personal-block-notify-fail" ''
+    if ! "$@"; then
+      /usr/bin/osascript -e 'display notification "Run ~/.dotfiles/.local/bin/gcal-personal-block --run to see the error" with title "gcal sync failed" sound name "Basso"'
+      exit 1
+    fi
+  '';
 in
 {
   home.activation.gcal-personal-block = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
@@ -30,6 +38,7 @@ in
     enable = true;
     config = {
       ProgramArguments = [
+        "${notifyFail}/bin/gcal-personal-block-notify-fail"
         "${py}/bin/python3"
         "${script}"
         "--run"

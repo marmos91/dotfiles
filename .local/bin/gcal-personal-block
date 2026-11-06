@@ -141,9 +141,9 @@ def run():
     KEY = "familyMirrorId"
     want = {}   # familyId -> desired placeholder body
     for e in src:
-        # singleEvents=True expands recurrences into instances that all share
-        # the master's iCalUID — key by the instance id so each occurrence
-        # gets its own placeholder, and dedupe any re-expansion of the same slot
+        # singleEvents=True expands recurrences into instances that share the
+        # master's iCalUID — key by the unique instance id instead, so each
+        # occurrence gets its own placeholder (ids are unique per expansion)
         fid = e["id"]
         want[fid] = {
             "summary": TITLE,
@@ -178,6 +178,12 @@ def run():
                     raise
             time.sleep(0.05)
 
+    # compare times by their instant only: family events carry a timeZone
+    # sub-key whose shape differs between what we send and what the API
+    # returns — dict equality would patch the same event every run
+    def instant(dct):
+        return dct.get("dateTime", dct.get("date"))
+
     NO_REMIND = {"useDefault": False, "overrides": []}
 
     # upsert — note: the API returns {'useDefault': False} (no overrides key)
@@ -185,27 +191,32 @@ def run():
     for fid, body in want.items():
         cur = have.get(fid)
         rem_defaults = (cur.get("reminders") or {}).get("useDefault", True) if cur else None
-        try:
-            if cur is None:
-                work.events().insert(calendarId=work_cal, body=body,
-                                     sendUpdates="none").execute()
-                created += 1
-            elif (cur.get("start") != body["start"] or cur.get("end") != body["end"]
-                  or cur.get("description") != DESCRIPTION
-                  or cur.get("colorId") != COLOR_ID
-                  or rem_defaults):
-                work.events().patch(calendarId=work_cal, eventId=cur["id"],
-                                     body={"start": body["start"], "end": body["end"],
-                                           "description": DESCRIPTION,
-                                           "colorId": COLOR_ID,
-                                           "reminders": NO_REMIND},
-                                     sendUpdates="none").execute()
-                updated += 1
-        except HttpError as ex:
-            if ex.resp.status in (403, 429):
-                time.sleep(2)
-                continue
-            raise
+        for attempt in range(3):
+            try:
+                if cur is None:
+                    work.events().insert(calendarId=work_cal, body=body,
+                                         sendUpdates="none").execute()
+                    created += 1
+                elif (instant(cur["start"]) != instant(body["start"])
+                      or instant(cur["end"]) != instant(body["end"])
+                      or cur.get("description") != DESCRIPTION
+                      or cur.get("colorId") != COLOR_ID
+                      or rem_defaults):
+                    work.events().patch(calendarId=work_cal, eventId=cur["id"],
+                                         body={"start": body["start"], "end": body["end"],
+                                               "description": DESCRIPTION,
+                                               "colorId": COLOR_ID,
+                                               "reminders": NO_REMIND},
+                                         sendUpdates="none").execute()
+                    updated += 1
+                break
+            except HttpError as ex:
+                if ex.resp.status not in (403, 429):
+                    raise
+                if attempt == 2:
+                    print(f"rate-limited, gave up on {fid}", file=sys.stderr)
+                    break
+                time.sleep(2 * (attempt + 1))
         time.sleep(0.05)
 
     print(f"created {created}, updated {updated}, removed {removed}")
