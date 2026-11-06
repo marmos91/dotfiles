@@ -44,28 +44,32 @@ stow .
 
 ```
 flake.nix                    # Main entry point, defines inputs and outputs
-├── system/                  # System-level (nix-darwin)
+├── system/                  # System-level (nix-darwin), imported by system/default.nix
 │   ├── darwin.nix          # Core Nix settings, system packages
 │   ├── homebrew.nix        # Homebrew casks and packages
 │   ├── preferences.nix     # macOS system preferences
-│   ├── fonts.nix           # Font configuration
 │   └── security.nix        # Security settings
-└── home/                    # User-level (home-manager)
+└── home/                    # User-level (home-manager), entry point home/default.nix
     ├── env.nix             # Environment variables
-    ├── packages.nix        # User packages and custom scripts
-    ├── programs/           # Shell, terminal, git, utilities
-    │   ├── terminal/       # ghostty, tmux, starship, atuin
+    ├── packages.nix        # User packages, custom scripts, nerd-fonts
+    ├── catppuccin.nix, claude.nix, agent-skills.nix
+    ├── programs/           # Shell, terminal, git, utilities, gnupg.nix
+    │   ├── terminal/       # ghostty, tmux, tmuxinator, starship, atuin, carapace
     │   ├── shell/          # zsh
     │   ├── git/            # git config (incl. delta), lazygit
-    │   └── utilities/      # bat, fzf, eza, ripgrep, etc.
-    └── development/        # Language toolchains
-        ├── go.nix, python.nix, rust.nix, node.nix, bash.nix, nix.nix
+    │   ├── desktop/        # GNOME (Linux)
+    │   ├── services/       # ssh
+    │   └── utilities/      # bat, fzf, eza, ripgrep, mcp, pi, gcal-personal-block, etc.
+    ├── development/        # Language toolchains
+    │   └── go.nix, python.nix, rust.nix, node.nix, bash.nix, nix.nix
+    └── secrets/            # sops-nix (see secrets/README.md)
 ```
 
 **Key settings:**
 
 - Hostname: `amaterasu`
 - System: `aarch64-darwin` (Apple Silicon)
+- Fonts: no fonts module; `nerd-fonts.*` are in `home/packages.nix` and `fonts.fontconfig.enable` is in `home/default.nix`
 - Uses Determinate Nix with flakes enabled
 - **Linux support**: standalone home-manager outputs (`marmos91`, `marmos91-aarch64`) share the same `home/` modules; `install.sh` auto-detects OS
 - **Secrets**: sops-nix + age (`home/secrets/`) — kubeconfig, AWS, rclone, SSH hosts, git identities, MCP credentials, gcal sync identifiers are encrypted in `secrets.yaml` and decrypted at activation
@@ -81,16 +85,17 @@ init.lua                     # Entry point
     ├── autocmds.lua        # Autocommands
     ├── lazy-bootstrap.lua  # Lazy.nvim bootstrap
     ├── lazy-plugins.lua    # Plugin manager setup
-    └── plugins/            # Individual plugin configs (46 plugins)
+    ├── utils/              # Helpers (bufremove.lua)
+    └── plugins/            # One file per plugin spec
 ```
 
-**LSP servers configured:** bashls, gopls, pylsp, vtsls, lua_ls, marksman, taplo, terraformls, yamlls, jsonls, html, cssls, dockerls, starlark_rust, helm_ls (Rust uses rustaceanvim)
+**LSP servers configured** (`servers` in `lua/plugins/lspconfig.lua`): bashls, bzl (macOS only), cssls, dockerls, docker_compose_language_service, eslint, gopls, helm_ls, html, jsonls, lua_ls, marksman, pylsp, taplo, terraformls, vtsls, yamlls (Rust uses rustaceanvim)
 
-**Formatters:** stylua, black, gofumpt, shfmt, nixfmt, rustfmt, taplo, buildifier, markdownlint
+**Formatters** (`formatters_by_ft` in `lua/plugins/conform.lua`): stylua (lua), black (python), buildifier (bzl), shfmt (bash/sh), markdownlint (markdown), nixfmt (nix), rustfmt (rust). Other filetypes fall back to the LSP formatter: gofumpt is applied by gopls (`gofumpt = true`), TypeScript by vtsls
 
 ### Stow Structure
 
-Files in `.dotfiles/` are symlinked to `~` via Stow. The `.stowrc` configures target as home and ignores setup scripts.
+Only `.config/` is stowed into `~`: `.stowrc` sets the target to home and ignores every other top-level path (an allowlist), plus `DS_Store` and gh's `hosts.yml`.
 
 ## Making Changes
 
