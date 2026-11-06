@@ -12,8 +12,8 @@ Cross-platform personal dotfiles for macOS and Linux using Nix Darwin, Home Mana
 # System rebuild (after config changes)
 rebuild                    # alias for darwin-rebuild switch --flake ~/.config/nix-darwin#amaterasu
 
-# Full command if alias unavailable
-darwin-rebuild switch --flake ~/.config/nix-darwin#amaterasu
+# Full command if alias unavailable (activation needs root)
+sudo darwin-rebuild switch --flake ~/.config/nix-darwin#amaterasu
 
 # Update flake inputs
 nix flake update ~/.config/nix-darwin
@@ -132,7 +132,11 @@ Create a new file in `.config/nvim/lua/plugins/`, Lazy.nvim auto-discovers it.
 
 ### Adding shell aliases
 
-Edit `.config/nix-darwin/home/programs/shell/zsh.nix` in the `shellAliases` section.
+Aliases live in two `shellAliases` tables that are not shared:
+`.config/nix-darwin/home/programs/shell/zsh.nix` and
+`.config/nix-darwin/home/development/bash.nix`. Add a portable alias to both.
+zsh also has `cd`, `claude`, `gcal-setup`, `neofetch` and `nix-shell`, which bash
+lacks. The `rebuild` function is defined twice the same way, in each file's init block.
 
 ## Commit Guidelines
 
