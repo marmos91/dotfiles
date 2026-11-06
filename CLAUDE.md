@@ -68,7 +68,8 @@ flake.nix                    # Main entry point, defines inputs and outputs
 - System: `aarch64-darwin` (Apple Silicon)
 - Uses Determinate Nix with flakes enabled
 - **Linux support**: standalone home-manager outputs (`marmos91`, `marmos91-aarch64`) share the same `home/` modules; `install.sh` auto-detects OS
-- **Secrets**: sops-nix + age (`home/secrets/`) — kubeconfig, AWS, rclone, SSH hosts, git identities, MCP credentials are encrypted in `secrets.yaml` and decrypted at activation
+- **Secrets**: sops-nix + age (`home/secrets/`) — kubeconfig, AWS, rclone, SSH hosts, git identities, MCP credentials, gcal sync identifiers are encrypted in `secrets.yaml` and decrypted at activation
+- **gcal-personal-block**: hourly launchd agent mirrors the Family calendar onto the work calendar as opaque "Personal Commitment" blocks (`.local/bin/gcal-personal-block`, nix module in `home/programs/utilities/gcal-personal-block.nix`); `gcal-setup` re-auths the work OAuth token
 
 ### Neovim Configuration (`.config/nvim/`)
 

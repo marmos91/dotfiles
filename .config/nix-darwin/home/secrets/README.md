@@ -159,3 +159,7 @@ secrets/
 | `aws_credentials` | `~/.aws/credentials` | AWS access keys |
 | `aws_config` | `~/.aws/config` | AWS CLI configuration |
 | `rclone_config` | `~/.config/rclone/rclone.conf` | Rclone remote configuration |
+| `gcal_client_id` | `~/.config/gcal-personal-block/client-id` | GCP OAuth client id (gcal-personal-block) |
+| `gcal_client_secret` | `~/.config/gcal-personal-block/client-secret` | GCP OAuth client secret (gcal-personal-block) |
+| `gcal_family_cal` | `~/.config/gcal-personal-block/family-cal` | Source Family calendar id |
+| `gcal_work_email` | `~/.config/gcal-personal-block/work-email` | Work account to receive mirror blocks |
