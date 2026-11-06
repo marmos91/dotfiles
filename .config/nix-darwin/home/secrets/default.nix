@@ -135,15 +135,9 @@
       echo "sops: create it per home/secrets/README.md §1 (age-keygen -o), then rerun rebuild." >&2
       exit 1
     fi
-    case "$(uname)" in
-      # Absolute path: activation runs with GNU coreutils first on PATH, where
-      # `stat -f` means "file system status" and prints nothing usable. -L so a
-      # symlinked keys.txt reports the mode of the file it points at.
-      Darwin) mode=$(/usr/bin/stat -L -f '%Lp' "$key") ;;
-      *)      mode=$(stat -L -c '%a' "$key") ;;
-    esac
-    # stat -f '%Lp' on Darwin already emits octal digits (possibly with
-    # leading zeros, harmless inside $((8#…))).
+    # Activation puts GNU coreutils first on PATH on every platform. -L so a
+    # symlinked keys.txt reports the mode of the file it points at.
+    mode=$(stat -L -c '%a' "$key")
     if [ "$(( 8#$mode & 077 ))" -ne 0 ]; then
       echo "sops: $key is group/world-readable (mode $mode); expected 0600 or tighter." >&2
       echo "sops: re-run the key step with umask 077 (see README), then: chmod 600 $key" >&2
