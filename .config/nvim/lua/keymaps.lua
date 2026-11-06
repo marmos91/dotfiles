@@ -21,11 +21,10 @@ vim.keymap.set("n", "<leader>dE", function()
     vim.diagnostic.jump({ count = -1, severity = vim.diagnostic.severity.ERROR })
 end, { desc = "[D]iagnostic prev [E]rror" })
 
--- Warn if arrow keys are used in normal mode
+-- Remap arrow keys to hjkl-style motions (see the expr maps below, which
+-- make <up>/<down> scroll by display line)
 vim.keymap.set("n", "<left>", "h", { desc = "Use h to move instead" })
 vim.keymap.set("n", "<right>", "l", { desc = "Use l to move instead" })
-vim.keymap.set("n", "<up>", "k", { desc = "Use k to move instead" })
-vim.keymap.set("n", "<down>", "j", { desc = "Use j to move instead" })
 
 -- Buffer management
 vim.keymap.set("n", "<leader>bd", require("utils.bufremove").bufremove, { desc = "Delete Buffer" })

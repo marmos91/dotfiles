@@ -36,7 +36,8 @@ test("ignores a length stop that produced an answer", () => {
 test("ignores ordinary completions", () => {
 	assert.equal(isDegenerateLengthStop(msg("stop", [thinking])), false);
 	assert.equal(isDegenerateLengthStop(msg("toolUse", [thinking, toolCall])), false);
-	// A length stop mid-tool-call already ran; its result is persisted.
+	// A length stop's tool calls are failed, not executed, but their error
+	// tool-results are still persisted, so the message cannot be dropped.
 	assert.equal(isDegenerateLengthStop(msg("length", [thinking, toolCall])), false);
 });
 
@@ -64,7 +65,10 @@ function harness(thinkingLevel = "high") {
 		},
 		getThinkingLevel: () => level,
 		setThinkingLevel: (l: string) => {
+			const previousLevel = level;
 			level = l;
+			// Mirrors agent-session: the event is emitted asynchronously.
+			handlers.thinking_level_select?.({ level, previousLevel }, ctx);
 		},
 	};
 	const ctx: any = {
@@ -77,6 +81,11 @@ function harness(thinkingLevel = "high") {
 		fire: (m: any, proposed: any[] = []) =>
 			handlers.turn_end({ message: m, messageEntryId: "e1", entries: proposed }, ctx),
 		start: (reason = "startup") => handlers.session_start({ type: "session_start", reason }, ctx),
+		select: (l: string) => {
+			const previousLevel = level;
+			level = l;
+			handlers.thinking_level_select({ level, previousLevel }, ctx);
+		},
 		command: (n: string) => commands[n],
 		notes,
 		entries,
@@ -130,6 +139,19 @@ test("a clean turn restores the thinking level after escalation", () => {
 	assert.equal(h.level(), "high", "the level the user chose must come back");
 	assert.deepEqual(h.entries.at(-1)?.d, { action: "thinking-restore", level: "high" });
 	assert.ok(h.notes.some((n) => n.includes("restored")));
+});
+
+test("a user level change mid-collapse wins over the pending restore", () => {
+	const h = harness("high");
+	h.fire(loop);
+	h.fire(loop);
+	h.fire(loop); // escalate to off
+	assert.equal(h.level(), "off");
+
+	h.select("xhigh"); // user overrides while the collapse is being retried
+	h.fire(ok);
+	assert.equal(h.level(), "xhigh", "the user's choice must not be clobbered back to high");
+	assert.ok(!h.entries.some((e) => e.d.action === "thinking-restore"));
 });
 
 test("keeps entries proposed by earlier turn_end handlers", () => {

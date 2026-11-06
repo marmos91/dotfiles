@@ -178,8 +178,8 @@ in
   # sessions. It cannot be a config fix — mimir's vLLM accepts and ignores
   # thinking_token_budget (probe: budget 2000 -> 3250 reasoning tokens), so
   # only an extension can detect the empty length-stop and retry. pi loads
-  # *.ts from this directory directly via jiti, and never writes into it, so
-  # a store symlink is fine (unlike settings.json).
+  # *.ts from this directory directly via jiti; the repo symlink keeps .pi/
+  # the single source of truth, so edits take effect without a rebuild.
   home.file.".pi/agent/extensions/loop-breaker.ts".source =
     config.lib.file.mkOutOfStoreSymlink "${repoRoot}/.pi/agent/extensions/loop-breaker.ts";
 

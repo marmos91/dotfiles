@@ -15,9 +15,11 @@ vim.opt.mouse = "a"
 -- Don't show the mode, since it's already in the status line
 vim.opt.showmode = false
 
--- Sync clipboard between OS and Neovim.
--- only set clipboard if not in ssh, to make sure the OSC 52
--- integration works automatically. Requires Neovim >= 0.10.0
+-- Sync clipboard between OS and Neovim. Requires Neovim >= 0.10.0
+vim.opt.clipboard = "unnamedplus"
+
+-- Over SSH the local clipboard is unreachable, so route through OSC 52,
+-- which the terminal forwards to the local machine.
 if vim.env.SSH_TTY then
     vim.g.clipboard = {
         name = "OSC 52",
@@ -30,8 +32,6 @@ if vim.env.SSH_TTY then
             ["*"] = require("vim.ui.clipboard.osc52").paste("*"),
         },
     }
-else
-    vim.opt.clipboard = "unnamedplus"
 end
 
 vim.opt.completeopt = "menu,menuone,noselect"

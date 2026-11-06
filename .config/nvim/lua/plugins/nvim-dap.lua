@@ -21,7 +21,7 @@ return {
                 dap.listeners.before.event_exited.dapui_config = function()
                     dapui.close()
                 end
-            end
+            end,
         },
         "nvim-neotest/nvim-nio",
         {
@@ -38,6 +38,7 @@ return {
         },
         {
             "theHamsta/nvim-dap-virtual-text",
+            opts = {},
         },
     },
     init = function()
@@ -46,29 +47,29 @@ return {
     config = function()
         local dap = require("dap")
 
-        dap.configurations = {
-            go = {
-                {
-                    type = "delve",
-                    name = "Debug",
-                    request = "launch",
-                    program = "${file}",
-                },
-                {
-                    type = "delve",
-                    name = "Debug test", -- configuration for debugging test files
-                    request = "launch",
-                    mode = "test",
-                    program = "${file}",
-                },
-                -- works with go.mod packages and sub packages
-                {
-                    type = "delve",
-                    name = "Debug test (go.mod)",
-                    request = "launch",
-                    mode = "test",
-                    program = "./${relativeFileDirname}",
-                },
+        -- Assign rather than replace: mason-nvim-dap registers its own
+        -- codelldb/cpptools configurations first.
+        dap.configurations.go = {
+            {
+                type = "delve",
+                name = "Debug",
+                request = "launch",
+                program = "${file}",
+            },
+            {
+                type = "delve",
+                name = "Debug test", -- configuration for debugging test files
+                request = "launch",
+                mode = "test",
+                program = "${file}",
+            },
+            -- works with go.mod packages and sub packages
+            {
+                type = "delve",
+                name = "Debug test (go.mod)",
+                request = "launch",
+                mode = "test",
+                program = "./${relativeFileDirname}",
             },
         }
     end,
@@ -128,7 +129,7 @@ return {
             remap = false,
         },
         {
-            "<leader>dl",
+            "<leader>dbr",
             function()
                 require("dap").run_last()
             end,
@@ -137,11 +138,10 @@ return {
             remap = false,
         },
         {
-            "<leader>dq",
+            "<leader>dbq",
             function()
                 require("dap").terminate()
                 require("dapui").close()
-                require("nvim-dap-virtual-text").toggle()
             end,
             desc = "Terminate",
             nowait = true,
@@ -166,7 +166,7 @@ return {
             remap = false,
         },
         {
-            "<leader>de",
+            "<leader>dbe",
             function()
                 require("dap").set_exception_breakpoints({ "all" })
             end,
