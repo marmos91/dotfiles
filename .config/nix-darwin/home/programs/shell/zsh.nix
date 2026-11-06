@@ -40,7 +40,9 @@ in
       gg = "lazygit";
 
       # AI agents (route Claude Code through Headroom context compression)
-      claude = "headroom wrap claude --memory --code-graph";
+      # The GitHub MCP plugin reads GITHUB_PERSONAL_ACCESS_TOKEN; scope it to
+      # claude instead of exporting it to every process.
+      claude = "GITHUB_PERSONAL_ACCESS_TOKEN=$(gh auth token 2>/dev/null) headroom wrap claude --memory --code-graph";
 
       # tmux
       ta = "tmux attach";

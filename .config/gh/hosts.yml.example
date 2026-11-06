@@ -1,0 +1,7 @@
+# Redacted template. gh writes the real hosts.yml (untracked, gitignored);
+# run `gh auth login` instead of copying this.
+github.com:
+    user: <user>
+    git_protocol: ssh
+    users:
+        <user>: {}
