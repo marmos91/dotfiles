@@ -24,6 +24,12 @@
       url = "github:backnotprop/pstack";
       flake = false;
     };
+    # My own agent skills (repo-audit, repo-audit-fix, refute-root-cause),
+    # pinned and linked the same way as pstack.
+    mySkills = {
+      url = "github:marmos91/skills";
+      flake = false;
+    };
   };
 
   outputs =
@@ -36,6 +42,7 @@
       catppuccin,
       sops-nix,
       pstack,
+      mySkills,
       ...
     }:
     let
@@ -44,16 +51,41 @@
       hostname = "amaterasu";
 
       # Helper to create pkgs for a system
-      mkPkgs = system: import nixpkgs {
-        inherit system;
-        config.allowUnfree = true;
-        overlays = [
-          # nushell 0.112.1 has two SHLVL tests that fail in the Nix sandbox
-          (final: prev: {
-            nushell = prev.nushell.overrideAttrs (_: { doCheck = false; });
-          })
-        ];
+      mkPkgs =
+        system:
+        import nixpkgs {
+          inherit system;
+          config.allowUnfree = true;
+          overlays = [
+            # nushell 0.112.1 has two SHLVL tests that fail in the Nix sandbox
+            (final: prev: {
+              nushell = prev.nushell.overrideAttrs (_: {
+                doCheck = false;
+              });
+            })
+          ];
+        };
+
+      # Shared specialArgs for every home-manager configuration below.
+      # `inputs` lets home modules reach any flake input by name — adding
+      # one never touches this block again.
+      hmArgs = {
+        inherit username hostname inputs;
+        homeDirectory = "/Users/${username}";
       };
+      makeHomeConfig =
+        system:
+        home-manager.lib.homeManagerConfiguration {
+          pkgs = mkPkgs system;
+          extraSpecialArgs = hmArgs // {
+            homeDirectory = "/home/${username}";
+          };
+          modules = [
+            ./home
+            catppuccin.homeModules.catppuccin
+            sops-nix.homeManagerModules.sops
+          ];
+        };
     in
     {
       nixpkgs.config.allowUnfree = true;
@@ -84,7 +116,7 @@
                 useGlobalPkgs = true;
                 useUserPackages = true;
                 backupFileExtension = "backup";
-                extraSpecialArgs = { inherit username hostname; homeDirectory = "/Users/${username}"; pstackSrc = pstack; };
+                extraSpecialArgs = hmArgs;
                 users.${username} = {
                   imports = [
                     ./home
@@ -100,26 +132,10 @@
 
       # Linux configuration (standalone home-manager)
       homeConfigurations = {
-        ${username} = home-manager.lib.homeManagerConfiguration {
-          pkgs = mkPkgs "x86_64-linux";
-          extraSpecialArgs = { inherit username hostname; homeDirectory = "/home/${username}"; pstackSrc = pstack; };
-          modules = [
-            ./home
-            catppuccin.homeModules.catppuccin
-            sops-nix.homeManagerModules.sops
-          ];
-        };
+        ${username} = makeHomeConfig "x86_64-linux";
 
         # ARM Linux variant (e.g., Raspberry Pi, ARM servers)
-        "${username}-aarch64" = home-manager.lib.homeManagerConfiguration {
-          pkgs = mkPkgs "aarch64-linux";
-          extraSpecialArgs = { inherit username hostname; homeDirectory = "/home/${username}"; pstackSrc = pstack; };
-          modules = [
-            ./home
-            catppuccin.homeModules.catppuccin
-            sops-nix.homeManagerModules.sops
-          ];
-        };
+        "${username}-aarch64" = makeHomeConfig "aarch64-linux";
       };
     };
 }

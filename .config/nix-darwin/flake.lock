@@ -171,6 +171,22 @@
         "type": "github"
       }
     },
+    "mySkills": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1793744254,
+        "narHash": "sha256-eoUErQGJwDtovDPHhG8j7W0pxd94qhqu9F+M8eEzpr4=",
+        "owner": "marmos91",
+        "repo": "skills",
+        "rev": "20b141a3a4cbb17fcb76a0e78892c4e1e14905c4",
+        "type": "github"
+      },
+      "original": {
+        "owner": "marmos91",
+        "repo": "skills",
+        "type": "github"
+      }
+    },
     "nix": {
       "inputs": {
         "bdwgc": "bdwgc",
@@ -323,6 +339,7 @@
         "catppuccin": "catppuccin",
         "determinate": "determinate",
         "home-manager": "home-manager",
+        "mySkills": "mySkills",
         "nix-darwin": "nix-darwin",
         "nixpkgs": "nixpkgs_4",
         "pstack": "pstack",
