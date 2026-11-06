@@ -30,6 +30,7 @@ function show_help {
     echo "  --keep-stow       Keep stow installed"
     echo "  --keep-1password  Keep 1Password installed (Linux only)"
     echo "  --keep-docker     Keep Docker installed (Linux only)"
+    echo "  --purge-data      Also delete Docker volumes and the Nix store (off by default)"
     echo "  -y, --yes         Skip confirmation prompt"
     echo "  --help            Show this help message"
     echo ""
@@ -46,6 +47,7 @@ KEEP_NIX=false
 KEEP_STOW=false
 KEEP_1PASSWORD=false
 KEEP_DOCKER=false
+PURGE_DATA=false
 SKIP_CONFIRM=false
 
 while [[ $# -gt 0 ]]; do
@@ -68,6 +70,10 @@ while [[ $# -gt 0 ]]; do
             ;;
         --keep-docker)
             KEEP_DOCKER=true
+            shift
+            ;;
+        --purge-data)
+            PURGE_DATA=true
             shift
             ;;
         -y|--yes)
@@ -114,6 +120,14 @@ if [[ "$DOTFILES_ONLY" == false ]]; then
         warn "  - Home-manager/nix-darwin configuration"
         warn "  - All Nix-installed packages"
         warn "  - Nix itself"
+        # The Determinate installer removes /nix on its own; only the manual
+        # fallback is gated, so say so here rather than promise otherwise.
+        if [[ "$PURGE_DATA" == true ]]; then
+            warn "  - The Nix store at /nix (permanent)"
+        else
+            warn "  - The Nix store at /nix is removed by the Determinate installer;"
+            warn "    the manual fallback keeps it unless --purge-data is given"
+        fi
     else
         warn "  - Home-manager/nix-darwin configuration"
     fi
@@ -122,6 +136,12 @@ if [[ "$DOTFILES_ONLY" == false ]]; then
     fi
     if [[ "$OS" == "Linux" && "$KEEP_DOCKER" == false ]]; then
         warn "  - Docker Engine"
+        if [[ "$PURGE_DATA" == true ]]; then
+            warn "  - Docker data: /var/lib/docker and /var/lib/containerd"
+            warn "    (every image, container and named volume - unrecoverable)"
+        else
+            warn "  - Docker data is KEPT (pass --purge-data to delete it)"
+        fi
     fi
 fi
 echo ""
@@ -219,8 +239,12 @@ if [[ "$OS" == "Linux" && "$KEEP_1PASSWORD" == false ]]; then
             sudo rm -f /usr/share/polkit-1/actions/com.1password.1Password.policy 2>/dev/null || true
             sudo rm -f /etc/chromium/native-messaging-hosts/com.1password.1password.json 2>/dev/null || true
             sudo rm -f /etc/opt/chrome/native-messaging-hosts/com.1password.1password.json 2>/dev/null || true
-            sudo rm -rf /etc/chromium/policies/managed 2>/dev/null || true
-            sudo rm -rf /etc/opt/chrome/policies/managed 2>/dev/null || true
+            # Only 1Password's own policy files, then the directory only if it is
+            # empty — these roots are shared and may hold other policies. The
+            # filename 1Password writes is not fixed, so match the vendor prefix.
+            sudo rm -f /etc/chromium/policies/managed/com.1password*.json 2>/dev/null || true
+            sudo rm -f /etc/opt/chrome/policies/managed/com.1password*.json 2>/dev/null || true
+            sudo rmdir --ignore-fail-on-non-empty /etc/chromium/policies/managed /etc/opt/chrome/policies/managed 2>/dev/null || true
         fi
 
         # Clean up user data (optional - keep by default for safety)
@@ -255,9 +279,14 @@ if [[ "$OS" == "Linux" && "$KEEP_DOCKER" == false ]]; then
             sudo rm -f /etc/apt/keyrings/docker.asc 2>/dev/null || true
         fi
 
-        # Remove Docker data (images, containers, volumes)
-        sudo rm -rf /var/lib/docker 2>/dev/null || true
-        sudo rm -rf /var/lib/containerd 2>/dev/null || true
+        # Remove Docker data (images, containers, volumes) — opt-in only.
+        if [[ "$PURGE_DATA" == true ]]; then
+            warn "Deleting Docker data permanently: /var/lib/docker /var/lib/containerd"
+            sudo rm -rf /var/lib/docker 2>/dev/null || true
+            sudo rm -rf /var/lib/containerd 2>/dev/null || true
+        else
+            warn "Docker data kept at /var/lib/docker and /var/lib/containerd (pass --purge-data to remove)"
+        fi
 
         # Remove Docker group
         if getent group docker > /dev/null 2>&1; then
@@ -311,8 +340,14 @@ if [[ "$KEEP_NIX" == false ]]; then
             sudo launchctl unload /Library/LaunchDaemons/org.nixos.nix-daemon.plist 2>/dev/null || true
         fi
 
-        # Remove nix files
-        sudo rm -rf /nix 2>/dev/null || true
+        # Remove nix files. /nix holds the store — opt-in only here; the
+        # Determinate installer branch above always removes it.
+        if [[ "$PURGE_DATA" == true ]]; then
+            warn "Deleting the Nix store permanently: /nix"
+            sudo rm -rf /nix 2>/dev/null || true
+        else
+            warn "Nix store kept at /nix (pass --purge-data to remove it)"
+        fi
         sudo rm -rf /etc/nix 2>/dev/null || true
         sudo rm -f /etc/profile.d/nix.sh 2>/dev/null || true
         sudo rm -f /etc/bashrc.backup-before-nix 2>/dev/null || true
