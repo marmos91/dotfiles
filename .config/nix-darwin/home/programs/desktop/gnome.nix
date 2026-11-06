@@ -1,21 +1,11 @@
-{ pkgs, lib, ... }:
+{ config, pkgs, lib, ... }:
 let
-  # Catppuccin Mocha palette for GNOME Terminal (not supported by catppuccin/nix)
-  catppuccin = {
-    rosewater = "#f5e0dc";
-    pink = "#f5c2e7";
-    red = "#f38ba8";
-    yellow = "#f9e2af";
-    green = "#a6e3a1";
-    teal = "#94e2d5";
-    blue = "#89b4fa";
-    text = "#cdd6f4";
-    subtext1 = "#bac2de";
-    subtext0 = "#a6adc8";
-    surface2 = "#585b70";
-    surface1 = "#45475a";
-    base = "#1e1e2e";
-  };
+  # Catppuccin Mocha palette for GNOME Terminal (not supported by catppuccin/nix).
+  # Read from the flake input, as pi.nix does, so a catppuccin bump carries over.
+  p =
+    (builtins.fromJSON (
+      builtins.readFile "${config.catppuccin.sources.palette}/palette.json"
+    )).mocha.colors;
 in
 lib.mkIf pkgs.stdenv.hostPlatform.isLinux {
   # GNOME Shell extensions
@@ -97,29 +87,29 @@ lib.mkIf pkgs.stdenv.hostPlatform.isLinux {
         visibleName = "Catppuccin Mocha";
         font = "MesloLGS Nerd Font Mono 12";
         colors = {
-          foregroundColor = catppuccin.text;
-          backgroundColor = catppuccin.base;
+          foregroundColor = p.text.hex;
+          backgroundColor = p.base.hex;
           cursor = {
-            foreground = catppuccin.base;
-            background = catppuccin.rosewater;
+            foreground = p.base.hex;
+            background = p.rosewater.hex;
           };
           palette = [
-            catppuccin.surface1
-            catppuccin.red
-            catppuccin.green
-            catppuccin.yellow
-            catppuccin.blue
-            catppuccin.pink
-            catppuccin.teal
-            catppuccin.subtext1
-            catppuccin.surface2
-            catppuccin.red
-            catppuccin.green
-            catppuccin.yellow
-            catppuccin.blue
-            catppuccin.pink
-            catppuccin.teal
-            catppuccin.subtext0
+            p.surface1.hex
+            p.red.hex
+            p.green.hex
+            p.yellow.hex
+            p.blue.hex
+            p.pink.hex
+            p.teal.hex
+            p.subtext1.hex
+            p.surface2.hex
+            p.red.hex
+            p.green.hex
+            p.yellow.hex
+            p.blue.hex
+            p.pink.hex
+            p.teal.hex
+            p.subtext0.hex
           ];
         };
       };

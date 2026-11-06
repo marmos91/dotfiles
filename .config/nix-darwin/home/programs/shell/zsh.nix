@@ -2,6 +2,9 @@
 let
   isDarwin = pkgs.stdenv.hostPlatform.isDarwin;
 
+  # Feeds the `secrets` completion lists; the script itself lives in
+  # home/packages.nix.
+  secretNames = lib.concatStringsSep " " (lib.naturalSort (builtins.attrNames config.sops.secrets));
 in
 {
   programs.zsh = {
@@ -79,12 +82,6 @@ in
       # Raise file descriptor limit (macOS default is too low for many dev tools)
       ulimit -n 10240
 
-      # Override GNOME's SSH agent with 1Password (GNOME sets SSH_AUTH_SOCK at session start)
-      ${lib.optionalString (!isDarwin) ''
-      if [ -S "$HOME/.1password/agent.sock" ]; then
-        export SSH_AUTH_SOCK="$HOME/.1password/agent.sock"
-      fi
-      ''}
       # compinit is run (and cached) by oh-my-zsh; do not run it again here.
       # A second `compinit` re-audits all of fpath and rewrites the dump on
       # every shell, which costs ~1s of the startup time.
@@ -111,7 +108,9 @@ in
       setopt CORRECT INTERACTIVE_COMMENTS NO_BEEP
 
       # Keybindings
-      bindkey '^ ' autosuggest-accept  # Ctrl+Space to accept suggestion
+      # Alt-, rather than Ctrl+Space: tmux's prefix is C-Space, so it never
+      # reaches the pane there.
+      bindkey '^[,' autosuggest-accept
 
       # Development helpers
       mkcd() { mkdir -p "$1" && cd "$1"; }
@@ -131,13 +130,6 @@ in
           }
           ;;
       esac
-
-      bazel() {
-        unfunction bazel
-        # Load completion only when first used
-        source <(command bazel completion zsh 2>/dev/null || true)
-        bazel "$@"
-      }
 
       # Lazy load kubectl (biggest offender)
       kubectl() {
@@ -160,74 +152,8 @@ in
         command docker "$@"
       }
 
-      secrets() {
-        local secrets_dir="$XDG_CONFIG_HOME/nix-darwin/home/secrets"
-        case "$1" in
-          edit)
-            # The body lives in the `secrets-edit` script (development/bash.nix,
-            # home.packages) so bash and zsh share one implementation.
-            secrets-edit "''${2:-}"
-            ;;
-          view)
-            if [[ -n "$2" ]]; then
-              sops -d --extract "[\"$2\"]" "$secrets_dir/secrets.yaml"
-            else
-              sops -d "$secrets_dir/secrets.yaml"
-            fi
-            ;;
-          add)
-            if [[ -n "$2" ]]; then
-              local name="$2"
-              local target_path="$3"
-              if [[ -z "$target_path" ]]; then
-                echo "Usage: secrets add <name> <path>"
-                echo "Example: secrets add github_token \"\\\$HOME/.config/gh/token\""
-                return 1
-              fi
-              echo "Adding secret: $name -> $target_path"
-              echo ""
-              echo "Step 1: Add this to default.nix in the secrets section:"
-              echo ""
-              echo "      $name = {"
-              echo "        path = \"$target_path\";"
-              echo "        mode = \"0600\";"
-              echo "      };"
-              echo ""
-              read "?Press Enter to open default.nix..."
-              ''${EDITOR:-nvim} "$secrets_dir/default.nix"
-              echo ""
-              echo "Step 2: Add the secret value to secrets.yaml"
-              read "?Press Enter to edit secrets.yaml..."
-              sops "$secrets_dir/secrets.yaml"
-              echo ""
-              echo "Done! Run 'rebuild' to apply changes."
-            else
-              echo "Adding a new secret requires two steps:"
-              echo "1. Edit default.nix to define the secret path"
-              echo "2. Edit secrets.yaml to add the encrypted value"
-              echo ""
-              read "?Press Enter to open default.nix..."
-              ''${EDITOR:-nvim} "$secrets_dir/default.nix"
-              echo ""
-              read "?Press Enter to edit secrets.yaml..."
-              sops "$secrets_dir/secrets.yaml"
-              echo ""
-              echo "Done! Run 'rebuild' to apply changes."
-            fi
-            ;;
-          *)
-            echo "Usage: secrets <command> [args]"
-            echo ""
-            echo "Commands:"
-            echo "  edit [name]       Edit secrets (all or specific)"
-            echo "  view [name]       View decrypted secrets (all or specific)"
-            echo "  add [name path]   Add a new secret"
-            echo ""
-            echo "Available secrets: kubeconfig, aws_credentials, aws_config, rclone_config"
-            ;;
-        esac
-      }
-
+      # `secrets` itself is a script in home/packages.nix — one copy for both
+      # shells instead of two that drift.
       _secrets() {
         local -a commands secrets
         commands=(
@@ -235,7 +161,7 @@ in
           'view:View decrypted secrets'
           'add:Add a new secret'
         )
-        secrets=(kubeconfig aws_credentials aws_config rclone_config)
+        secrets=(${secretNames})
 
         case "$words[2]" in
           edit|view)

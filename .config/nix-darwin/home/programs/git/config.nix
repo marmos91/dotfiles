@@ -31,6 +31,7 @@ in
 
   programs.git = {
     enable = true;
+    lfs.enable = true;
 
     signing = {
       signByDefault = true;
@@ -95,17 +96,10 @@ in
 
       # SSH signing with the native toolchain (ssh-keygen -Y sign). No
       # `gpg.ssh.program` override — the default reads user.signingkey, which
-      # is a path to the on-disk key, so no agent is involved.
-      gpg.format = "ssh";
+      # is a path to the on-disk key, so no agent is involved. Hand-written
+      # rather than `signing.allowedSigners`, which writes the file itself: the
+      # content is a sops secret, so only the path can be set here.
       "gpg \"ssh\"".allowedSignersFile = "~/.config/git/allowed_signers";
-
-      # Git LFS
-      filter.lfs = {
-        clean = "git-lfs clean -- %f";
-        smudge = "git-lfs smudge -- %f";
-        process = "git-lfs filter-process";
-        required = true;
-      };
 
       # Include local config
       include.path = "~/.config/git/config.local";

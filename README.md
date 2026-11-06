@@ -208,8 +208,8 @@ This automatically detects your platform and runs the appropriate command:
 │   │       ├── programs/
 │   │       │   ├── desktop/        # GNOME settings (Linux)
 │   │       │   ├── terminal/       # ghostty, tmux, starship
-│   │       │   ├── shell/          # zsh, fish
-│   │       │   ├── git/            # git, lazygit, delta
+│   │       │   ├── shell/          # zsh
+│   │       │   ├── git/            # git (incl. delta), lazygit
 │   │       │   └── utilities/      # bat, fzf, btop, k9s, etc.
 │   │       └── development/        # Language toolchains
 │   └── nvim/                # Neovim configuration

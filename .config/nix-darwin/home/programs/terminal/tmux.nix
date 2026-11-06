@@ -87,11 +87,14 @@
       bind k select-pane -U
       bind l select-pane -R
 
-      # Vim-style pane resizing
-      bind -r j resize-pane -D 5
-      bind -r k resize-pane -U 5
-      bind -r l resize-pane -R 5
-      bind -r h resize-pane -L 5
+      # Resizing on Alt: a second `bind` on the same key replaces the first, so
+      # h/j/k/l would have silently killed the navigation above, and capitals
+      # would take tmux's own `prefix L` (switch-client -l). Alt-h/j/k/l are
+      # unbound in the prefix table.
+      bind -r M-h resize-pane -L 5
+      bind -r M-j resize-pane -D 5
+      bind -r M-k resize-pane -U 5
+      bind -r M-l resize-pane -R 5
 
       # Pane synchronization
       bind-key g set-window-option synchronize-panes\; display-message "synchronize-panes is now #{?pane_synchronized,on,off}"

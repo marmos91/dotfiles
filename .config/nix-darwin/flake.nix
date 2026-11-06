@@ -56,14 +56,6 @@
         import nixpkgs {
           inherit system;
           config.allowUnfree = true;
-          overlays = [
-            # nushell 0.112.1 has two SHLVL tests that fail in the Nix sandbox
-            (final: prev: {
-              nushell = prev.nushell.overrideAttrs (_: {
-                doCheck = false;
-              });
-            })
-          ];
         };
 
       # Shared specialArgs for every home-manager configuration below.
@@ -88,8 +80,6 @@
         };
     in
     {
-      nixpkgs.config.allowUnfree = true;
-
       # macOS configuration (nix-darwin + home-manager)
       darwinConfigurations = {
         ${hostname} = nix-darwin.lib.darwinSystem {

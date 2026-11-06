@@ -55,8 +55,8 @@ flake.nix                    # Main entry point, defines inputs and outputs
     ├── packages.nix        # User packages and custom scripts
     ├── programs/           # Shell, terminal, git, utilities
     │   ├── terminal/       # ghostty, tmux, starship, atuin
-    │   ├── shell/          # zsh (primary), fish
-    │   ├── git/            # git config, lazygit
+    │   ├── shell/          # zsh
+    │   ├── git/            # git config (incl. delta), lazygit
     │   └── utilities/      # bat, fzf, eza, ripgrep, etc.
     └── development/        # Language toolchains
         ├── go.nix, python.nix, rust.nix, node.nix, bash.nix, nix.nix
@@ -102,7 +102,9 @@ Casks and brews from a third-party tap **must be tap-qualified**
 (`nikitabobko/tap/aerospace`, not `aerospace`). `brew bundle --cleanup` rewrites
 Homebrew's trust store from the generated Brewfile, and an unqualified name
 resolves to the core cask — leaving the tap's version untrusted, which makes
-`brew cleanup` exit 1 and fails the whole activation.
+`brew cleanup` exit 1 and fails the whole activation. Trust is declared in
+`homebrew.taps` with `trusted = true`, which emits `trusted: true` into the
+Brewfile; do not hand-write the trust store from an activation script.
 
 `onActivation.autoUpdate`/`upgrade` are deliberately `false`: non-deterministic
 third-party upgrades during activation made `rebuild` slow, interactive, and
