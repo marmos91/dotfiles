@@ -16,6 +16,7 @@
     ./pi.nix
     ./rclone.nix
     ./ripgrep.nix
+    ./yazi.nix
     ./zoxide.nix
   ];
 }
