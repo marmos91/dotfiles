@@ -70,6 +70,9 @@ vim.opt.splitkeep = "screen"
 vim.opt.ignorecase = true
 vim.opt.smartcase = true
 
+-- Highlight search matches (<esc> clears them, see keymaps.lua)
+vim.opt.hlsearch = true
+
 -- Keep signcolumn on by default
 vim.opt.signcolumn = "yes"
 
@@ -133,5 +136,3 @@ vim.opt.listchars = {
     extends = "›",
     precedes = "‹",
 }
-
--- vim: ts=2 sts=2 sw=2 et
