@@ -12,14 +12,12 @@
       awscli2
       bazel-watcher
       bazelisk
-      btop
       buildifier
       certbot
       cmake
       commitlint
       ffmpeg
       gh
-      git-lfs
       goreleaser
       go-task
       hub
@@ -31,8 +29,6 @@
       markdownlint-cli
       fastfetch
       neovim
-      opencode
-      pi-coding-agent
       pulumi
       pulumiPackages.pulumi-go
       (scaleway-cli.overrideAttrs (_: { doCheck = false; }))
@@ -145,6 +141,70 @@
             done
       '')
 
+      # Edit one secret without decrypting the whole store to a fixed path, and
+      # without ever replacing it with plaintext. Shared by zsh and bash.
+      (pkgs.writeShellScriptBin "secrets" ''
+        set -u
+
+        # The store lives in the stowed dotfiles checkout, next to its .sops.yaml.
+        secrets_dir="''${XDG_CONFIG_HOME:-$HOME/.config}/nix-darwin/home/secrets"
+        store="$secrets_dir/secrets.yaml"
+
+        tmp_dir=""
+        # Plaintext never outlives the command, including on Ctrl-C in $EDITOR.
+        cleanup() { [ -n "$tmp_dir" ] && rm -rf "$tmp_dir"; }
+        trap cleanup EXIT
+        trap 'cleanup; exit 130' INT TERM HUP
+
+        case "''${1:-}" in
+          edit)
+            # One implementation for both shells: secrets-edit
+            # (development/bash.nix) edits a copy and renames it into place.
+            exec secrets-edit "''${2:-}"
+            ;;
+          view)
+            if [ -n "''${2:-}" ]; then
+              exec sops -d --extract "[\"$2\"]" "$store"
+            fi
+            exec sops -d "$store"
+            ;;
+          add)
+            if [ -n "''${2:-}" ] && [ -z "''${3:-}" ]; then
+              echo "Usage: secrets add <name> <path>" >&2
+              exit 1
+            fi
+            if [ -n "''${2:-}" ]; then
+              echo "Adding secret: $2 -> $3"
+              echo ""
+              echo "Step 1: add this to the secrets block of default.nix:"
+              echo "      $2 = mk \"$3\";"
+              printf 'Press Enter to open default.nix... '
+            else
+              echo "Adding a new secret requires two steps:"
+              echo "1. Edit default.nix to define the secret path"
+              echo "2. Edit secrets.yaml to add the encrypted value"
+              echo ""
+              printf 'Press Enter to open default.nix... '
+            fi
+            read -r _
+            ''${EDITOR:-nvim} "$secrets_dir/default.nix"
+            echo ""
+            printf 'Press Enter to edit secrets.yaml... '
+            read -r _
+            exec sops "$store"
+            ;;
+          *)
+            echo "Usage: secrets <command> [args]"
+            echo ""
+            echo "Commands:"
+            echo "  edit [name]       Edit secrets (all or specific)"
+            echo "  view [name]       View decrypted secrets (all or specific)"
+            echo "  add [name path]   Add a new secret"
+            exit 1
+            ;;
+        esac
+      '')
+
       # Find and kill agent-spawned shells orphaned to PID 1 that are burning CPU.
       # pi and Claude Code spawn bash-tool shells detached (setsid); when the
       # parent agent dies, the shell and its `(while :; do :; done)` load jobs
@@ -157,7 +217,16 @@
 
         while [ $# -gt 0 ]; do
           case "$1" in
-            -t) THRESH=$2; shift 2 ;;
+            -t)
+              # gawk compares "$3+0 >= t", so a non-numeric t matches every
+              # candidate and -y would kill all of them. The "x" prefix keeps
+              # the empty case expressible inside this Nix string.
+              case "x''${2:-}" in
+                x | x*[!0-9]*) echo "-t needs a percentage" >&2; exit 1 ;;
+              esac
+              THRESH="$2"
+              shift 2
+              ;;
             -y) ASSUME_YES=1; shift ;;
             --dry-run) DRY=1; shift ;;
             -h|--help)
@@ -170,7 +239,7 @@
           esac
         done
         # non-interactive and not told to kill -> just report
-        [ -t 0 ] && [ "$ASSUME_YES" != 1 ] && DRY=1
+        if [ ! -t 0 ] && [ "$ASSUME_YES" != 1 ]; then DRY=1; fi
 
         # PPID 1 = orphaned. Only agent shells (zsh/bash/sh -c), only busy ones.
         CANDIDATES=$(ps -eo pid,ppid,pcpu,command | ${pkgs.gawk}/bin/awk -v t="$THRESH" '

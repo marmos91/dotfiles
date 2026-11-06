@@ -3,7 +3,8 @@
 #
 # Rendered via sops because google-docs carries OAuth client credentials
 # (same sops secrets Claude already uses). tokensave/headroom are local stdio
-# binaries; context7 is a remote HTTP MCP. Figma's remote MCP is gated to its
+# binaries (tokensave is installed by hand, not by this repo); context7 is a
+# remote HTTP MCP. Figma's remote MCP is gated to its
 # MCP Catalog (DCR 403 for unlisted clients) and the desktop route needs the
 # Figma app — add framelink figma-developer-mcp (npx, FIGMA_API_KEY) if ever
 # needed. OAuth tokens live in the OS keychain, never here.
@@ -24,6 +25,8 @@
         # today, and npm_config_ignore_scripts keeps install scripts of it and
         # its deps from running. Bump the version deliberately.
         google-docs = {
+          # Store path, not bare `npx`: this client may be launched from the GUI,
+          # where PATH is /usr/bin:/bin:/usr/sbin:/sbin (see the obsidian note).
           command = "${pkgs.nodejs}/bin/npx";
           args = [ "-y" "@a-bonus/google-docs-mcp@1.11.3" ];
           env = {

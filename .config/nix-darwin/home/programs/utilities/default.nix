@@ -3,7 +3,6 @@
   imports = [
     ./bat.nix
     ./btop.nix
-    ./delta.nix
     ./eza.nix
     ./fd.nix
     ./fzf.nix
@@ -15,7 +14,6 @@
     ./obsidian.nix
     ./opencode.nix
     ./pi.nix
-    ./rclone.nix
     ./ripgrep.nix
     ./yazi.nix
     ./zoxide.nix

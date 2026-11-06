@@ -36,18 +36,15 @@
 
   system.stateVersion = 5;
   system.primaryUser = username;
-  nixpkgs.hostPlatform = "aarch64-darwin";
 
   environment = {
+    # Kept for the root/non-interactive context: /run/current-system/sw/bin is
+    # not created from home-manager, and activation runs there. Everything the
+    # user needs comes from home.packages or a `${pkgs.x}/bin/y` store path.
     systemPackages = with pkgs; [
       coreutils
       curl
-      vim
-      git
-      gnused
-      gawk
     ];
     systemPath = [ "/opt/homebrew/bin" ];
-    pathsToLink = [ "/Applications" ];
   };
 }
