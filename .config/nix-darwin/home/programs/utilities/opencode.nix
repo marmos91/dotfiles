@@ -14,15 +14,22 @@
 { config, pkgs, lib, ... }:
 let
   localBin = "${config.home.homeDirectory}/.local/bin";
-  modalities = {
-    input = [ "text" "image" ];
-    output = [ "text" ];
-  };
   # The gateway takes reasoning effort as a 0-100 number, not a named level.
   thinking = effort: {
     chat_template_kwargs = {
       thinking = true;
       reasoning_effort = effort;
+    };
+  };
+  # Per-model settings opencode has and pi does not.
+  opencodeExtras."vllm/mimir" = {
+    options = thinking 50;
+    variants = {
+      none.chat_template_kwargs.thinking = false;
+      low = thinking 25;
+      high = thinking 50;
+      xhigh = thinking 75;
+      max = thinking 100;
     };
   };
 in
@@ -49,34 +56,23 @@ in
         chunkTimeout = 300000;
         headers."x-bf-passthrough-extra-params" = "true";
       };
-      models = {
-        "vllm/mimir" = {
-          name = "Mimir";
-          attachment = true;
-          inherit modalities;
-          limit = {
-            context = 917504;
-            output = 131072;
-          };
-          options = thinking 50;
-          variants = {
-            none.chat_template_kwargs.thinking = false;
-            low = thinking 25;
-            high = thinking 50;
-            xhigh = thinking 75;
-            max = thinking 100;
-          };
-        };
-        "cubbit/mimir-small" = {
-          name = "Mimir Small";
-          attachment = true;
-          inherit modalities;
-          limit = {
-            context = 229376;
-            output = 32768;
-          };
-        };
-      };
+      models = lib.listToAttrs (
+        map (m: {
+          name = m.id;
+          value = {
+            inherit (m) name;
+            attachment = true;
+            modalities = {
+              inherit (m) input;
+              output = [ "text" ];
+            };
+            limit = {
+              context = m.contextWindow;
+              output = m.maxTokens;
+            };
+          } // (opencodeExtras.${m.id} or { });
+        }) (import ./mimir-models.nix)
+      );
     };
     model = "cubbit/vllm/mimir";
     share = "disabled";
