@@ -6,5 +6,3 @@ if not vim.uv.fs_stat(lazypath) then
     vim.fn.system({ "git", "clone", "--filter=blob:none", "--branch=stable", lazyrepo, lazypath })
 end ---@diagnostic disable-next-line: undefined-field
 vim.opt.rtp:prepend(lazypath)
-
--- vim: ts=2 sts=2 sw=2 et
