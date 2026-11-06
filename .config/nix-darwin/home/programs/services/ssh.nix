@@ -10,17 +10,10 @@ in
     includes = [ "~/.ssh/config.d/*" ];
 
     settings = {
+      # Everything ssh already defaults to is left out on purpose; only the
+      # agent decision and the macOS keychain lookup are real here.
       "*" = {
-        ForwardAgent = false;
-        ServerAliveInterval = 0;
-        ServerAliveCountMax = 3;
-        Compression = false;
         AddKeysToAgent = "yes";
-        HashKnownHosts = false;
-        UserKnownHostsFile = "~/.ssh/known_hosts";
-        ControlMaster = "no";
-        ControlPath = "~/.ssh/master-%r@%n:%p";
-        ControlPersist = "no";
       } // lib.optionalAttrs isDarwin {
         UseKeychain = "yes";
       };

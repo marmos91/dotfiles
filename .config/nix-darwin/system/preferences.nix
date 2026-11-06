@@ -38,7 +38,7 @@
               arrangement = "date-modified";
             };
           }
-          "/Applications"
+          { folder.path = "/Applications"; }
         ];
         mru-spaces = false;
         showhidden = true;

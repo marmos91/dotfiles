@@ -314,11 +314,13 @@ in
     fi
 
     # Drop the Anthropic credential so Opus is never reachable from pi.
+    # Skipped entirely on --dry-run: $DRY_RUN_CMD is `echo`, so prefixing the
+    # redirect would still leave an auth.json.new behind (verified).
     auth="${piDir}/auth.json"
-    if [ -f "$auth" ] && ${jq} -e 'has("anthropic")' "$auth" >/dev/null; then
+    if [ -z "$DRY_RUN_CMD" ] && [ -f "$auth" ] && ${jq} -e 'has("anthropic")' "$auth" >/dev/null; then
       ${jq} 'del(.anthropic)' "$auth" > "$auth.new"
       chmod 600 "$auth.new"
-      $DRY_RUN_CMD mv "$auth.new" "$auth"
+      mv "$auth.new" "$auth"
     fi
 
     # Warn when the live settings.json has drifted from the repo seed. Because
