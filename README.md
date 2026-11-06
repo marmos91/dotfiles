@@ -34,7 +34,7 @@ chmod +x install.sh && ./install.sh
 
 | Flag | Description |
 |------|-------------|
-| `--shell <shell>` | Set default shell (`zsh` or `bash`), Linux only. Default: `zsh`. Ignored on macOS, where `system/darwin.nix` sets zsh |
+| `--shell <shell>` | Set default shell (`zsh` or `bash`), Linux only. Default: `zsh`. Ignored on macOS, which keeps its own `/bin/zsh` as the login shell |
 | `--shell-only` | Only change the default shell, skip full installation |
 | `--no-stow` | Skip stowing dotfiles |
 | `--skip-nix` | Skip Nix installation (use existing Nix) |
@@ -250,7 +250,7 @@ Key files to customize:
 | Purpose | File |
 |---------|------|
 | Theme (flavor/accent) | `home/catppuccin.nix` |
-| Shell aliases | `home/programs/shell/zsh.nix` and `home/development/bash.nix` (keep both in sync) |
+| Shell aliases | `home/programs/shell/common.nix` (both shells); zsh-only ones in `home/programs/shell/zsh.nix` |
 | Git config | `home/programs/git/config.nix` |
 | Neovim plugins | `.config/nvim/lua/plugins/` |
 | Terminal settings | `home/programs/terminal/` |

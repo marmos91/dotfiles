@@ -138,11 +138,11 @@ Create a new file in `.config/nvim/lua/plugins/`, Lazy.nvim auto-discovers it.
 
 ### Adding shell aliases
 
-Aliases live in two `shellAliases` tables that are not shared:
-`.config/nix-darwin/home/programs/shell/zsh.nix` and
-`.config/nix-darwin/home/development/bash.nix`. Add a portable alias to both.
-zsh also has `cd`, `claude`, `gcal-setup`, `neofetch` and `nix-shell`, which bash
-lacks. The `rebuild` function is defined twice the same way, in each file's init block.
+Portable aliases and functions (`rebuild`, `claude`, `mkcd`, ...) live once in
+`.config/nix-darwin/home/programs/shell/common.nix`, which both
+`programs/shell/zsh.nix` and `programs/shell/bash.nix` import. Put zsh-only
+aliases in `zsh.nix` (today: `cd`, `gcal-setup`, `neofetch`, `nix-shell`; the
+`tx*` tmuxinator aliases are zsh-only too).
 
 ## Commit Guidelines
 
