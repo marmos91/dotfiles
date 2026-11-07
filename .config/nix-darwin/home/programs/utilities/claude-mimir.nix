@@ -54,7 +54,7 @@ let
     exec ${pkgs.claude-code}/bin/claude "$@"
   '';
 in
-lib.mkIf pkgs.stdenv.isDarwin {
+lib.mkIf pkgs.stdenv.hostPlatform.isDarwin {
   home.packages = [ claude-mimir ];
 
   home.file = lib.genAttrs [ "mimir" "mimir-pro" "mimir-slim" ] (n: {
