@@ -1,6 +1,6 @@
 {
   "theme": "catppuccin-mocha",
-  "defaultProvider": "cubbit",
+  "defaultProvider": "cubbit-headroom",
   "defaultModel": "cubbit/mimir-pro",
   "defaultThinkingLevel": "medium",
   "hideThinkingBlock": true,

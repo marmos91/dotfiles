@@ -25,6 +25,10 @@ let
 in
 {
   home.file.".claude/skills/graphify".source = ./graphify-skill;
+  # pi gets the same text (the package's skill-pi.md is identical to
+  # skill.md); a copy pi installed itself went stale and made `graphify`
+  # warn about a skill newer than the package.
+  home.file.".pi/agent/skills/graphify".source = ./graphify-skill;
 
   home.activation.graphify = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
     if ! "${venv}/bin/graphify" --version 2>/dev/null | grep -q "${pin}"; then
