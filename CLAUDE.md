@@ -42,29 +42,7 @@ stow .
 
 ### Nix Darwin Configuration (`.config/nix-darwin/`)
 
-```
-flake.nix                    # Main entry point, defines inputs and outputs
-├── system/                  # System-level (nix-darwin), imported by system/default.nix
-│   ├── darwin.nix          # Core Nix settings, system packages
-│   ├── homebrew.nix        # Homebrew casks and packages
-│   ├── preferences.nix     # macOS system preferences
-│   └── security.nix        # Touch ID sudo, firewall, screensaver lock
-└── home/                    # User-level (home-manager), entry point home/default.nix
-    ├── env.nix             # Environment variables
-    ├── packages.nix        # User packages, nerd-fonts
-    ├── catppuccin.nix, claude.nix, agent-skills.nix
-    ├── scripts/            # Custom scripts, one writeShellScriptBin per file
-    ├── programs/           # Shell, terminal, git, utilities, gnupg.nix
-    │   ├── terminal/       # ghostty, tmux, tmuxinator, starship, atuin, carapace
-    │   ├── shell/          # zsh, bash, common.nix (shared aliases/functions)
-    │   ├── git/            # git config (incl. delta), lazygit
-    │   ├── desktop/        # GNOME (Linux)
-    │   ├── services/       # ssh
-    │   └── utilities/      # bat, fzf, eza, ripgrep, mcp, pi, gcal-personal-block, etc.
-    ├── development/        # Language toolchains
-    │   └── go.nix, python.nix, rust.nix, node.nix, bash.nix, nix.nix
-    └── secrets/            # sops-nix (see secrets/README.md)
-```
+Entry point `flake.nix`; system-level modules in `system/`, home-manager modules in `home/` (one script per file in `home/scripts/`).
 
 **Key settings:**
 
@@ -78,21 +56,7 @@ flake.nix                    # Main entry point, defines inputs and outputs
 
 ### Neovim Configuration (`.config/nvim/`)
 
-```
-init.lua                     # Entry point
-└── lua/
-    ├── options.lua         # Vim settings (leader=space, relative numbers)
-    ├── keymaps.lua         # Custom keybindings
-    ├── autocmds.lua        # Autocommands
-    ├── lazy-bootstrap.lua  # Lazy.nvim bootstrap
-    ├── lazy-plugins.lua    # Plugin manager setup
-    ├── utils/              # Helpers (bufremove.lua)
-    └── plugins/            # One file per plugin spec
-```
-
-**LSP servers configured** (`servers` in `lua/plugins/lspconfig.lua`): bashls, bzl (macOS only), cssls, dockerls, docker_compose_language_service, eslint, gopls, helm_ls, html, jsonls, lua_ls, marksman, pylsp, taplo, terraformls, vtsls, yamlls (Rust uses rustaceanvim)
-
-**Formatters** (`formatters_by_ft` in `lua/plugins/conform.lua`): stylua (lua), black (python), buildifier (bzl), shfmt (bash/sh), markdownlint (markdown), nixfmt (nix), rustfmt (rust). Other filetypes fall back to the LSP formatter: gofumpt is applied by gopls (`gofumpt = true`), TypeScript by vtsls
+LSP servers: `servers` in `lua/plugins/lspconfig.lua` (Rust uses rustaceanvim). Formatters: `formatters_by_ft` in `lua/plugins/conform.lua`; other filetypes fall back to the LSP formatter (gofumpt via gopls).
 
 ### Stow Structure
 
