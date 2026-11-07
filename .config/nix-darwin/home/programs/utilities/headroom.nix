@@ -19,9 +19,16 @@
 #                              session logs, all on this provider. The gateway
 #                              has its own limits, so the local one is only
 #                              self-inflicted backpressure.
-#   --no-ccr-inject-tool       pi is a streaming client that cannot resolve
+#   --no-ccr                   pi is a streaming client that cannot resolve
 #                              the injected headroom_retrieve MCP tool, so
-#                              the marker is dead weight in every request.
+#                              the tool and its markers are dead weight in
+#                              every request. (0.30 had --no-ccr-inject-tool;
+#                              0.43 removed it, and --no-ccr is its help text's
+#                              advice for streaming / non-MCP clients.)
+#
+# Upgrade by bumping `pin`, never with `headroom update`: activation reinstalls
+# the pin whenever the venv reports another version, so a self-update is undone
+# (downgraded) on the next rebuild, under the running proxies.
 #
 # Do NOT add --request-timeout-seconds here. It looks tempting (the default is
 # 300s and Mimir allows 131072 output tokens), but it is httpx's *read* timeout
@@ -39,7 +46,7 @@
 let
   venv = "${config.home.homeDirectory}/.local/share/headroom-venv";
   bin = "${config.home.homeDirectory}/.local/bin/headroom";
-  pin = "0.30.0";
+  pin = "0.43.1";
   proxyPort = 8788;
   mimirUrlFile = config.sops.secrets.mimir_base_url.path;
   logDir = "${config.home.homeDirectory}/.headroom/logs";
@@ -50,6 +57,10 @@ in
       $DRY_RUN_CMD ${pkgs.python313}/bin/python3 -m venv --clear "${venv}"
       $DRY_RUN_CMD "${venv}/bin/pip" install --quiet --upgrade pip
       $DRY_RUN_CMD "${venv}/bin/pip" install --quiet "headroom-ai[all]==${pin}"
+      # A proxy still running the old version lazily imports modules that the
+      # new install no longer has (ModuleNotFoundError on every error path).
+      # Restart the launchd proxy; `headroom wrap` proxies need a new session.
+      $DRY_RUN_CMD /bin/launchctl kickstart -k "gui/$(id -u)/org.nix-community.home.headroom-proxy" 2>/dev/null || true
     fi
     $DRY_RUN_CMD mkdir -p "${config.home.homeDirectory}/.local/bin"
     $DRY_RUN_CMD ln -sf "${venv}/bin/headroom" "${bin}"
@@ -71,7 +82,7 @@ in
           exec "${bin}" proxy --port ${toString proxyPort} \
             --openai-api-url "$(cat "${mimirUrlFile}")" \
             --no-rate-limit \
-            --no-ccr-inject-tool
+            --no-ccr
         ''
       ];
       RunAtLoad = true;
