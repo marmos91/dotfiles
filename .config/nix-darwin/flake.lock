@@ -35,6 +35,22 @@
         "type": "github"
       }
     },
+    "claude-mimir": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1793893849,
+        "narHash": "sha256-ejiQkqQQWlAmSj7n1G1/CQUO2O1lnuhLcIPodHL7Nxo=",
+        "owner": "didimelli",
+        "repo": "claude-mimir",
+        "rev": "06fa535a6e118412f320a179c51c80c762e3dc8d",
+        "type": "github"
+      },
+      "original": {
+        "owner": "didimelli",
+        "repo": "claude-mimir",
+        "type": "github"
+      }
+    },
     "determinate": {
       "inputs": {
         "determinate-nixd-aarch64-darwin": "determinate-nixd-aarch64-darwin",
@@ -337,6 +353,7 @@
     "root": {
       "inputs": {
         "catppuccin": "catppuccin",
+        "claude-mimir": "claude-mimir",
         "determinate": "determinate",
         "home-manager": "home-manager",
         "mySkills": "mySkills",
