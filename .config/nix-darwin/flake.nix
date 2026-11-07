@@ -30,6 +30,12 @@
       url = "github:marmos91/skills";
       flake = false;
     };
+    # Davide's Claude Code <-> Mimir gateway (it-router). Built from source
+    # by home/programs/utilities/claude-mimir.nix.
+    claude-mimir = {
+      url = "github:didimelli/claude-mimir";
+      flake = false;
+    };
   };
 
   outputs =

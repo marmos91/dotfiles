@@ -3,6 +3,7 @@
   imports = [
     ./bat.nix
     ./btop.nix
+    ./claude-mimir.nix
     ./eza.nix
     ./fd.nix
     ./fzf.nix
