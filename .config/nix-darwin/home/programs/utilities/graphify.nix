@@ -21,7 +21,7 @@
 let
   venv = "${config.home.homeDirectory}/.local/share/graphify-venv";
   bin = "${config.home.homeDirectory}/.local/bin/graphify";
-  pin = "0.9.5";
+  pin = "0.9.70";
 in
 {
   home.file.".claude/skills/graphify".source = ./graphify-skill;
