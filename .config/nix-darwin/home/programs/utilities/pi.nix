@@ -31,13 +31,13 @@
 # Two settings in that seed are load-bearing for Mimir and should not be
 # "simplified" back to the defaults:
 #
-#   compaction.modelOverrides["cubbit/vllm/mimir"].reserveTokens = 131072
+#   compaction.modelOverrides["cubbit/cubbit/mimir"].reserveTokens = 131072 (and mimir-pro)
 #     The base reserveTokens stays at pi's default 16384, which is correct for
 #     ordinary models, and the Mimir entries are overridden because the value
 #     has to be the model's maxTokens. The override key is exactly
 #     `${model.provider}/${model.id}` (settings-manager.js), and pi reports
-#     the model id as "vllm/mimir", so the key is the three-segment
-#     "cubbit/vllm/mimir" — not "cubbit/vllm".
+#     the model id as "cubbit/mimir", so the key is the three-segment
+#     "cubbit/cubbit/mimir" — not "cubbit/cubbit".
 #     Leaving the default 16384 sets pi's native compaction threshold at
 #     contextWindow - 16384 = 901120 tokens. That is not past the server's
 #     ~1,048,561-input limit, but it means the one summarization request that
@@ -49,7 +49,7 @@
 #     summarizer a ~105k-token budget. Pi's docstring for the setting says it
 #     "reserves room for the LLM's response", and for a reasoning model that
 #     is maxTokens, not 16k.
-#     cubbit/mimir-small keeps the default shape with its own 32768 maxTokens
+#     cubbit/mimir-slim keeps the default shape with its own 32768 maxTokens
 #     because a 131072 reserve on a 229376 window would leave it almost no
 #     working context.
 #
@@ -283,13 +283,18 @@ in
     # so a later seed edit is otherwise silently ignored — which has already
     # happened twice. Compare only the keys the seed declares: pi rewrites
     # lastChangelogVersion on launch, so a whole-file diff would warn on every
-    # rebuild until the warning meant nothing. A drifted key does warn.
+    # rebuild until the warning meant nothing. A drifted key does warn. Inside
+    # an object, only the seed's own sub-keys count: pi fills in defaults such
+    # as compaction.enabled, which are not drift.
     # Warn rather than overwrite: "pi install" legitimately adds packages, and
     # clobbering the live file on every rebuild would discard runtime state.
     drifted=""
     for key in $(${jq} -r 'keys[]' "${repoRoot}/.pi/agent/seed/settings.json"); do
       if ! ${jq} -e --arg k "$key" --slurpfile s "${repoRoot}/.pi/agent/seed/settings.json" \
-           '.[$k] == $s[0][$k]' "${piDir}/settings.json" >/dev/null 2>&1; then
+           '$s[0][$k] as $want | .[$k]
+              | if type == "object" and ($want | type) == "object"
+                then with_entries(select(.key as $x | $want | has($x))) else . end
+              | . == $want' "${piDir}/settings.json" >/dev/null 2>&1; then
         drifted="$drifted $key"
       fi
     done

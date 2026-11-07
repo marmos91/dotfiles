@@ -5,9 +5,10 @@
 # files (opencode does resolve `{file:...}`, unlike pi), and the theme is
 # pinned to Catppuccin Mocha.
 #
-# Model ids must match what the gateway serves (`GET /v1/models`:
-# `vllm/mimir`, `cubbit/mimir-small`) — opencode sends the model key
-# verbatim, so a stale id is a hard 404 rather than a silent fallback.
+# Model ids are the manifest's (`cubbit/mimir`, `cubbit/mimir-pro`,
+# `cubbit/mimir-slim`), which the gateway accepts as aliases of the
+# `vllm/*` names in `GET /v1/models`. opencode sends the model key
+# verbatim, so an id the gateway does not know is a hard 404.
 #
 # The long timeouts are not optional: `output` is 131072 tokens, and a
 # full-length generation comfortably outruns opencode's stock timeout.
@@ -22,7 +23,7 @@ let
     };
   };
   # Per-model settings opencode has and pi does not.
-  opencodeExtras."vllm/mimir" = {
+  opencodeExtras."cubbit/mimir" = {
     options = thinking 50;
     variants = {
       none.chat_template_kwargs.thinking = false;
@@ -32,6 +33,10 @@ let
       max = thinking 100;
     };
   };
+  # As the manifest: Pro takes a named reasoning_effort, not a 0-100 number.
+  opencodeExtras."cubbit/mimir-pro".variants = lib.genAttrs [ "auto" "low" "high" "max" ] (
+    effort: { reasoning_effort = effort; }
+  );
 in
 {
   # Same PATH gap as pi.nix: opencode lands in the home-manager profile
@@ -74,7 +79,7 @@ in
         }) (import ./mimir-models.nix)
       );
     };
-    model = "cubbit/vllm/mimir";
+    model = "cubbit/cubbit/mimir-pro";
     share = "disabled";
     disabled_providers = [ "opencode" ];
     theme = "catppuccin-mocha";
