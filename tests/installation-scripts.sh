@@ -484,9 +484,11 @@ $(cat "$SUDO_LOG")"
     # T-12a: a folded ~/.local must still be unfolded, not just left as a link.
     reset
     rm -rf "$FAKE_HOME/.local"
-    ln -sfn "$REPO_ROOT/.config" "$FAKE_HOME/.local"
+    # .config/nvim, not .config: a live checkout's .config holds runtime
+    # sockets (1Password's op-daemon.sock) that cp -a cannot copy.
+    ln -sfn "$REPO_ROOT/.config/nvim" "$FAKE_HOME/.local"
     run_script uninstall.sh "$WORK/cwd" -y --keep-nix
-    if [[ "$RC" -eq 0 ]] && [ ! -L "$FAKE_HOME/.local" ] && [ -d "$FAKE_HOME/.local/nvim" ]; then
+    if [[ "$RC" -eq 0 ]] && [ ! -L "$FAKE_HOME/.local" ] && [ -d "$FAKE_HOME/.local/lua" ]; then
         pass "folded ~/.local is unfolded"
     else
         fail "folded ~/.local is unfolded"
