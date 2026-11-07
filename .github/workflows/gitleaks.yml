@@ -1,0 +1,46 @@
+name: gitleaks
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    env:
+      GITLEAKS_VERSION: 8.30.1
+      GITLEAKS_SHA256: 551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb
+    steps:
+      # The PR head, not GitHub's synthetic merge commit, whose metadata is
+      # not the author's. Empty on push, which checks out the pushed ref.
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Install gitleaks (checksum-pinned)
+        run: |
+          tgz="gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
+          curl -fsSLO "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/${tgz}"
+          echo "${GITLEAKS_SHA256}  ${tgz}" | sha256sum -c -
+          tar -xzf "${tgz}" gitleaks
+
+      # Full history: a secret in any commit is public once pushed.
+      - name: Scan file contents
+        run: ./gitleaks git --config .gitleaks.toml --redact --no-banner --verbose .
+
+      # gitleaks reads diffs, not commit metadata. Squash merges on github.com
+      # take the account's primary email, so this catches it after the fact;
+      # the fix is "Keep my email addresses private" in GitHub settings.
+      - name: Check author and committer emails
+        run: |
+          bad=$(git log --format='%ae%n%ce' | sort -u \
+            | grep -vE '@users\.noreply\.github\.com$|^noreply@github\.com$' || true)
+          if [ -n "$bad" ]; then
+            echo "::error::Commits with a non-noreply email: $(echo "$bad" | wc -l) address(es)"
+            exit 1
+          fi

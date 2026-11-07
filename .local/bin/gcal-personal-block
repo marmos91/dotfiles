@@ -47,7 +47,7 @@ COLOR_ID = "4"
 DESCRIPTION = (
     "Marco has a personal commitment and is busy at this time.\n"
     "Please find another time to avoid scheduling conflicts.\n\n"
-    "--\nPowered by Mimir (https://mimir.example.invalid)"
+    "--\nPowered by Mimir"
 )
 LOOKAHEAD_DAYS = 60
 WIPE_BEHIND_DAYS = 30   # placeholders whose Family event vanished get removed

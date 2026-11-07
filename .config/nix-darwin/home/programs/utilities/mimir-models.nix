@@ -1,5 +1,5 @@
 # The Mimir model catalog, in pi's shape (mirrors
-# https://mimir.example.invalid/.well-known/pi-models.json). pi.nix renders it as is;
+# <mimir base URL>/.well-known/pi-models.json). pi.nix renders it as is;
 # opencode.nix derives its names and limits from it.
 [
   {

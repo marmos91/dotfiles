@@ -1,0 +1,29 @@
+# gitleaks config for this public repo: the default rules plus two for the
+# personal data that leaked before (emails, internal hostnames). Real values
+# belong in sops (.config/nix-darwin/home/secrets/), never in plain files.
+[extend]
+useDefault = true
+
+[[rules]]
+id = "non-noreply-email"
+description = "Email address that is not a noreply or example address"
+regex = '''[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,}'''
+[[rules.allowlists]]
+regexes = [
+  '''@users\.noreply\.github\.com$''',
+  '''^noreply@''',
+  '''@example\.(com|org|invalid)$''',
+  '''@[a-z.-]*example$''',
+  '''^YOUR_[A-Z_]+@group\.calendar\.google\.com$''',
+  '''^dash-to-dock@micxgx\.gmail\.com$''', # GNOME extension UUID
+]
+
+[[rules]]
+id = "internal-hostname"
+description = "Hostname under a company domain; keep endpoints in sops"
+regex = '''\b[a-z0-9-]+(?:\.[a-z0-9-]+)*\.cubbit\.(?:io|dev|eu|cloud)\b'''
+
+[allowlist]
+description = "Public 1Password signing-key fingerprint and download checksums in install.sh"
+regexTarget = "line"
+regexes = ['''ONEPASSWORD_[A-Z_]*(SHA256|FINGERPRINT)="[0-9A-Fa-f]+"''']

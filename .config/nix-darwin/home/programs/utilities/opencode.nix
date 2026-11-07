@@ -1,6 +1,6 @@
 # opencode pointed at Cubbit's Mimir gateway.
 #
-# Mirrors https://mimir.example.invalid/.well-known/opencode.json, with two
+# Mirrors <mimir base URL>/.well-known/opencode.json, with two
 # deliberate local deviations: baseURL/apiKey come from the sops-rendered
 # files (opencode does resolve `{file:...}`, unlike pi), and the theme is
 # pinned to Catppuccin Mocha.
