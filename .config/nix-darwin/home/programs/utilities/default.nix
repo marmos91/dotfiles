@@ -1,6 +1,7 @@
 { ... }:
 {
   imports = [
+    ./backup.nix
     ./bat.nix
     ./btop.nix
     ./claude-mimir.nix

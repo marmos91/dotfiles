@@ -1,0 +1,17 @@
+# restic exclude patterns for the Level-1 backup (see backup.nix / .local/bin/backup).
+# Drop regenerable bulk so snapshots stay small.
+*Previews.lrdata
+Helper.lrdata
+node_modules
+.venv
+.direnv
+target
+.DS_Store
+*.log
+*.tmp
+Caches
+.Trash
+# headroom: keep only the small memory*.db (listed explicitly in the standard tier),
+# drop its logs/telemetry if a parent path ever pulls them in
+.headroom/logs
+.headroom/*.jsonl
