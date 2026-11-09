@@ -1,0 +1,198 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(go test:*)",
+      "Bash(go build:*)",
+      "Bash(go fmt:*)",
+      "Bash(go vet:*)",
+      "Bash(go doc:*)",
+      "Bash(go list:*)",
+      "Bash(go clean:*)",
+      "Bash(go run:*)",
+      "Bash(go mod tidy:*)",
+      "Bash(go mod vendor:*)",
+      "Bash(go tool cover:*)",
+      "Bash(go tool pprof:*)",
+      "Bash(gofmt:*)",
+      "Bash(golangci-lint:*)",
+      "Bash(staticcheck:*)",
+      "Bash(errcheck:*)",
+      "Bash(markdownlint:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(git pull:*)",
+      "Bash(git fetch:*)",
+      "Bash(git status:*)",
+      "Bash(git log:*)",
+      "Bash(git show:*)",
+      "Bash(git diff:*)",
+      "Bash(git branch:*)",
+      "Bash(git checkout:*)",
+      "Bash(git stash:*)",
+      "Bash(git reset:*)",
+      "Bash(git rebase:*)",
+      "Bash(git cherry-pick:*)",
+      "Bash(git rm:*)",
+      "Bash(git config:*)",
+      "Bash(git remote set-url:*)",
+      "Bash(git check-ignore:*)",
+      "Bash(gh pr view:*)",
+      "Bash(gh pr diff:*)",
+      "Bash(gh pr checks:*)",
+      "Bash(gh pr list:*)",
+      "Bash(gh pr edit:*)",
+      "Bash(gh pr create:*)",
+      "Bash(gh issue view:*)",
+      "Bash(gh issue list:*)",
+      "Bash(gh issue edit:*)",
+      "Bash(gh issue close:*)",
+      "Bash(gh issue create:*)",
+      "Bash(gh run view:*)",
+      "Bash(gh run list:*)",
+      "Bash(gh run watch:*)",
+      "Bash(gh api:*)",
+      "Bash(gh auth:*)",
+      "Bash(gh release:*)",
+      "Bash(gh repo view:*)",
+      "Bash(gh secret list:*)",
+      "Bash(gh label list:*)",
+      "Bash(kubectl:*)",
+      "Bash(helm template:*)",
+      "Bash(docker run:*)",
+      "Bash(docker build:*)",
+      "Bash(docker buildx build:*)",
+      "Bash(docker buildx create:*)",
+      "Bash(docker buildx use:*)",
+      "Bash(docker logs:*)",
+      "Bash(docker ps:*)",
+      "Bash(docker info:*)",
+      "Bash(docker login:*)",
+      "Bash(docker pull:*)",
+      "Bash(docker push:*)",
+      "Bash(make:*)",
+      "Bash(test:*)",
+      "Bash(grep:*)",
+      "Bash(cat:*)",
+      "Bash(ls:*)",
+      "Bash(wc:*)",
+      "Bash(find:*)",
+      "Bash(cut:*)",
+      "Bash(echo:*)",
+      "Bash(tee:*)",
+      "Bash(xargs:*)",
+      "Bash(chmod:*)",
+      "Bash(unzip:*)",
+      "Bash(lsof:*)",
+      "Bash(mount:*)",
+      "Bash(pkill:*)",
+      "Bash(pgrep:*)",
+      "Bash(md5:*)",
+      "Bash(xxd:*)",
+      "Bash(dd:*)",
+      "Bash(curl:*)",
+      "Bash(perl:*)",
+      "Bash(node:*)",
+      "Bash(python3:*)",
+      "Bash(pip3 install:*)",
+      "Bash(rpcinfo:*)",
+      "Bash(nix flake check:*)",
+      "Bash(nix-shell:*)",
+      "WebSearch",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:tools.ietf.org)",
+      "WebFetch(domain:datatracker.ietf.org)",
+      "WebFetch(domain:juicefs.com)",
+      "WebFetch(domain:golang.testcontainers.org)",
+      "WebFetch(domain:deepwiki.com)"
+    ],
+    "deny": [],
+    "ask": [],
+    "defaultMode": "auto"
+  },
+  "model": "opus[1m]",
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "npx --yes any-buddy@latest apply --silent"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "rtk hook claude"
+          }
+        ]
+      }
+    ]
+  },
+  "statusLine": {
+    "type": "command",
+    "command": "node \"/Users/marmos91/.claude/hooks/gsd-statusline.js\""
+  },
+  "enabledPlugins": {
+    "gopls-lsp@claude-plugins-official": true,
+    "code-simplifier@claude-plugins-official": true,
+    "feature-dev@claude-plugins-official": true,
+    "superpowers@claude-plugins-official": true,
+    "github@claude-plugins-official": true,
+    "microsoft-docs@claude-plugins-official": true,
+    "security-guidance@claude-plugins-official": true,
+    "typescript-lsp@claude-plugins-official": true,
+    "ponytail@ponytail": true,
+    "humanizer@humanizer": true,
+    "exa-deep-research@anthropic-plugin-directory": true,
+    "design@anthropic-plugin-directory": true,
+    "data@anthropic-plugin-directory": true,
+    "product-management@anthropic-plugin-directory": true,
+    "design-skills@anthropic-plugin-directory": true,
+    "website-design@anthropic-plugin-directory": true,
+    "design-superpowers@anthropic-plugin-directory": true,
+    "anti-ai-writing@anthropic-plugin-directory": true,
+    "ux-ui-audit@anthropic-plugin-directory": true,
+    "ui-consistency@anthropic-plugin-directory": true,
+    "advisory-council@anthropic-plugin-directory": true,
+    "ste-explain@anthropic-plugin-directory": true,
+    "ste-mode@anthropic-plugin-directory": true,
+    "pstack@cursor-plugins": true
+  },
+  "extraKnownMarketplaces": {
+    "ponytail": {
+      "source": {
+        "source": "github",
+        "repo": "DietrichGebert/ponytail"
+      }
+    },
+    "humanizer": {
+      "source": {
+        "source": "github",
+        "repo": "blader/humanizer"
+      }
+    },
+    "cursor-plugins": {
+      "source": {
+        "source": "github",
+        "repo": "cursor/plugins"
+      }
+    }
+  },
+  "alwaysThinkingEnabled": true,
+  "effortLevel": "high",
+  "tui": "fullscreen",
+  "skipDangerousModePermissionPrompt": true,
+  "skipWorkflowUsageWarning": true,
+  "editorMode": "vim",
+  "agentPushNotifEnabled": true,
+  "skipAutoPermissionPrompt": true,
+  "switchModelsOnFlag": true
+}
