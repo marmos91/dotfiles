@@ -1,0 +1,64 @@
+#!/usr/bin/env bash
+# Level-1 backup: this Mac -> MarcoBackups (NAS) over the tailnet, via restic's
+# SFTP backend. Three lifecycle tiers, each its own restic tag with its own
+# retention (see `prune`). Declarative install + schedule live in
+# home/programs/utilities/backup.nix; this script is the runtime.
+#
+#   backup run     back up all tiers (the daily launchd job)
+#   backup prune   apply per-tier retention + prune (the weekly launchd job)
+#   backup init    initialise the repo if absent (idempotent; run at setup)
+#   backup <restic-args...>   passthrough, e.g. `backup snapshots`, `backup check`
+set -uo pipefail
+
+# Repository URL names the NAS host, so it comes from sops (see home/secrets/),
+# not this public script. Override with RESTIC_REPOSITORY for ad-hoc targets.
+export RESTIC_REPOSITORY="${RESTIC_REPOSITORY:-$(cat "$HOME/.config/restic/repository" 2>/dev/null)}"
+export RESTIC_PASSWORD_FILE="${RESTIC_PASSWORD_FILE:-$HOME/.config/restic/password}"
+[ -n "$RESTIC_REPOSITORY" ] || { echo "no repository: ~/.config/restic/repository missing (sops not rendered?)" >&2; exit 1; }
+EXCLUDES="$HOME/.config/restic/excludes"
+H="$HOME"
+
+# Only pass paths that exist, so a missing dir never aborts the run.
+_present() { local out=(); local p; for p in "$@"; do [ -e "$p" ] && out+=("$p"); done; printf '%s\n' "${out[@]}"; }
+
+tier_paths() {
+  case "$1" in
+    ephemeral) _present "$H/Downloads" "$H/Desktop" ;;
+    standard)
+      _present "$H/Pictures/Lightroom" "$H/Documents" "$H/Presentations" \
+        "$H/.pulumi/stacks" "$H/.pulumi/history" "$H/.pulumi/backups" \
+        "$H/.pi/agent/missions" \
+        "$H/.headroom/memory.db" "$H/.headroom/memory_graph.db" "$H/.headroom/memory_vectors.db" \
+        "$H/.kube/wiit" "$H/.kube/wiit-swarm" "$H/.kube/neonswarm-config" \
+        "$H/.kube/ds3-drive-demo.yaml" "$H/.kube/kubectx" \
+        $H/.claude/projects/*/memory ;;
+    archive) _present "$H/Archive" ;;
+  esac
+}
+
+do_backup() {
+  local rc=0 tag
+  for tag in ephemeral standard archive; do
+    mapfile -t paths < <(tier_paths "$tag")
+    [ "${#paths[@]}" -eq 0 ] && continue
+    echo ">> backing up tier '$tag' (${#paths[@]} paths)"
+    restic backup --tag "$tag" --exclude-file "$EXCLUDES" "${paths[@]}" || rc=1
+  done
+  return $rc
+}
+
+do_prune() {
+  local rc=0
+  restic forget --tag ephemeral --keep-daily 7 --keep-weekly 4 || rc=1
+  restic forget --tag standard  --keep-daily 7 --keep-weekly 4 --keep-monthly 12 --keep-yearly 2 || rc=1
+  restic forget --tag archive   --keep-monthly 12 --keep-yearly 10 || rc=1
+  restic prune || rc=1
+  return $rc
+}
+
+case "${1:-run}" in
+  run)   do_backup ;;
+  prune) do_prune ;;
+  init)  restic cat config >/dev/null 2>&1 && echo "repo already initialised" || restic init ;;
+  *)     exec restic "$@" ;;
+esac

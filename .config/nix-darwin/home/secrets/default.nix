@@ -44,6 +44,12 @@ in
       rclone_config = mk ".config/rclone/rclone.conf";
       ssh_hosts_config = mk ".ssh/config.d/hosts";
       mimir_api_key = mk ".config/mimir/api-key";
+
+      # restic Level-1 backup (home/programs/utilities/backup.nix). The repo URL
+      # names the NAS host, so it lives here rather than the public script; the
+      # password encrypts the repo. Both read at runtime by `.local/bin/backup`.
+      restic_password = mk ".config/restic/password";
+      restic_repository = mk ".config/restic/repository";
       google_docs_mcp_client_id = mk ".config/google-docs-mcp/client-id";
       google_docs_mcp_client_secret = mk ".config/google-docs-mcp/client-secret";
 
