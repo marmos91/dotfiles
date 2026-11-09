@@ -29,9 +29,17 @@ tier_paths() {
         "$H/.pulumi/stacks" "$H/.pulumi/history" "$H/.pulumi/backups" \
         "$H/.pi/agent/missions" \
         "$H/.headroom/memory.db" "$H/.headroom/memory_graph.db" "$H/.headroom/memory_vectors.db" \
-        "$H/.kube/wiit" "$H/.kube/wiit-swarm" "$H/.kube/neonswarm-config" \
-        "$H/.kube/ds3-drive-demo.yaml" "$H/.kube/kubectx" \
-        $H/.claude/projects/*/memory ;;
+        $H/.claude/projects/*/memory
+      # Extra paths that name private infra (clusters, customers) live in a
+      # sops-rendered file, never this public script. One $HOME-relative path
+      # per line; '#' comments and blanks ignored. Missing file => skipped.
+      if [ -r "$H/.config/restic/extra-paths" ]; then
+        while IFS= read -r line; do
+          case "$line" in ''|\#*) continue ;; esac
+          _present "$H/$line"
+        done < "$H/.config/restic/extra-paths"
+      fi
+      ;;
     archive) _present "$H/Archive" ;;
   esac
 }

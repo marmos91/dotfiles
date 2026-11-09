@@ -50,6 +50,9 @@ in
       # password encrypts the repo. Both read at runtime by `.local/bin/backup`.
       restic_password = mk ".config/restic/password";
       restic_repository = mk ".config/restic/repository";
+      # Extra backup paths whose names reveal private infra (clusters,
+      # customers), read by `.local/bin/backup`; kept out of the public script.
+      restic_extra_paths = mk ".config/restic/extra-paths";
       google_docs_mcp_client_id = mk ".config/google-docs-mcp/client-id";
       google_docs_mcp_client_secret = mk ".config/google-docs-mcp/client-secret";
 
