@@ -18,31 +18,38 @@ let
   script = "${config.home.homeDirectory}/.dotfiles/.local/bin/backup";
   linkedBin = "${config.home.homeDirectory}/.local/bin/backup";
   logDir = "${config.home.homeDirectory}/.local/state/restic/logs";
-  binPath = lib.makeBinPath [ pkgs.restic pkgs.openssh pkgs.coreutils pkgs.bash ];
+  # On macOS restic must use Apple's /usr/bin/ssh so SSH key auth reads the
+  # passphrase from the login keychain (UseKeychain) non-interactively. nix's
+  # openssh ignores the keychain and prompts, which hangs unattended runs — so
+  # it's on the tool PATH only on Linux (there auth goes through the 1Password
+  # agent). /usr/bin (hence Apple ssh) is appended to the launchd PATH below.
+  binPath = lib.makeBinPath (
+    [ pkgs.restic pkgs.coreutils pkgs.bash ] ++ lib.optional (!isDarwin) pkgs.openssh
+  );
 in
 {
   home.packages = [ pkgs.restic ];
 
   home.file.".config/restic/excludes".source = ./restic-excludes;
 
-  # Common to all hosts: expose `backup` on ~/.local/bin and init the repo
-  # idempotently (best-effort; skipped cleanly if the NAS is unreachable or sops
-  # hasn't rendered the secrets yet, so it never fails the rebuild).
+  # Common to all hosts: expose `backup` on ~/.local/bin. Deliberately NO
+  # network here — an earlier version ran `restic init` over SFTP at this point,
+  # which prompted for the SSH key passphrase and hung `rebuild` (and would
+  # stall on an unreachable NAS). The repo is created once with `backup init`;
+  # it's shared across hosts, so a new machine just points at the existing repo.
   home.activation.restic = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
     $DRY_RUN_CMD mkdir -p "${logDir}" "${config.home.homeDirectory}/.local/bin"
     $DRY_RUN_CMD ln -sfn "${script}" "${linkedBin}"
-    repo="${config.home.homeDirectory}/.config/restic/repository"
-    pass="${config.home.homeDirectory}/.config/restic/password"
-    if [ -r "$repo" ] && [ -r "$pass" ]; then
-      PATH="${binPath}:$PATH" RESTIC_REPOSITORY="$(cat "$repo")" RESTIC_PASSWORD_FILE="$pass" \
-        ${pkgs.restic}/bin/restic cat config >/dev/null 2>&1 \
-      || PATH="${binPath}:$PATH" RESTIC_REPOSITORY="$(cat "$repo")" RESTIC_PASSWORD_FILE="$pass" \
-         $DRY_RUN_CMD ${pkgs.restic}/bin/restic init >/dev/null 2>&1 || true
-    fi
   '';
 
   # macOS: launchd agents (daily backup 13:00, weekly prune Sun 14:00).
+  # enable is set explicitly: when the agents are defined inside this top-level
+  # `launchd.agents = mkIf isDarwin {...}`, home-manager's auto-enable (which
+  # keys off a non-empty `config`) doesn't fire and the plists are never
+  # written (enable defaults false). gcal works because it's a direct
+  # `launchd.agents.<name> = {...}` definition.
   launchd.agents = lib.mkIf isDarwin {
+    restic-backup.enable = true;
     restic-backup.config = {
       ProgramArguments = [ "${pkgs.bash}/bin/bash" script "run" ];
       StartCalendarInterval = [ { Hour = 13; Minute = 0; } ];
@@ -51,6 +58,7 @@ in
       StandardErrorPath = "${logDir}/backup.err.log";
       EnvironmentVariables.PATH = "${binPath}:/usr/bin:/bin";
     };
+    restic-prune.enable = true;
     restic-prune.config = {
       ProgramArguments = [ "${pkgs.bash}/bin/bash" script "prune" ];
       StartCalendarInterval = [ { Weekday = 0; Hour = 14; Minute = 0; } ];
