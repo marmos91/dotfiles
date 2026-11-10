@@ -15,6 +15,12 @@ in
       "*" = {
         AddKeysToAgent = "yes";
       } // lib.optionalAttrs isDarwin {
+        # UseKeychain is Apple-ssh only; the non-Apple ssh that restic spawns
+        # for its SFTP backend aborts on it ("Bad configuration option:
+        # usekeychain"). IgnoreUnknown makes every ssh skip it instead. It must
+        # precede UseKeychain in the block; home-manager renders the settings
+        # alphabetically, so "IgnoreUnknown" lands before "UseKeychain".
+        IgnoreUnknown = "UseKeychain";
         UseKeychain = "yes";
       };
     };
