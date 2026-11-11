@@ -38,15 +38,16 @@
     "claude-mimir": {
       "flake": false,
       "locked": {
-        "lastModified": 1793893849,
-        "narHash": "sha256-ejiQkqQQWlAmSj7n1G1/CQUO2O1lnuhLcIPodHL7Nxo=",
-        "owner": "didimelli",
+        "lastModified": 1794431749,
+        "narHash": "sha256-hI74AMunD4yEthAOkCf5dHl0Ukhd/6NXnvAdGINo5Y4=",
+        "owner": "marmos91",
         "repo": "claude-mimir",
-        "rev": "06fa535a6e118412f320a179c51c80c762e3dc8d",
+        "rev": "b32eb6ece4b7a92e880158fe49f2fccc833fe792",
         "type": "github"
       },
       "original": {
-        "owner": "didimelli",
+        "owner": "marmos91",
+        "ref": "fix/replay-reasoning",
         "repo": "claude-mimir",
         "type": "github"
       }
