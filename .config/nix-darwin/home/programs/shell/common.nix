@@ -33,7 +33,13 @@ in
 
     # The GitHub MCP plugin reads GITHUB_PERSONAL_ACCESS_TOKEN; scope it to
     # claude instead of exporting it to every process.
-    claude = "GITHUB_PERSONAL_ACCESS_TOKEN=$(gh auth token 2>/dev/null) headroom wrap claude --memory --code-graph";
+    # On darwin, claude-mimir (utilities/claude-mimir.nix) adds it-router under
+    # headroom so Mimir models work; it exports the token itself.
+    claude =
+      if isDarwin then
+        "claude-mimir --memory --code-graph"
+      else
+        "GITHUB_PERSONAL_ACCESS_TOKEN=$(gh auth token 2>/dev/null) headroom wrap claude --memory --code-graph";
 
     # Directory shortcuts
     dotfiles = "cd ~/.dotfiles";
