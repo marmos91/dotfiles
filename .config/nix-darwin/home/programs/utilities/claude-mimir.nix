@@ -16,6 +16,8 @@
 # Headroom: `headroom wrap claude` takes a pre-set ANTHROPIC_BASE_URL as its
 # proxy's upstream (headroom #1353), and does not reuse a proxy that routes
 # elsewhere, so a plain-headroom session on :8787 is left alone.
+# It still prints "incompatible routing config" when it finds that proxy, so
+# the wrapper pins its own port (8789; 8788 is the launchd proxy for pi).
 {
   config,
   pkgs,
@@ -59,6 +61,7 @@ let
     export ANTHROPIC_CUSTOM_MODEL_OPTION_DESCRIPTION=''${ANTHROPIC_CUSTOM_MODEL_OPTION_DESCRIPTION:-Cubbit Mimir via it-router}
     export GITHUB_PERSONAL_ACCESS_TOKEN="$(gh auth token 2>/dev/null)"
     unset ANTHROPIC_CUSTOM_HEADERS
+    export HEADROOM_PORT=''${HEADROOM_PORT:-8789}
     exec ${config.home.homeDirectory}/.local/bin/headroom wrap claude "$@"
   '';
 in
