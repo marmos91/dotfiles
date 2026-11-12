@@ -31,9 +31,11 @@
       flake = false;
     };
     # Davide's Claude Code <-> Mimir gateway (it-router). Built from source
-    # by home/programs/utilities/claude-mimir.nix.
+    # by home/programs/utilities/claude-mimir.nix. Our fork keeps Mimir's
+    # reasoning across turns (didimelli/claude-mimir#10); switch back to
+    # github:didimelli/claude-mimir once that merges.
     claude-mimir = {
-      url = "github:didimelli/claude-mimir";
+      url = "github:marmos91/claude-mimir/fix/replay-reasoning";
       flake = false;
     };
   };
