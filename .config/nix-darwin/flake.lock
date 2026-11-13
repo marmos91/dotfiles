@@ -191,15 +191,16 @@
     "mySkills": {
       "flake": false,
       "locked": {
-        "lastModified": 1793744254,
-        "narHash": "sha256-eoUErQGJwDtovDPHhG8j7W0pxd94qhqu9F+M8eEzpr4=",
+        "lastModified": 1794496750,
+        "narHash": "sha256-uQjiAhg6uisPzpDe84ytarlfIuWYzgZRHJkhPhXbNO0=",
         "owner": "marmos91",
         "repo": "skills",
-        "rev": "20b141a3a4cbb17fcb76a0e78892c4e1e14905c4",
+        "rev": "e6ea42b3d7d40b6a6ccb573723c6e14975d8fccc",
         "type": "github"
       },
       "original": {
         "owner": "marmos91",
+        "ref": "v0.1.0",
         "repo": "skills",
         "type": "github"
       }
