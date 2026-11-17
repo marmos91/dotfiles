@@ -33,6 +33,7 @@
       pulumiPackages.pulumi-go
       (scaleway-cli.overrideAttrs (_: { doCheck = false; }))
       sd
+      semgrep
       sshpass
       stow
       swiftformat
@@ -40,6 +41,7 @@
       tilt
       tldr
       tmuxinator
+      uv # Python package runner; drives the mempalace MCP server (mcp.nix / claude.nix)
       watch
       wget
       wireguard-tools

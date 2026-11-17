@@ -28,7 +28,7 @@
     # home/agent-skills.nix runs the package installer from it at activation.
     # To upgrade: change the tag, `nix flake update mySkills`, `rebuild`.
     mySkills = {
-      url = "github:marmos91/skills/v0.1.0";
+      url = "github:marmos91/skills/v0.8.0";
       flake = false;
     };
     # Davide's Claude Code <-> Mimir gateway (it-router). Built from source
