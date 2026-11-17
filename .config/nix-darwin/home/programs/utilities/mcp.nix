@@ -49,6 +49,19 @@
         context7 = {
           url = "https://mcp.context7.com/mcp";
         };
+        # Local memory server (one global palace under ~/.mempalace). mempalace
+        # isn't in nixpkgs, so it's run through uv, which resolves it into a
+        # cached env on first launch. uv by store path for the GUI-PATH reason
+        # above; the pinned version stops each launch from pulling whatever PyPI
+        # serves today (same reasoning as google-docs). The server itself is
+        # `python -m mempalace.mcp_server` (the `mempalace mcp` subcommand only
+        # prints setup syntax). Claude Code gets the same server via claude.nix.
+        mempalace = {
+          type = "stdio";
+          command = "${pkgs.uv}/bin/uv";
+          args = [ "run" "--with" "mempalace==3.11.0" "python" "-m" "mempalace.mcp_server" ];
+          env.PATH = "${pkgs.uv}/bin:/usr/bin:/bin";
+        };
         # Obsidian vault access. The plugin (utilities/obsidian.nix) serves an
         # MCP endpoint on the same listener as its REST API, so there is no
         # child process to spawn. Plain HTTP on 127.0.0.1:27123 rather than the

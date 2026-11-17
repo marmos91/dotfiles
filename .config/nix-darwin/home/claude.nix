@@ -1,4 +1,15 @@
 { pkgs, lib, config, ... }:
+let
+  # mempalace memory MCP server, same definition as pi's in mcp.nix (kept in
+  # sync by hand; it's one attrset). Run through uv because mempalace isn't in
+  # nixpkgs; pinned so a launch can't pull whatever PyPI serves today.
+  mempalaceServer = {
+    type = "stdio";
+    command = "${pkgs.uv}/bin/uv";
+    args = [ "run" "--with" "mempalace==3.11.0" "python" "-m" "mempalace.mcp_server" ];
+    env.PATH = "${pkgs.uv}/bin:/usr/bin:/bin";
+  };
+in
 {
   # Claude Code CLI from nixpkgs — hash-verified by the flake lock + binary
   # cache. Replaces the old `curl https://claude.ai/install.sh | sh`
@@ -30,6 +41,25 @@
       $DRY_RUN_CMD mkdir -p "${config.home.homeDirectory}/.claude"
       $DRY_RUN_CMD cp ${./claude/settings.json} "${config.home.homeDirectory}/.claude/settings.json"
       $DRY_RUN_CMD chmod u+w "${config.home.homeDirectory}/.claude/settings.json"
+    fi
+  '';
+
+  # Register the mempalace MCP server in ~/.claude.json. Claude Code owns that
+  # file (it rewrites it at runtime, like settings.json), so we don't symlink or
+  # overwrite it — we merge just the one key with jq and leave everything else
+  # untouched. Re-applied every switch so a version bump above propagates. jq by
+  # store path for the GUI-PATH reason noted in mcp.nix. pi's copy of this server
+  # lives in mcp.nix; Claude keeps its own because it ignores ~/.config/mcp.
+  home.activation.claudeMcp = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+    claudeJson="${config.home.homeDirectory}/.claude.json"
+    [ -e "$claudeJson" ] || $DRY_RUN_CMD cp ${pkgs.writeText "claude.json" "{}"} "$claudeJson"
+    if [ -e "$claudeJson" ]; then
+      tmp="$(${pkgs.coreutils}/bin/mktemp)"
+      if ${pkgs.jq}/bin/jq --argjson s '${builtins.toJSON mempalaceServer}' \
+        '.mcpServers.mempalace = $s' "$claudeJson" > "$tmp"; then
+        $DRY_RUN_CMD cp "$tmp" "$claudeJson"
+      fi
+      rm -f "$tmp"
     fi
   '';
 }
