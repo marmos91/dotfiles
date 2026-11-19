@@ -51,8 +51,9 @@ Entry point `flake.nix`; system-level modules in `system/`, home-manager modules
 - Fonts: no fonts module; `nerd-fonts.*` are in `home/packages.nix` and `fonts.fontconfig.enable` is in `home/default.nix`
 - Uses Determinate Nix with flakes enabled
 - **Linux support**: standalone home-manager outputs (`marmos91`, `marmos91-aarch64`) share the same `home/` modules; `install.sh` auto-detects OS
-- **Secrets**: sops-nix + age (`home/secrets/`) — kubeconfig, AWS, rclone, SSH hosts, git identities, MCP credentials, gcal sync identifiers are encrypted in `secrets.yaml` and decrypted at activation
-- **gcal-personal-block**: hourly launchd agent mirrors the Family calendar onto the work calendar as opaque "Personal Commitment" blocks (`.local/bin/gcal-personal-block`, nix module in `home/programs/utilities/gcal-personal-block.nix`); `gcal-setup` re-auths the work OAuth token
+- **Secrets**: sops-nix + age (`home/secrets/`) — kubeconfig, AWS, rclone, SSH hosts, git identities, MCP credentials are encrypted in `secrets.yaml` and decrypted at activation
+- **gcal-personal-block**: hourly mirror of the Family calendar onto the work calendar as opaque "Personal Commitment" blocks, running as a Google Apps Script (source of truth: `.local/bin/gcal-personal-block.gs`, deployed once in the browser; hourly trigger inside Google). Replaced the old python/launchd/OAuth-client setup, whose Google Cloud "Testing" tokens expired every 7 days
+- Production external OAuth apps with sensitive scopes (calendar) get hard-blocked without Google verification; the "Advanced → unsafe" bypass only exists in Testing mode — that's why the mirror moved to Apps Script
 
 ### Neovim Configuration (`.config/nvim/`)
 
@@ -105,7 +106,7 @@ Create a new file in `.config/nvim/lua/plugins/`, Lazy.nvim auto-discovers it.
 Portable aliases and functions (`rebuild`, `claude`, `mkcd`, ...) live once in
 `.config/nix-darwin/home/programs/shell/common.nix`, which both
 `programs/shell/zsh.nix` and `programs/shell/bash.nix` import. Put zsh-only
-aliases in `zsh.nix` (today: `cd`, `gcal-setup`, `neofetch`, `nix-shell`; the
+aliases in `zsh.nix` (today: `cd`, `neofetch`, `nix-shell`; the
 `tx*` tmuxinator aliases are zsh-only too).
 
 ## Commit Guidelines

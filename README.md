@@ -13,7 +13,7 @@ Cross-platform dotfiles for **macOS** and **Linux** (Ubuntu/GNOME), powered by N
 - **Shell**: Zsh with [Starship](https://starship.rs/) prompt
 - **Editor**: [Neovim](https://neovim.io/) with custom Lua configuration
 - **Terminal multiplexer**: [Tmux](https://github.com/tmux/tmux/wiki) with catppuccin theme
-- **Calendar sync**: hourly Family → work-calendar mirror ([gcal-personal-block](.local/bin/gcal-personal-block)) as opaque busy blocks; identifiers live in sops
+- **Calendar sync**: hourly Family → work-calendar mirror ([gcal-personal-block.gs](.local/bin/gcal-personal-block.gs), deployed as a Google Apps Script on the work account) as opaque busy blocks
 
 ## Installation
 

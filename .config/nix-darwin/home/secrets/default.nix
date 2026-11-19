@@ -56,13 +56,6 @@ in
       google_docs_mcp_client_id = mk ".config/google-docs-mcp/client-id";
       google_docs_mcp_client_secret = mk ".config/google-docs-mcp/client-secret";
 
-      # gcal-personal-block: OAuth client (Mimir Cloud GCP project) and the
-      # calendar identifiers it syncs. Read by the script at runtime, and by
-      # `gcal-setup` for the consent screen.
-      gcal_client_id = mk ".config/gcal-personal-block/client-id";
-      gcal_client_secret = mk ".config/gcal-personal-block/client-secret";
-      gcal_family_cal = mk ".config/gcal-personal-block/family-cal";
-      gcal_work_email = mk ".config/gcal-personal-block/work-email";
       # Internal Cubbit endpoints. Not credentials, but they name company
       # infrastructure, so they stay out of the public repo. Shared by opencode,
       # pi and headroom, so the path names none of them. opencode resolves
