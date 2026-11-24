@@ -91,7 +91,9 @@ function syncMirror() {
   // patch existing placeholders unconditionally instead of diffing against
   // the API echo: drift detection proved unreliable (a shortened family
   // event left a stale block), and a write per family event per hour is
-  // harmless — sendUpdates: none, no attendee mail, trivial quota
+  // harmless — sendUpdates: none, no attendee mail, trivial quota.
+  // NOTE: this reverts manual edits to a mirrored block (times, color,
+  // description) within the hour — adjust the Family event instead.
   for (const [fid, body] of Object.entries(want)) {
     const cur = have[fid];
     try {

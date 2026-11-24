@@ -467,16 +467,16 @@ $(cat "$SUDO_LOG")"
     ln -sfn "$REPO_ROOT/CLAUDE.md" "$FAKE_HOME/CLAUDE.md"
     ln -sfn "$REPO_ROOT/.gitignore.global" "$FAKE_HOME/.gitignore.global"
     ln -sfn "$REPO_ROOT/.config/nix-darwin/home/claude/settings.json" "$FAKE_HOME/.claude/settings.local.json"
-    ln -sfn "$REPO_ROOT/.local/bin/gcal-personal-block" "$FAKE_HOME/.local/bin/gcal-personal-block"
+    ln -sfn "$REPO_ROOT/.local/bin/backup" "$FAKE_HOME/.local/bin/backup"
     ln -sfn "$REPO_ROOT/removed-dir/gone.json" "$FAKE_HOME/.claude/orphan.json"
     run_script uninstall.sh "$WORK/cwd" -y --keep-nix
-    # Tracked targets (the nix-seeded settings.json, gcal-personal-block) must
-    # be copied, not dropped; the gcal copy landing in ~/.local proves the
-    # per-file sweep reaches that tree too (settings lands in ~/.claude).
+    # Tracked targets (the nix-seeded settings.json, backup) must be copied,
+    # not dropped; the backup copy landing in ~/.local proves the per-file
+    # sweep reaches that tree too.
     if [[ "$RC" -eq 0 ]] && [ ! -L "$FAKE_HOME/CLAUDE.md" ] \
         && [ ! -e "$FAKE_HOME/.gitignore.global" ] && [ ! -L "$FAKE_HOME/.gitignore.global" ] \
-        && [ ! -L "$FAKE_HOME/.local/bin/gcal-personal-block" ] \
-        && [ -f "$FAKE_HOME/.local/bin/gcal-personal-block" ] \
+        && [ ! -L "$FAKE_HOME/.local/bin/backup" ] \
+        && [ -f "$FAKE_HOME/.local/bin/backup" ] \
         && contains "Removed dangling link" \
         && [ ! -L "$FAKE_HOME/.claude/orphan.json" ] && [ ! -e "$FAKE_HOME/.claude/orphan.json" ] \
         && [ -f "$FAKE_HOME/.claude/settings.local.json" ] \
