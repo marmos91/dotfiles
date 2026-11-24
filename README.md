@@ -61,8 +61,9 @@ chmod +x install.sh && ./install.sh
    links it created into the repo are cleaned up first: a folded `~/.claude` or
    `~/.local` is copied out into a real directory (it holds your own state), links
    inside them are replaced by copies, and the `~/CLAUDE.md`, `~/.pi` and
-   `~/.gitignore.global` links are removed. The repo's `.claude/settings.json` is
-   the project settings for this checkout, so it is not linked into `~/.claude`
+   `~/.gitignore.global` links are removed. The settings seed lives under
+   `.config/nix-darwin/home/claude/settings.json` (installed by home-manager), so
+   nothing is linked into `~/.claude`
 3. Install [Nix](https://nixos.org/) using the [Determinate Systems installer](https://determinate.systems/nix-installer/)
 4. Install [1Password](https://1password.com/) via official apt repository (Linux only, for SSH agent)
 5. Install Docker Engine (Linux only, Debian/Ubuntu, unless `--no-docker`): adds

@@ -458,6 +458,10 @@ $(cat "$SUDO_LOG")"
     # removed, not left dangling (repo file deleted) or live (still linking in).
     # Shapes match what stow really produces: a pre-existing ~/.local makes it
     # link file by file, and a dangling link's parent may be gone entirely.
+    # The ~/.claude/settings.local.json link is synthetic — stow never mapped a
+    # repo path there — but it is the only shape that reaches the per-file copy
+    # branch for ~/.claude; the real legacy shape is dangling, covered by
+    # orphan.json below.
     reset
     mkdir -p "$FAKE_HOME/.claude" "$FAKE_HOME/.local/bin"
     ln -sfn "$REPO_ROOT/CLAUDE.md" "$FAKE_HOME/CLAUDE.md"
