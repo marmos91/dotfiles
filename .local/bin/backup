@@ -29,8 +29,13 @@ notify() {
   # the detail is safe in the AppleScript literal and in a public shell prompt.
   detail=$(printf '%s' "$detail" | sed -E 's#(sftp|https?)://[^[:space:]]+#<repo>#g')
   detail=${detail//\"//}; detail=${detail//\\//}; detail=${detail//\'/}
-  /usr/bin/osascript -e "display notification \"$detail\" with title \"$1\"" >/dev/null 2>&1 || true
-  /usr/bin/afplay /System/Library/Sounds/Submarine.aiff >/dev/null 2>&1 || true
+  # macOS-only; on Linux the marker + systemd OnFailure are the signal.
+  if [ "$(uname)" = Darwin ]; then
+    /usr/bin/osascript -e "display notification \"$detail\" with title \"$1\"" >/dev/null 2>&1 || true
+    /usr/bin/afplay /System/Library/Sounds/Submarine.aiff >/dev/null 2>&1 || true
+  fi
+  # Contract with the shell hooks: line 1 = "<timestamp> <title>", line 2 = detail.
+  # Read by backup_fail_check in zsh.nix (and could be by a bash prompt hook).
   ( umask 077; { echo "$(date '+%Y-%m-%d %H:%M') $1"; printf '%s\n' "$detail"; } > "$marker" ) 2>/dev/null || true
 }
 

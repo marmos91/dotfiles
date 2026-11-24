@@ -80,6 +80,9 @@ in
         Type = "oneshot";
         ExecStart = "${pkgs.bash}/bin/bash ${script} run";
         Environment = [ "PATH=${binPath}" ];
+        # Parity with the script's own BACKUP_TIMEOUT; systemd's 90s default
+        # would kill a real backup.
+        TimeoutStartSec = "7h";
       };
     };
     timers.restic-backup = {
@@ -93,6 +96,7 @@ in
         Type = "oneshot";
         ExecStart = "${pkgs.bash}/bin/bash ${script} prune";
         Environment = [ "PATH=${binPath}" ];
+        TimeoutStartSec = "5h";
       };
     };
     timers.restic-prune = {
