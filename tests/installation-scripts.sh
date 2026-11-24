@@ -458,16 +458,21 @@ $(cat "$SUDO_LOG")"
     # removed, not left dangling (repo file deleted) or live (still linking in).
     # Shapes match what stow really produces: a pre-existing ~/.local makes it
     # link file by file, and a dangling link's parent may be gone entirely.
+    # The ~/.claude/settings.local.json link is synthetic — stow never mapped a
+    # repo path there — but it is the only shape that reaches the per-file copy
+    # branch for ~/.claude; the real legacy shape is dangling, covered by
+    # orphan.json below.
     reset
     mkdir -p "$FAKE_HOME/.claude" "$FAKE_HOME/.local/bin"
     ln -sfn "$REPO_ROOT/CLAUDE.md" "$FAKE_HOME/CLAUDE.md"
     ln -sfn "$REPO_ROOT/.gitignore.global" "$FAKE_HOME/.gitignore.global"
-    ln -sfn "$REPO_ROOT/.claude/settings.json" "$FAKE_HOME/.claude/settings.local.json"
+    ln -sfn "$REPO_ROOT/.config/nix-darwin/home/claude/settings.json" "$FAKE_HOME/.claude/settings.local.json"
     ln -sfn "$REPO_ROOT/.local/bin/gcal-personal-block" "$FAKE_HOME/.local/bin/gcal-personal-block"
     ln -sfn "$REPO_ROOT/removed-dir/gone.json" "$FAKE_HOME/.claude/orphan.json"
     run_script uninstall.sh "$WORK/cwd" -y --keep-nix
-    # Tracked targets (settings.json, gcal-personal-block) must be copied, not
-    # dropped; that the copy lands in ~/.local proves the sweep reaches it too.
+    # Tracked targets (the nix-managed settings.json, gcal-personal-block) must
+    # be copied, not dropped; that the copy lands in ~/.local proves the sweep
+    # reaches it too.
     if [[ "$RC" -eq 0 ]] && [ ! -L "$FAKE_HOME/CLAUDE.md" ] \
         && [ ! -e "$FAKE_HOME/.gitignore.global" ] && [ ! -L "$FAKE_HOME/.gitignore.global" ] \
         && [ ! -L "$FAKE_HOME/.local/bin/gcal-personal-block" ] \

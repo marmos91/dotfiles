@@ -24,8 +24,7 @@ result
 .pi/tasks/
 
 ### Claude Code runtime state (managed by home-manager, not stow)
-# Transcripts, history, todos and shell snapshots land in ~/.claude; only the
-# hook script and the settings seed belong in the repo.
+# Transcripts, history, todos and shell snapshots land in ~/.claude and stay out
+# of the repo. The settings seed and rules live under
+# .config/nix-darwin/home/claude/ (seeded by home/claude.nix).
 .claude/*
-!.claude/settings.json
-!.claude/hooks/

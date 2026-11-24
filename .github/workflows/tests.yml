@@ -1,0 +1,23 @@
+name: tests
+
+# T-12 went red when #42 moved .claude/settings.json and nobody noticed until
+# a manual run, so the install/uninstall suite runs on every PR.
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  installation-scripts:
+    # macOS: the suite exercises launchd/Darwin branches as well as the shims.
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # The suite builds a throwaway HOME and shims sudo/stow/launchctl itself,
+      # so it needs no Nix, no network and no privileged access.
+      - name: Run install/uninstall script tests
+        run: bash tests/installation-scripts.sh
