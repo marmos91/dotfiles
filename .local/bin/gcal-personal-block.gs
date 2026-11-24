@@ -101,10 +101,9 @@ function syncMirror() {
         Calendar.Events.insert(body, 'primary', { sendUpdates: 'none' });
         created++;
       } else {
-        Calendar.Events.patch(
-          { start: body.start, end: body.end, description: DESCRIPTION,
-            colorId: COLOR_ID, reminders: NO_REMIND },
-          'primary', cur.id, { sendUpdates: 'none' });
+        // body is a complete description of the placeholder, and patch is a
+        // partial update, so send it wholesale instead of re-listing keys.
+        Calendar.Events.patch(body, 'primary', cur.id, { sendUpdates: 'none' });
         patched++;
       }
     } catch (err) {
