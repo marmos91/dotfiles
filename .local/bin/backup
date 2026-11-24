@@ -10,33 +10,43 @@
 #   backup <restic-args...>   passthrough, e.g. `backup snapshots`, `backup check`
 set -uo pipefail
 
+ERRLOG_DIR="$HOME/.local/state/restic/logs"
+
+# Surface a failure to the logged-in user (launchd stays silent on non-zero exit):
+# toast (osascript needs Script Editor's notification permission — keep it on),
+# sound, and a marker file the shell precmd hook (zsh.nix) prints as a red warning.
+# Defined before the repository check below, which also needs to alert.
+notify() {
+  local marker="$HOME/.local/state/restic/FAILED"
+  local detail
+  # $3, when given, is the message; otherwise take the last line of $2's log
+  # (defaulting to the backup log) — never a stale line from a previous run.
+  if [ -n "${3:-}" ]; then
+    detail="$3"
+  else
+    detail=$(tail -1 "${2:-$ERRLOG_DIR/backup.err.log}" 2>/dev/null | cut -c1-140)
+  fi
+  # Strip any URL (the repo URL names the private NAS host) and quote chars, so
+  # the detail is safe in the AppleScript literal and in a public shell prompt.
+  detail=$(printf '%s' "$detail" | sed -E 's#(sftp|https?)://[^[:space:]]+#<repo>#g')
+  detail=${detail//\"//}; detail=${detail//\\//}; detail=${detail//\'/}
+  /usr/bin/osascript -e "display notification \"$detail\" with title \"$1\"" >/dev/null 2>&1 || true
+  /usr/bin/afplay /System/Library/Sounds/Submarine.aiff >/dev/null 2>&1 || true
+  mkdir -p "$(dirname "$marker")" 2>/dev/null || true
+  ( umask 077; { echo "$(date '+%Y-%m-%d %H:%M') $1"; printf '%s\n' "$detail"; } > "$marker" ) 2>/dev/null || true
+}
+
 # Repository URL names the NAS host, so it comes from sops (see home/secrets/),
 # not this public script. Override with RESTIC_REPOSITORY for ad-hoc targets.
 export RESTIC_REPOSITORY="${RESTIC_REPOSITORY:-$(cat "$HOME/.config/restic/repository" 2>/dev/null)}"
 export RESTIC_PASSWORD_FILE="${RESTIC_PASSWORD_FILE:-$HOME/.config/restic/password}"
 [ -n "$RESTIC_REPOSITORY" ] || {
   echo "no repository: ~/.config/restic/repository missing (sops not rendered?)" >&2
-  notify "Backup failed — no repository"
+  notify "Backup failed — no repository" "" "~/.config/restic/repository is missing (sops not rendered?)"
   exit 1
 }
 EXCLUDES="$HOME/.config/restic/excludes"
 H="$HOME"
-ERRLOG_DIR="$HOME/.local/state/restic/logs"
-
-# Surface a failure to the logged-in user (launchd stays silent on non-zero exit):
-# toast (osascript needs Script Editor's notification permission — keep it on),
-# sound, and a marker file the shell precmd hook (zsh.nix) prints as a red warning.
-notify() {
-  local marker="$HOME/.local/state/restic/FAILED"
-  local detail
-  detail=$(tail -1 "${2:-$ERRLOG_DIR/backup.err.log}" 2>/dev/null | cut -c1-140)
-  # strip quote chars so $detail can't break the AppleScript string literal
-  detail=${detail//\"//}; detail=${detail//\\//}; detail=${detail//\'//}
-  /usr/bin/osascript -e "display notification \"$detail\" with title \"$1\"" >/dev/null 2>&1 || true
-  /usr/bin/afplay /System/Library/Sounds/Submarine.aiff >/dev/null 2>&1 || true
-  mkdir -p "$(dirname "$marker")" 2>/dev/null || true
-  { echo "$(date '+%Y-%m-%d %H:%M') $1"; printf '%s\n' "$detail"; } > "$marker" 2>/dev/null || true
-}
 
 # Only pass paths that exist, so a missing dir never aborts the run.
 _present() { local out=(); local p; for p in "$@"; do [ -e "$p" ] && out+=("$p"); done; printf '%s\n' "${out[@]}"; }
