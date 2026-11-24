@@ -71,6 +71,17 @@ in
       # place, so remove it by hand on a machine that had it:
       #   rm ~/.config/ds3ctl/config.yaml ~/.config/sops-nix/secrets/ds3ctl_config
 
+      # Dropped the four gcal keys: the mirror now runs as a Google Apps Script
+      # (see .local/bin/gcal-personal-block.gs), so there is no OAuth client.
+      # sops-nix leaves installed secrets in place, so on a machine that ran the
+      # old agent, remove the rendered files and unload the dead agent:
+      #   launchctl bootout gui/$(id -u)/org.nix-community.home.gcal-personal-block
+      #   rm ~/Library/LaunchAgents/org.nix-community.home.gcal-personal-block.plist
+      #   rm -rf ~/.config/gcal-personal-block ~/.local/state/gcal-personal-block
+      #   rm ~/.config/sops-nix/secrets/gcal_{client_id,client_secret,family_cal,work_email}
+      # Also revoke the "Mimir Cloud" OAuth client in the GCP console — deleting
+      # the files does not invalidate the credential.
+
       # Git identities. These are gitconfig fragments pulled in by `includes`
       # in programs/git/config.nix, so the addresses stay out of the public
       # repo. Keeping them here (rather than in nix) means git reads them at
