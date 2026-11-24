@@ -1,12 +1,10 @@
 { pkgs, lib, ... }:
 {
-  # gh-dash lives in nixpkgs but declares no gh-extension manifest; linking it
-  # into gh's extensions dir is what makes `gh dash` work (upstream installs
-  # it via `gh extension install`).
-  home.file.".local/share/gh/extensions/gh-dash/gh-dash" = {
-    source = "${pkgs.gh-dash}/bin/gh-dash";
-    executable = true;
-  };
+  # gh discovers extensions by scanning its data dir, so linking the nixpkgs
+  # binary there is what makes `gh dash` work (upstream does this via
+  # `gh extension install`). xdg.dataFile honours XDG_DATA_HOME, which go-gh
+  # reads — a hardcoded ~/.local/share would break if that were ever exported.
+  xdg.dataFile."gh/extensions/gh-dash/gh-dash".source = "${pkgs.gh-dash}/bin/gh-dash";
 
   home.packages =
     with pkgs;

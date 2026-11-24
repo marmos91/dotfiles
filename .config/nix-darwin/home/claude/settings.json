@@ -119,7 +119,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "/Users/marmos91/.local/bin/headroom wrap selfheal --marker headroom-wrap-selfheal",
+            "command": "$HOME/.local/bin/headroom wrap selfheal --marker headroom-wrap-selfheal",
             "timeout": 10
           }
         ]

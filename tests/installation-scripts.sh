@@ -471,8 +471,8 @@ $(cat "$SUDO_LOG")"
     ln -sfn "$REPO_ROOT/removed-dir/gone.json" "$FAKE_HOME/.claude/orphan.json"
     run_script uninstall.sh "$WORK/cwd" -y --keep-nix
     # Tracked targets (the nix-managed settings.json, gcal-personal-block) must
-    # be copied, not dropped; that the copy lands in ~/.local proves the sweep
-    # reaches it too.
+    # be copied, not dropped; the gcal copy landing in ~/.local proves the
+    # per-file sweep reaches that tree too (settings lands in ~/.claude).
     if [[ "$RC" -eq 0 ]] && [ ! -L "$FAKE_HOME/CLAUDE.md" ] \
         && [ ! -e "$FAKE_HOME/.gitignore.global" ] && [ ! -L "$FAKE_HOME/.gitignore.global" ] \
         && [ ! -L "$FAKE_HOME/.local/bin/gcal-personal-block" ] \
