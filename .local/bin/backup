@@ -24,21 +24,13 @@ PRUNE_TIMEOUT="${PRUNE_TIMEOUT:-4h}"
 # Defined before the repository check below, which also needs to alert.
 notify() {
   local marker="$HOME/.local/state/restic/FAILED"
-  local detail
-  # $3, when given, is the message; otherwise take the last line of $2's log
-  # (defaulting to the backup log) — never a stale line from a previous run.
-  if [ -n "${3:-}" ]; then
-    detail="$3"
-  else
-    detail=$(tail -1 "${2:-$ERRLOG_DIR/backup.err.log}" 2>/dev/null | cut -c1-140)
-  fi
+  local detail="${2:-}"
   # Strip any URL (the repo URL names the private NAS host) and quote chars, so
   # the detail is safe in the AppleScript literal and in a public shell prompt.
   detail=$(printf '%s' "$detail" | sed -E 's#(sftp|https?)://[^[:space:]]+#<repo>#g')
   detail=${detail//\"//}; detail=${detail//\\//}; detail=${detail//\'/}
   /usr/bin/osascript -e "display notification \"$detail\" with title \"$1\"" >/dev/null 2>&1 || true
   /usr/bin/afplay /System/Library/Sounds/Submarine.aiff >/dev/null 2>&1 || true
-  mkdir -p "$(dirname "$marker")" 2>/dev/null || true
   ( umask 077; { echo "$(date '+%Y-%m-%d %H:%M') $1"; printf '%s\n' "$detail"; } > "$marker" ) 2>/dev/null || true
 }
 
@@ -48,7 +40,7 @@ export RESTIC_REPOSITORY="${RESTIC_REPOSITORY:-$(cat "$HOME/.config/restic/repos
 export RESTIC_PASSWORD_FILE="${RESTIC_PASSWORD_FILE:-$HOME/.config/restic/password}"
 [ -n "$RESTIC_REPOSITORY" ] || {
   echo "no repository: ~/.config/restic/repository missing (sops not rendered?)" >&2
-  notify "Backup failed — no repository" "" "~/.config/restic/repository is missing (sops not rendered?)"
+  notify "Backup failed — no repository" "~/.config/restic/repository is missing (sops not rendered?)"
   exit 1
 }
 EXCLUDES="$HOME/.config/restic/excludes"
@@ -96,7 +88,7 @@ do_backup() {
       failed="$failed $tag"
     fi
   done
-  [ "$rc" -eq 0 ] || notify "Backup failed —${failed}" "" "see $ERRLOG_DIR/backup.err.log"
+  [ "$rc" -eq 0 ] || notify "Backup failed —${failed}" "see $ERRLOG_DIR/backup.err.log"
   return $rc
 }
 
@@ -106,7 +98,7 @@ do_prune() {
   timeout "$PRUNE_TIMEOUT" restic forget --tag standard  --keep-daily 7 --keep-weekly 4 --keep-monthly 12 --keep-yearly 2 || rc=1
   timeout "$PRUNE_TIMEOUT" restic forget --tag archive   --keep-monthly 12 --keep-yearly 10 || rc=1
   timeout "$PRUNE_TIMEOUT" restic prune || rc=1
-  [ "$rc" -eq 0 ] || notify "Backup prune failed" "" "see $ERRLOG_DIR/prune.err.log"
+  [ "$rc" -eq 0 ] || notify "Backup prune failed" "see $ERRLOG_DIR/prune.err.log"
   return $rc
 }
 
