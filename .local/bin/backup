@@ -14,9 +14,29 @@ set -uo pipefail
 # not this public script. Override with RESTIC_REPOSITORY for ad-hoc targets.
 export RESTIC_REPOSITORY="${RESTIC_REPOSITORY:-$(cat "$HOME/.config/restic/repository" 2>/dev/null)}"
 export RESTIC_PASSWORD_FILE="${RESTIC_PASSWORD_FILE:-$HOME/.config/restic/password}"
-[ -n "$RESTIC_REPOSITORY" ] || { echo "no repository: ~/.config/restic/repository missing (sops not rendered?)" >&2; exit 1; }
+[ -n "$RESTIC_REPOSITORY" ] || {
+  echo "no repository: ~/.config/restic/repository missing (sops not rendered?)" >&2
+  notify "Backup failed — no repository"
+  exit 1
+}
 EXCLUDES="$HOME/.config/restic/excludes"
 H="$HOME"
+ERRLOG_DIR="$HOME/.local/state/restic/logs"
+
+# Surface a failure to the logged-in user (launchd stays silent on non-zero exit):
+# toast (osascript needs Script Editor's notification permission — keep it on),
+# sound, and a marker file the shell precmd hook (zsh.nix) prints as a red warning.
+notify() {
+  local marker="$HOME/.local/state/restic/FAILED"
+  local detail
+  detail=$(tail -1 "${2:-$ERRLOG_DIR/backup.err.log}" 2>/dev/null | cut -c1-140)
+  # strip quote chars so $detail can't break the AppleScript string literal
+  detail=${detail//\"//}; detail=${detail//\\//}; detail=${detail//\'//}
+  /usr/bin/osascript -e "display notification \"$detail\" with title \"$1\"" >/dev/null 2>&1 || true
+  /usr/bin/afplay /System/Library/Sounds/Submarine.aiff >/dev/null 2>&1 || true
+  mkdir -p "$(dirname "$marker")" 2>/dev/null || true
+  { echo "$(date '+%Y-%m-%d %H:%M') $1"; printf '%s\n' "$detail"; } > "$marker" 2>/dev/null || true
+}
 
 # Only pass paths that exist, so a missing dir never aborts the run.
 _present() { local out=(); local p; for p in "$@"; do [ -e "$p" ] && out+=("$p"); done; printf '%s\n' "${out[@]}"; }
@@ -46,12 +66,17 @@ tier_paths() {
 
 do_backup() {
   local rc=0 tag
+  local failed=""
   for tag in ephemeral standard archive; do
     mapfile -t paths < <(tier_paths "$tag")
     [ "${#paths[@]}" -eq 0 ] && continue
     echo ">> backing up tier '$tag' (${#paths[@]} paths)"
-    restic backup --tag "$tag" --exclude-file "$EXCLUDES" "${paths[@]}" || rc=1
+    if ! restic backup --tag "$tag" --exclude-file "$EXCLUDES" "${paths[@]}"; then
+      rc=1
+      failed="$failed $tag"
+    fi
   done
+  [ "$rc" -eq 0 ] || notify "Backup failed —${failed}"
   return $rc
 }
 
@@ -61,12 +86,13 @@ do_prune() {
   restic forget --tag standard  --keep-daily 7 --keep-weekly 4 --keep-monthly 12 --keep-yearly 2 || rc=1
   restic forget --tag archive   --keep-monthly 12 --keep-yearly 10 || rc=1
   restic prune || rc=1
+  [ "$rc" -eq 0 ] || notify "Backup prune failed" "$ERRLOG_DIR/prune.err.log"
   return $rc
 }
 
 case "${1:-run}" in
-  run)   do_backup ;;
-  prune) do_prune ;;
+  run)   do_backup; rc=$?; [ "$rc" -eq 0 ] && rm -f "$HOME/.local/state/restic/FAILED"; exit $rc ;;
+  prune) do_prune; rc=$?; [ "$rc" -eq 0 ] && rm -f "$HOME/.local/state/restic/FAILED"; exit $rc ;;
   init)  restic cat config >/dev/null 2>&1 && echo "repo already initialised" || restic init ;;
   *)     exec restic "$@" ;;
 esac

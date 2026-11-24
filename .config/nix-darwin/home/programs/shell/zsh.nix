@@ -91,6 +91,16 @@ in
           ;;
       esac
 
+      # Backup failure marker (written by ~/.dotfiles/.local/bin/backup on a
+      # failed restic run); shown once per shell session, any TERM.
+      backup_fail_check() {
+        [[ -f "$HOME/.local/state/restic/FAILED" && -z "$_backup_fail_shown" ]] || return 0
+        printf '\033[1;31mBACKUP FAILED:\033[0m %s\n' "$(sed -n '1p' "$HOME/.local/state/restic/FAILED" 2>/dev/null)"
+        [[ -n "$(sed -n '2p' "$HOME/.local/state/restic/FAILED" 2>/dev/null)" ]] && printf '%s\n' "$(sed -n '2p' "$HOME/.local/state/restic/FAILED" 2>/dev/null)"
+        _backup_fail_shown=1
+      }
+      add-zsh-hook precmd backup_fail_check
+
       # kubectl/helm/docker completions come from carapace (terminal/carapace.nix).
 
       _secrets() {
