@@ -107,12 +107,19 @@ do_prune() {
   return $rc
 }
 
+# Clear the marker only when the operation that just succeeded is the one that
+# wrote it — a good daily run must not erase a weekly prune failure, and a good
+# prune must not erase a failing run.
+clear_marker_for() {
+  local marker="$HOME/.local/state/restic/FAILED"
+  [ -f "$marker" ] || return 0
+  head -1 "$marker" 2>/dev/null | grep -qF "$1" && rm -f "$marker"
+  return 0
+}
+
 case "${1:-run}" in
-  run)   do_backup; rc=$?; [ "$rc" -eq 0 ] && rm -f "$HOME/.local/state/restic/FAILED"; exit $rc ;;
-  # A successful prune must not clear a backup-failure marker: backups can keep
-  # failing Mon-Sat while Sunday's prune succeeds, and the shell warning would
-  # then vanish before the next failing run.
-  prune) do_prune; rc=$?; exit $rc ;;
+  run)   do_backup; rc=$?; [ "$rc" -eq 0 ] && clear_marker_for "Backup failed —"; exit $rc ;;
+  prune) do_prune; rc=$?; [ "$rc" -eq 0 ] && clear_marker_for "Backup prune failed"; exit $rc ;;
   init)  restic cat config >/dev/null 2>&1 && echo "repo already initialised" || restic init ;;
   *)     exec restic "$@" ;;
 esac
