@@ -56,13 +56,6 @@ in
       google_docs_mcp_client_id = mk ".config/google-docs-mcp/client-id";
       google_docs_mcp_client_secret = mk ".config/google-docs-mcp/client-secret";
 
-      # gcal-personal-block: OAuth client (Mimir Cloud GCP project) and the
-      # calendar identifiers it syncs. Read by the script at runtime, and by
-      # `gcal-setup` for the consent screen.
-      gcal_client_id = mk ".config/gcal-personal-block/client-id";
-      gcal_client_secret = mk ".config/gcal-personal-block/client-secret";
-      gcal_family_cal = mk ".config/gcal-personal-block/family-cal";
-      gcal_work_email = mk ".config/gcal-personal-block/work-email";
       # Internal Cubbit endpoints. Not credentials, but they name company
       # infrastructure, so they stay out of the public repo. Shared by opencode,
       # pi and headroom, so the path names none of them. opencode resolves
@@ -77,6 +70,17 @@ in
       # server from --server). sops-nix leaves an already-installed secret in
       # place, so remove it by hand on a machine that had it:
       #   rm ~/.config/ds3ctl/config.yaml ~/.config/sops-nix/secrets/ds3ctl_config
+
+      # Dropped the four gcal keys: the mirror now runs as a Google Apps Script
+      # (see .local/bin/gcal-personal-block.gs), so there is no OAuth client.
+      # sops-nix leaves installed secrets in place, so on a machine that ran the
+      # old agent, remove the rendered files and unload the dead agent:
+      #   launchctl bootout gui/$(id -u)/org.nix-community.home.gcal-personal-block
+      #   rm ~/Library/LaunchAgents/org.nix-community.home.gcal-personal-block.plist
+      #   rm -rf ~/.config/gcal-personal-block ~/.local/state/gcal-personal-block
+      #   rm ~/.config/sops-nix/secrets/gcal_{client_id,client_secret,family_cal,work_email}
+      # Also revoke the "Mimir Cloud" OAuth client in the GCP console — deleting
+      # the files does not invalidate the credential.
 
       # Git identities. These are gitconfig fragments pulled in by `includes`
       # in programs/git/config.nix, so the addresses stay out of the public

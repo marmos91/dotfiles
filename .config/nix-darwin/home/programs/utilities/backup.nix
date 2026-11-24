@@ -46,8 +46,9 @@ in
   # enable is set explicitly: when the agents are defined inside this top-level
   # `launchd.agents = mkIf isDarwin {...}`, home-manager's auto-enable (which
   # keys off a non-empty `config`) doesn't fire and the plists are never
-  # written (enable defaults false). gcal works because it's a direct
-  # `launchd.agents.<name> = {...}` definition.
+  # written (enable defaults false). (The former gcal agent worked because
+  # it was a direct `launchd.agents.<name> = {...}` definition — see git
+  # history; the mirror now runs on Google Apps Script.)
   launchd.agents = lib.mkIf isDarwin {
     restic-backup.enable = true;
     restic-backup.config = {

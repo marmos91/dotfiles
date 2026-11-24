@@ -39,9 +39,6 @@ in
     shellAliases = common.aliases // {
       # AI agents (route Claude Code through Headroom context compression)
 
-      # gcal sync setup (needs the nix python that carries google-api-client)
-      gcal-setup = "${pkgs.python313.withPackages (ps: [ ps.google-api-python-client ps.google-auth-oauthlib ])}/bin/python3 ~/.dotfiles/.local/bin/gcal-personal-block --setup";
-
       cd = "z";
       neofetch = "fastfetch";
       nix-shell = "nix-shell --command zsh";

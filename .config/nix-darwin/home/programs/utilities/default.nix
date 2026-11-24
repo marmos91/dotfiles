@@ -9,7 +9,6 @@
     ./fd.nix
     ./fzf.nix
     ./graphify.nix
-    ./gcal-personal-block.nix
     ./headroom.nix
     ./k9s.nix
     ./mcp.nix
