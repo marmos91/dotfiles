@@ -54,9 +54,9 @@ in
       ProgramArguments = [ "${pkgs.bash}/bin/bash" script "run" ];
       StartCalendarInterval = [ { Hour = 13; Minute = 0; } ];
       RunAtLoad = false;
-      # A hung restic (stalled tailnet/SFTP) would otherwise never exit, never
-      # alert, and suppress every subsequent daily run.
-      TimeoutSeconds = 3600;
+      # No TimeoutSeconds: launchd would SIGKILL the job, skipping the script's
+      # own alert and leaving a stale restic lock. The script bounds each restic
+      # call with `timeout` instead (BACKUP_TIMEOUT / PRUNE_TIMEOUT).
       StandardOutPath = "${logDir}/backup.log";
       StandardErrorPath = "${logDir}/backup.err.log";
       EnvironmentVariables.PATH = "${binPath}:/usr/bin:/bin";
@@ -66,7 +66,6 @@ in
       ProgramArguments = [ "${pkgs.bash}/bin/bash" script "prune" ];
       StartCalendarInterval = [ { Weekday = 0; Hour = 14; Minute = 0; } ];
       RunAtLoad = false;
-      TimeoutSeconds = 7200;
       StandardOutPath = "${logDir}/prune.log";
       StandardErrorPath = "${logDir}/prune.err.log";
       EnvironmentVariables.PATH = "${binPath}:/usr/bin:/bin";

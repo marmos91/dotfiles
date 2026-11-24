@@ -11,6 +11,12 @@
 set -uo pipefail
 
 ERRLOG_DIR="$HOME/.local/state/restic/logs"
+# Per-tier / per-prune ceiling. A first full backup or a catch-up run after a
+# long trip can take hours over a tailnet, so these are generous; the point is
+# only to bound a hang. Kept in-script (not launchd TimeoutSeconds) so a timeout
+# is still a normal failure that alerts and leaves no stale repo lock.
+BACKUP_TIMEOUT="${BACKUP_TIMEOUT:-6h}"
+PRUNE_TIMEOUT="${PRUNE_TIMEOUT:-4h}"
 
 # Surface a failure to the logged-in user (launchd stays silent on non-zero exit):
 # toast (osascript needs Script Editor's notification permission — keep it on),
@@ -81,28 +87,35 @@ do_backup() {
     mapfile -t paths < <(tier_paths "$tag")
     [ "${#paths[@]}" -eq 0 ] && continue
     echo ">> backing up tier '$tag' (${#paths[@]} paths)"
-    if ! restic backup --tag "$tag" --exclude-file "$EXCLUDES" "${paths[@]}"; then
+    # A hung restic (stalled tailnet/SFTP) must not suppress every later run, so
+    # each tier is bounded in-script rather than by launchd's TimeoutSeconds —
+    # launchd SIGKILLs the job, which would skip the notify below and leave a
+    # stale repo lock behind. A timeout here is just a normal failure.
+    if ! timeout "$BACKUP_TIMEOUT" restic backup --tag "$tag" --exclude-file "$EXCLUDES" "${paths[@]}"; then
       rc=1
       failed="$failed $tag"
     fi
   done
-  [ "$rc" -eq 0 ] || notify "Backup failed —${failed}"
+  [ "$rc" -eq 0 ] || notify "Backup failed —${failed}" "" "see $ERRLOG_DIR/backup.err.log"
   return $rc
 }
 
 do_prune() {
   local rc=0
-  restic forget --tag ephemeral --keep-daily 7 --keep-weekly 4 || rc=1
-  restic forget --tag standard  --keep-daily 7 --keep-weekly 4 --keep-monthly 12 --keep-yearly 2 || rc=1
-  restic forget --tag archive   --keep-monthly 12 --keep-yearly 10 || rc=1
-  restic prune || rc=1
-  [ "$rc" -eq 0 ] || notify "Backup prune failed" "$ERRLOG_DIR/prune.err.log"
+  timeout "$PRUNE_TIMEOUT" restic forget --tag ephemeral --keep-daily 7 --keep-weekly 4 || rc=1
+  timeout "$PRUNE_TIMEOUT" restic forget --tag standard  --keep-daily 7 --keep-weekly 4 --keep-monthly 12 --keep-yearly 2 || rc=1
+  timeout "$PRUNE_TIMEOUT" restic forget --tag archive   --keep-monthly 12 --keep-yearly 10 || rc=1
+  timeout "$PRUNE_TIMEOUT" restic prune || rc=1
+  [ "$rc" -eq 0 ] || notify "Backup prune failed" "" "see $ERRLOG_DIR/prune.err.log"
   return $rc
 }
 
 case "${1:-run}" in
   run)   do_backup; rc=$?; [ "$rc" -eq 0 ] && rm -f "$HOME/.local/state/restic/FAILED"; exit $rc ;;
-  prune) do_prune; rc=$?; [ "$rc" -eq 0 ] && rm -f "$HOME/.local/state/restic/FAILED"; exit $rc ;;
+  # A successful prune must not clear a backup-failure marker: backups can keep
+  # failing Mon-Sat while Sunday's prune succeeds, and the shell warning would
+  # then vanish before the next failing run.
+  prune) do_prune; rc=$?; exit $rc ;;
   init)  restic cat config >/dev/null 2>&1 && echo "repo already initialised" || restic init ;;
   *)     exec restic "$@" ;;
 esac
