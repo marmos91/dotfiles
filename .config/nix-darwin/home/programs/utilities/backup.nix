@@ -54,6 +54,9 @@ in
       ProgramArguments = [ "${pkgs.bash}/bin/bash" script "run" ];
       StartCalendarInterval = [ { Hour = 13; Minute = 0; } ];
       RunAtLoad = false;
+      # No TimeoutSeconds: launchd would SIGKILL the job, skipping the script's
+      # own alert and leaving a stale restic lock. The script bounds each restic
+      # call with `timeout` instead (BACKUP_TIMEOUT / PRUNE_TIMEOUT).
       StandardOutPath = "${logDir}/backup.log";
       StandardErrorPath = "${logDir}/backup.err.log";
       EnvironmentVariables.PATH = "${binPath}:/usr/bin:/bin";
@@ -77,6 +80,9 @@ in
         Type = "oneshot";
         ExecStart = "${pkgs.bash}/bin/bash ${script} run";
         Environment = [ "PATH=${binPath}" ];
+        # Parity with the script's own BACKUP_TIMEOUT; systemd's 90s default
+        # would kill a real backup.
+        TimeoutStartSec = "7h";
       };
     };
     timers.restic-backup = {
@@ -90,6 +96,7 @@ in
         Type = "oneshot";
         ExecStart = "${pkgs.bash}/bin/bash ${script} prune";
         Environment = [ "PATH=${binPath}" ];
+        TimeoutStartSec = "5h";
       };
     };
     timers.restic-prune = {
