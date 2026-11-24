@@ -115,11 +115,12 @@
   "hooks": {
     "SessionStart": [
       {
-        "matcher": "",
+        "matcher": "startup|resume",
         "hooks": [
           {
             "type": "command",
-            "command": "npx --yes any-buddy@latest apply --silent"
+            "command": "$HOME/.local/bin/headroom wrap selfheal --marker headroom-wrap-selfheal",
+            "timeout": 10
           }
         ]
       }

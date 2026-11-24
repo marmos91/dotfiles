@@ -1,5 +1,11 @@
 { pkgs, lib, ... }:
 {
+  # gh discovers extensions by scanning its data dir, so linking the nixpkgs
+  # binary there is what makes `gh dash` work (upstream does this via
+  # `gh extension install`). xdg.dataFile honours XDG_DATA_HOME, which go-gh
+  # reads — a hardcoded ~/.local/share would break if that were ever exported.
+  xdg.dataFile."gh/extensions/gh-dash/gh-dash".source = "${pkgs.gh-dash}/bin/gh-dash";
+
   home.packages =
     with pkgs;
     [
@@ -33,6 +39,7 @@
       pulumiPackages.pulumi-go
       (scaleway-cli.overrideAttrs (_: { doCheck = false; }))
       sd
+      # semgrep pins itself to mcp 1.x via pythonPackages.overrideScope upstream.
       semgrep
       sshpass
       stow

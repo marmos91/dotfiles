@@ -36,6 +36,10 @@ in
   # effortLevel, editorMode, tui toggles from the TUI), which a read-only store
   # path would break. Seed it on a fresh machine instead, and never clobber a
   # live file — so local edits and runtime writes both survive.
+  # Consequence: changes here do NOT reach a machine that already has
+  # ~/.claude/settings.json; apply those by hand (e.g. the SessionStart hook
+  # moved from any-buddy to headroom selfheal — edit the live file, or delete it
+  # and let this reseed).
   home.activation.claudeSettings = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
     if [ ! -e "${config.home.homeDirectory}/.claude/settings.json" ]; then
       $DRY_RUN_CMD mkdir -p "${config.home.homeDirectory}/.claude"
