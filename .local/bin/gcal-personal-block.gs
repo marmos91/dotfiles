@@ -64,46 +64,53 @@ function syncMirror() {
   }
 
   // 2. existing placeholders on the work calendar (key-presence filter is
-  // client-side: server-side empty-value ext-property filters return nothing)
+  // client-side: server-side empty-value ext-property filters return nothing).
+  // timeMax is mandatory: singleEvents expands endless recurrences (daily
+  // standups, weeklies) into instances forever, and an unbounded list OOMs
+  // Apps Script — placeholders can only exist inside [past, tmax] anyway,
+  // since that's the same window we create them in.
   const have = {};
-  for (const e of listEvents('primary', { timeMin: past, wantKey: KEY })) {
+  for (const e of listEvents('primary', { timeMin: past, timeMax: tmax, wantKey: KEY })) {
     have[e.extendedProperties.private[KEY]] = e;
   }
 
-  let created = 0, updated = 0, removed = 0;
-  // remove placeholders whose source event is gone
+  let created = 0, patched = 0, removed = 0, errors = 0;
+  // every mutation is try/caught so one bad event can't abort the run and
+  // starve the events after it — that's one way stale blocks survived reruns
   for (const [fid, e] of Object.entries(have)) {
     if (fid in want) continue;
-    Calendar.Events.remove('primary', e.id, { sendUpdates: 'none' });
-    removed++;
-  }
-
-  // compare times by their instant only (the timeZone sub-key shape differs
-  // between what we send and what the API returns — dict equality would
-  // patch the same event every run)
-  const instant = d => d.dateTime || d.date;
-  for (const [fid, body] of Object.entries(want)) {
-    const cur = have[fid];
-    if (!cur) {
-      Calendar.Events.insert(body, 'primary', { sendUpdates: 'none' });
-      created++;
-    } else if (
-      instant(cur.start) !== instant(body.start) ||
-      instant(cur.end) !== instant(body.end) ||
-      cur.description !== DESCRIPTION ||
-      cur.colorId !== COLOR_ID ||
-      (cur.reminders && cur.reminders.useDefault)
-    ) {
-      // patch drift back; the API returns {'useDefault': false} with no
-      // overrides key for empty overrides, so compare only useDefault above
-      Calendar.Events.patch(
-        { start: body.start, end: body.end, description: DESCRIPTION,
-          colorId: COLOR_ID, reminders: NO_REMIND },
-        'primary', cur.id, { sendUpdates: 'none' });
-      updated++;
+    try {
+      Calendar.Events.remove('primary', e.id, { sendUpdates: 'none' });
+      removed++;
+    } catch (err) {
+      errors++;
+      console.error(`remove ${e.id}: ${err}`);
     }
   }
-  console.log(`created ${created}, updated ${updated}, removed ${removed}`);
+
+  // patch existing placeholders unconditionally instead of diffing against
+  // the API echo: drift detection proved unreliable (a shortened family
+  // event left a stale block), and a write per family event per hour is
+  // harmless — sendUpdates: none, no attendee mail, trivial quota
+  for (const [fid, body] of Object.entries(want)) {
+    const cur = have[fid];
+    try {
+      if (!cur) {
+        Calendar.Events.insert(body, 'primary', { sendUpdates: 'none' });
+        created++;
+      } else {
+        Calendar.Events.patch(
+          { start: body.start, end: body.end, description: DESCRIPTION,
+            colorId: COLOR_ID, reminders: NO_REMIND },
+          'primary', cur.id, { sendUpdates: 'none' });
+        patched++;
+      }
+    } catch (err) {
+      errors++;
+      console.error(`${cur ? 'patch' : 'insert'} ${fid}: ${err}`);
+    }
+  }
+  console.log(`created ${created}, patched ${patched}, removed ${removed}, errors ${errors}`);
 }
 
 /** Paged Events.list wrapper. opts: timeMin, timeMax, wantKey (client-side
