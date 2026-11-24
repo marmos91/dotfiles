@@ -12,6 +12,9 @@
  *   3. Project Settings → Script Properties → add:
  *        familyCalendarId = <Family calendar ID>
  *   4. Triggers (clock icon) → Add trigger → syncMirror → hourly
+ *      In the same dialog set "Failure notification" to your address: the
+ *      python/launchd version raised a macOS notification on failure, and
+ *      per-event errors here only reach the exec log.
  *   5. Run syncMirror once from the editor to approve the permission dialog
  *
  * Only the work primary calendar is written; Family is read-only here.
