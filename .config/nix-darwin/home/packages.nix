@@ -24,6 +24,7 @@
       commitlint
       ffmpeg
       gh
+      gitleaks # secret scan before a push or a posted review (secret-scan skill)
       goreleaser
       go-task
       hub
